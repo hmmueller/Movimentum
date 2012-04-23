@@ -1,0 +1,1 @@
+java -classpath ..\lib\antlr-3.1\antlr-3.1.1.jar org.antlr.Tool -o generated Movimentum.g
