@@ -6,7 +6,7 @@ using System.Drawing;
 namespace Movimentum.Model {
     #region Script
 
-    public class Script {
+    public partial class Script {
         private readonly Config _config;
         private readonly IEnumerable<Thing> _things;
         private readonly IEnumerable<Step> _steps;
@@ -81,10 +81,10 @@ namespace Movimentum.Model {
 
     #region Step
 
-    public class Step {
+    public partial class Step {
         private readonly double _time;
-        private readonly IEnumerable<Constraint> _constraints;
-        public Step(double time, IEnumerable<Constraint> constraints) {
+        private readonly List<Constraint> _constraints;
+        public Step(double time, List<Constraint> constraints) {
             _time = time;
             _constraints = constraints;
         }
@@ -98,15 +98,19 @@ namespace Movimentum.Model {
     abstract public class Constraint {}
 
     public class VectorEqualityConstraint : Constraint {
-        private readonly VectorExpr _lhs;
+        private readonly Anchor _variable;
         private readonly VectorExpr _rhs;
-        public VectorEqualityConstraint(VectorExpr lhs, VectorExpr rhs) {
-            _lhs = lhs;
+        public VectorEqualityConstraint(Anchor variable, VectorExpr rhs) {
+            _variable = variable;
             _rhs = rhs;
         }
 
-        public VectorExpr Lhs { get { return _lhs; } }
+        public Anchor Variable { get { return _variable; } }
         public VectorExpr Rhs { get { return _rhs; } }
+
+        public override string ToString() {
+            return _variable + "#=#" + _rhs;
+        }
     }
 
     public class ScalarEqualityConstraint : Constraint {
@@ -119,6 +123,10 @@ namespace Movimentum.Model {
 
         public string Variable { get { return _variable; } }
         public ScalarExpr Rhs { get { return _rhs; } }
+        
+        public override string ToString() {
+            return _variable + "_=_" + _rhs;
+        }
     }
 
     public class ScalarInequalityConstraint : Constraint {
@@ -134,6 +142,24 @@ namespace Movimentum.Model {
         public string Variable { get { return _variable; } }
         public ScalarInequalityOperator Operator { get { return _operator; } }
         public ScalarExpr Rhs { get { return _rhs; } }
+
+        public override string ToString() {
+            return "(" + _variable + OpString() + _rhs + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case ScalarInequalityOperator.LT:
+                    return "_<_";
+                case ScalarInequalityOperator.LE:
+                    return "_<=_";
+                case ScalarInequalityOperator.GT:
+                    return "_>_";
+                case ScalarInequalityOperator.GE:
+                    return "_>=_";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
     public enum ScalarInequalityOperator { LT, LE, GT, GE }
@@ -168,9 +194,25 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _lhs.GetHashCode() + (int)_operator + _rhs.GetHashCode();
         }
+
+        public override string ToString() {
+            return "(" + _lhs + OpString() + _rhs + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case BinaryVectorOperator.PLUS:
+                    return "#+#";
+                case BinaryVectorOperator.MINUS:
+                    return "#-#";
+                //case BinaryVectorOperator.TIMES:
+                //    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
-    public enum BinaryVectorOperator { PLUS, MINUS, TIMES }
+    public enum BinaryVectorOperator { PLUS, MINUS /*, TIMES*/ }
 
     public class VectorScalarExpr : VectorExpr {
         private readonly VectorExpr _lhs;
@@ -196,6 +238,20 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _lhs.GetHashCode() + (int)_operator + _rhs.GetHashCode();
         }
+
+        public override string ToString() {
+            return "(" + _lhs + OpString() + _rhs + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case VectorScalarOperator.ROTATE:
+                    return "#ROT_";
+                case VectorScalarOperator.TIMES:
+                    return "#*_";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
     public enum VectorScalarOperator { ROTATE, TIMES }
@@ -220,6 +276,22 @@ namespace Movimentum.Model {
         }
         public override int GetHashCode() {
             return _inner.GetHashCode() + (int)_operator;
+        }
+
+        public override string ToString() {
+            return "(" + OpString() + _inner + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case UnaryVectorOperator.MINUS:
+                    return "#-";
+                case UnaryVectorOperator.INTEGRAL:
+                    return "#I:";
+                case UnaryVectorOperator.DIFFERENTIAL:
+                    return "#D:";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
@@ -249,6 +321,10 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _x.GetHashCode() + _y.GetHashCode() + _z.GetHashCode();
         }
+
+        public override string ToString() {
+            return "[" + _x + "," + _y + "," + _z + "]";
+        } 
     }
 
     public class VectorVariable : VectorExpr { // Also _
@@ -269,6 +345,10 @@ namespace Movimentum.Model {
         }
         public override int GetHashCode() {
             return _name.GetHashCode();
+        }
+
+        public override string ToString() {
+            return "#" + _name;
         }
     }
 
@@ -292,6 +372,10 @@ namespace Movimentum.Model {
         }
         public override int GetHashCode() {
             return _thing.GetHashCode() + _name.GetHashCode();
+        }
+
+        public override string ToString() {
+            return "#" + _thing + "." + _name;
         }
     }
 
@@ -325,6 +409,24 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _lhs.GetHashCode() + (int)_operator + _rhs.GetHashCode();
         }
+
+        public override string ToString() {
+            return "(" + _lhs + OpString() + _rhs + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case BinaryScalarOperator.PLUS:
+                    return "_+_";
+                case BinaryScalarOperator.MINUS:
+                    return "_-_";
+                case BinaryScalarOperator.TIMES:
+                    return "_*_";
+                case BinaryScalarOperator.DIVIDE:
+                    return "_/_";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
     public enum BinaryScalarOperator { PLUS, MINUS, TIMES, DIVIDE }
@@ -350,9 +452,30 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _inner.GetHashCode() + (int)_operator;
         }
+        public override string ToString() {
+            return "(" + OpString() + _inner + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case UnaryScalarOperator.MINUS:
+                    return "_-";
+                case UnaryScalarOperator.INTEGRAL:
+                    return "_i";
+                case UnaryScalarOperator.DIFFERENTIAL:
+                    return "_d";
+                case UnaryScalarOperator.SQUARED:
+                    return "_²";
+                case UnaryScalarOperator.CUBED:
+                    return "_³";
+                case UnaryScalarOperator.SQUAREROOT:
+                    return "_q";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
-    public enum UnaryScalarOperator { MINUS, INTEGRAL, DIFFERENTIAL }
+    public enum UnaryScalarOperator { MINUS, INTEGRAL, DIFFERENTIAL, SQUARED, CUBED, SQUAREROOT }
 
     public class BinaryScalarVectorExpr : ScalarExpr {
         private readonly VectorExpr _lhs;
@@ -377,6 +500,18 @@ namespace Movimentum.Model {
         }
         public override int GetHashCode() {
             return _lhs.GetHashCode() + (int)_operator + _rhs.GetHashCode();
+        }
+
+        public override string ToString() {
+            return "(" + _lhs + OpString() + _rhs + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case BinaryScalarVectorOperator.ANGLE:
+                    return "#a#";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
@@ -403,6 +538,23 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _inner.GetHashCode() + (int) _operator;
         }
+        public override string ToString() {
+            return "(" + _inner + OpString() + ")";
+        }
+        private string OpString() {
+            switch (_operator) {
+                case UnaryScalarVectorOperator.LENGTH:
+                    return ".L";
+                case UnaryScalarVectorOperator.X:
+                    return ".X";
+                case UnaryScalarVectorOperator.Y:
+                    return ".Y";
+                case UnaryScalarVectorOperator.Z:
+                    return ".Z";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 
     public enum UnaryScalarVectorOperator { LENGTH, X, Y, Z }
@@ -423,6 +575,10 @@ namespace Movimentum.Model {
         }
         public override int GetHashCode() {
             return _value.GetHashCode();
+        }
+
+        public override string ToString() {
+            return "" + _value;
         }
     }
 
@@ -445,6 +601,10 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _name.GetHashCode();
         }
+
+        public override string ToString() {
+            return "_" + _name;
+        }
     }
 
     public class T : ScalarExpr {
@@ -457,6 +617,10 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return 0;
         }
+
+        public override string ToString() {
+            return ".T";
+        }
     }
 
     public class IV : ScalarExpr {
@@ -468,6 +632,10 @@ namespace Movimentum.Model {
         }
         public override int GetHashCode() {
             return 1;
+        }
+
+        public override string ToString() {
+            return ".IV";
         }
     }
 

@@ -28,6 +28,9 @@ namespace Movimentum {
             //if (parser.Errors.Count > 0) {
             //    throw new InvalidOperationException("Parse-Fehler: " + string.Join("\r\n", parser.Errors.ToArray()));
             //}
+
+            script.AddRigidBodyConstraints();
+
             return script;
         }
 

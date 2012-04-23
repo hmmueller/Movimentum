@@ -60,6 +60,8 @@
     <Compile Include="generated\MovimentumParser.cs" />
     <Compile Include="Model\ReadOnlyDictionary.cs" />
     <Compile Include="Model\Model.cs" />
+    <Compile Include="Model\Script.cs" />
+    <Compile Include="Model\Step.cs" />
     <Compile Include="MovimentumParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

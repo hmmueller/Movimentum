@@ -54,7 +54,7 @@ namespace Movimentum.Unittests {
             @+02.0    Piston.P = Conrod.Q;
 
             // Let's move it!
-            @+02.0    Crank.Q = Crank.P + [_,0].rotate(180° * t);
+            @+02.0    Crank.Q = Crank.P + [_,0].rotate(180 * t);
 
             @+08.0   b = -180 / 6; // angular acceleration
                      w = .integral(b) + 180;
@@ -106,7 +106,7 @@ namespace Movimentum.Unittests {
             @+02.0    Piston.P = Conrod.Q;
 
             // Let's move it!
-            @+02.0    Crank.Q = Crank.P + [_,0].rotate(180° * t);
+            @+02.0    Crank.Q = Crank.P + [_,0].rotate(180 * t);
 
             @+08.0   b = -180 / 6; // angular acceleration
                      w = .integral(b) + 180;
@@ -115,6 +115,7 @@ namespace Movimentum.Unittests {
             @+06.0   w = 0;";
 
             Script script = Program.Parse(s, tokens => new TestMovimentumParser(tokens));
+
             Assert.IsNotNull(script);
             Assert.IsNotNull(script.Config);
             Assert.AreEqual(12, script.Config.FramesPerTimeunit);
@@ -122,6 +123,9 @@ namespace Movimentum.Unittests {
 
             Assert.AreEqual(7, script.Steps.Count());
             CollectionAssert.AreEqual(new[] { 10.0, 12.0, 14.0, 16.0, 18.0, 26.0, 32.0 }, script.Steps.Select(st => st.Time).ToArray());
+
+            Step firstStep = script.Steps.First(st => st.Time == 10);
+            Assert.AreEqual(4*2 + 2, firstStep.Constraints.Count());
         }
 
 

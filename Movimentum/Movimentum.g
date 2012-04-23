@@ -204,7 +204,19 @@
       ;
 
     scalarexpr4 returns [ScalarExpr result]
-      : s=scalarexpr4Ambiguous
+	  : s=scalarexpr5
+	    ( '^2'              { result = new UnaryScalarExpr(UnaryScalarOperator.SQUARED, s); }
+		| '^3'              { result = new UnaryScalarExpr(UnaryScalarOperator.CUBED, s); }
+		|                   { result = s; }
+		)
+	  | SQRT
+	    '('
+        s=scalarexpr5       { result = new UnaryScalarExpr(UnaryScalarOperator.SQUAREROOT, s); }
+	    ')'
+	  ;
+
+    scalarexpr5 returns [ScalarExpr result]
+      : s=scalarexpr5Ambiguous
                             { result = s; }
       | INTEGRAL '('        
           s=scalarexpr      
@@ -225,7 +237,7 @@
       | IV                  { result = new IV(); }
       ;                     
 
-   scalarexpr4Ambiguous returns [ScalarExpr result]
+   scalarexpr5Ambiguous returns [ScalarExpr result]
                     options { backtrack = true; }
      :  v=vectorexpr5
        ( X                  { result = new UnaryScalarVectorExpr(v, UnaryScalarVectorOperator.X); }
@@ -252,6 +264,7 @@
     T :  '.t';
     IV :  '.iv';
 
+    SQRT         : '.q' | '.sqrt';
     ROTATE       : '.r' | '.rotate';
     INTEGRAL     : '.i' | '.integral';
     DIFFERENTIAL : '.d' | '.differential';
