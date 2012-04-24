@@ -56,8 +56,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Frame.cs" />
     <Compile Include="generated\MovimentumLexer.cs" />
     <Compile Include="generated\MovimentumParser.cs" />
+    <Compile Include="Model\AbstractOperator.cs" />
+    <Compile Include="Model\ConstVector.cs" />
     <Compile Include="Model\ReadOnlyDictionary.cs" />
     <Compile Include="Model\Model.cs" />
     <Compile Include="Model\Script.cs" />

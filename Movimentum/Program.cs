@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Antlr.Runtime;
 using Movimentum.Lexer;
 using Movimentum.Model;
@@ -29,13 +27,13 @@ namespace Movimentum {
             //    throw new InvalidOperationException("Parse-Fehler: " + string.Join("\r\n", parser.Errors.ToArray()));
             //}
 
-            script.AddRigidBodyConstraints();
+            script.AddRigidBodyAnd2DConstraints();
 
             return script;
         }
 
         private static void Interpret(Script script) {
-            
+            IEnumerable<Frame> frames = script.CreateFrames();
 
             throw new NotImplementedException();
         }

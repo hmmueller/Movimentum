@@ -59,21 +59,22 @@
       ;
 
     constvector returns [ConstVector result]
-      :                     {{ double x = double.NaN, y = double.NaN, z = 0; }}
+      :                       {{ double x = double.NaN, y = double.NaN; }}
         '['
-        ('-' c=constscalar  { x = -c; }
-        |    c=constscalar  { x = c; }
+        ('-' c=constscalar    { x = -c; }
+        |    c=constscalar    { x = c; }
         )
         ','
-        ('-' c=constscalar  { y = -c; }
-        |    c=constscalar  { y = c; }
+        ('-' c=constscalar    { y = -c; }
+        |    c=constscalar    { y = c; }
         )
-        ( ','
+        ( ','                 {{ double z = double.NaN; }}
           ('-' c=constscalar  { z = -c; }
           |    c=constscalar  { z = c; }
-          )
-		)?
-        ']'                 { result = new ConstVector(x,y,z); }
+          )                   { result = new ConstVector(x,y,z); }
+		|                     { result = new ConstVector(x,y); }
+		)
+        ']'                 
       ;
 
     constscalar returns [double result]
@@ -99,7 +100,7 @@
         '='
         s=scalarexpr
         ';'                 { result = new ScalarEqualityConstraint($i.Text, s); }
-      | i=IDENT             {{ ScalarInequalityOperator op = 0; }}
+      | i=IDENT             {{ ScalarInequalityOperator op = null; }}
         ( '<'               { op = ScalarInequalityOperator.LE; }
         | '>'               { op = ScalarInequalityOperator.GE; }
         | '<='              { op = ScalarInequalityOperator.LT; }
@@ -111,7 +112,7 @@
 
     vectorexpr returns [VectorExpr result]
       : v=vectorexpr2       { result = v; }
-        (                   {{ BinaryVectorOperator op = 0; }}
+        (                   {{ BinaryVectorOperator op = null; }}
           ( '+'             {{ op = BinaryVectorOperator.PLUS; }}
           | '-'             {{ op = BinaryVectorOperator.MINUS; }}
           )                 
@@ -180,7 +181,7 @@
 
     scalarexpr returns [ScalarExpr result]
       : s=scalarexpr2       { result = s; }
-        (                   {{ BinaryScalarOperator op = 0; }}
+        (                   {{ BinaryScalarOperator op = null; }}
           ( '+'             {{ op = BinaryScalarOperator.PLUS; }}
           | '-'             {{ op = BinaryScalarOperator.MINUS; }}
           )                 
@@ -190,7 +191,7 @@
 
     scalarexpr2 returns [ScalarExpr result]
       : s=scalarexpr3       { result = s; }
-        (                   {{ BinaryScalarOperator op = 0; }}
+        (                   {{ BinaryScalarOperator op = null; }}
           ( '*'             {{ op = BinaryScalarOperator.TIMES; }}
           | '/'             {{ op = BinaryScalarOperator.DIVIDE; }}
           )                 

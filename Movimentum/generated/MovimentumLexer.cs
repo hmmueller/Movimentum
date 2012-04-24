@@ -1,4 +1,4 @@
-// $ANTLR 3.1.1 Movimentum.g 2012-04-23 21:28:18
+// $ANTLR 3.1.1 Movimentum.g 2012-04-24 20:58:33
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
 // Unreachable code detected.
@@ -570,8 +570,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = CONFIG;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:259:8: ( '.config' )
-            // Movimentum.g:259:10: '.config'
+            // Movimentum.g:260:8: ( '.config' )
+            // Movimentum.g:260:10: '.config'
             {
             	Match(".config"); 
 
@@ -594,8 +594,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = X;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:261:3: ( '.x' )
-            // Movimentum.g:261:6: '.x'
+            // Movimentum.g:262:3: ( '.x' )
+            // Movimentum.g:262:6: '.x'
             {
             	Match(".x"); 
 
@@ -618,8 +618,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = Y;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:262:3: ( '.y' )
-            // Movimentum.g:262:6: '.y'
+            // Movimentum.g:263:3: ( '.y' )
+            // Movimentum.g:263:6: '.y'
             {
             	Match(".y"); 
 
@@ -642,8 +642,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = Z;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:263:3: ( '.z' )
-            // Movimentum.g:263:6: '.z'
+            // Movimentum.g:264:3: ( '.z' )
+            // Movimentum.g:264:6: '.z'
             {
             	Match(".z"); 
 
@@ -666,8 +666,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = T;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:264:3: ( '.t' )
-            // Movimentum.g:264:6: '.t'
+            // Movimentum.g:265:3: ( '.t' )
+            // Movimentum.g:265:6: '.t'
             {
             	Match(".t"); 
 
@@ -690,8 +690,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = IV;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:265:4: ( '.iv' )
-            // Movimentum.g:265:7: '.iv'
+            // Movimentum.g:266:4: ( '.iv' )
+            // Movimentum.g:266:7: '.iv'
             {
             	Match(".iv"); 
 
@@ -714,7 +714,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = SQRT;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:267:14: ( '.q' | '.sqrt' )
+            // Movimentum.g:268:14: ( '.q' | '.sqrt' )
             int alt1 = 2;
             int LA1_0 = input.LA(1);
 
@@ -748,7 +748,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt1) 
             {
                 case 1 :
-                    // Movimentum.g:267:16: '.q'
+                    // Movimentum.g:268:16: '.q'
                     {
                     	Match(".q"); 
 
@@ -756,7 +756,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:267:23: '.sqrt'
+                    // Movimentum.g:268:23: '.sqrt'
                     {
                     	Match(".sqrt"); 
 
@@ -781,7 +781,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = ROTATE;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:268:14: ( '.r' | '.rotate' )
+            // Movimentum.g:269:14: ( '.r' | '.rotate' )
             int alt2 = 2;
             int LA2_0 = input.LA(1);
 
@@ -819,7 +819,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt2) 
             {
                 case 1 :
-                    // Movimentum.g:268:16: '.r'
+                    // Movimentum.g:269:16: '.r'
                     {
                     	Match(".r"); 
 
@@ -827,7 +827,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:268:23: '.rotate'
+                    // Movimentum.g:269:23: '.rotate'
                     {
                     	Match(".rotate"); 
 
@@ -852,7 +852,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = INTEGRAL;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:269:14: ( '.i' | '.integral' )
+            // Movimentum.g:270:14: ( '.i' | '.integral' )
             int alt3 = 2;
             int LA3_0 = input.LA(1);
 
@@ -890,7 +890,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt3) 
             {
                 case 1 :
-                    // Movimentum.g:269:16: '.i'
+                    // Movimentum.g:270:16: '.i'
                     {
                     	Match(".i"); 
 
@@ -898,7 +898,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:269:23: '.integral'
+                    // Movimentum.g:270:23: '.integral'
                     {
                     	Match(".integral"); 
 
@@ -923,7 +923,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = DIFFERENTIAL;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:270:14: ( '.d' | '.differential' )
+            // Movimentum.g:271:14: ( '.d' | '.differential' )
             int alt4 = 2;
             int LA4_0 = input.LA(1);
 
@@ -961,7 +961,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt4) 
             {
                 case 1 :
-                    // Movimentum.g:270:16: '.d'
+                    // Movimentum.g:271:16: '.d'
                     {
                     	Match(".d"); 
 
@@ -969,7 +969,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:270:23: '.differential'
+                    // Movimentum.g:271:23: '.differential'
                     {
                     	Match(".differential"); 
 
@@ -994,7 +994,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = ANGLE;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:271:14: ( '.a' | '.angle' )
+            // Movimentum.g:272:14: ( '.a' | '.angle' )
             int alt5 = 2;
             int LA5_0 = input.LA(1);
 
@@ -1032,7 +1032,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt5) 
             {
                 case 1 :
-                    // Movimentum.g:271:16: '.a'
+                    // Movimentum.g:272:16: '.a'
                     {
                     	Match(".a"); 
 
@@ -1040,7 +1040,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:271:23: '.angle'
+                    // Movimentum.g:272:23: '.angle'
                     {
                     	Match(".angle"); 
 
@@ -1065,7 +1065,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = COLOR;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:272:14: ( '.c' | '.color' )
+            // Movimentum.g:273:14: ( '.c' | '.color' )
             int alt6 = 2;
             int LA6_0 = input.LA(1);
 
@@ -1103,7 +1103,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt6) 
             {
                 case 1 :
-                    // Movimentum.g:272:16: '.c'
+                    // Movimentum.g:273:16: '.c'
                     {
                     	Match(".c"); 
 
@@ -1111,7 +1111,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:272:23: '.color'
+                    // Movimentum.g:273:23: '.color'
                     {
                     	Match(".color"); 
 
@@ -1136,7 +1136,7 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = LENGTH;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:273:14: ( '.l' | '.LENGTH' )
+            // Movimentum.g:274:14: ( '.l' | '.LENGTH' )
             int alt7 = 2;
             int LA7_0 = input.LA(1);
 
@@ -1170,7 +1170,7 @@ public partial class MovimentumLexer : Lexer {
             switch (alt7) 
             {
                 case 1 :
-                    // Movimentum.g:273:16: '.l'
+                    // Movimentum.g:274:16: '.l'
                     {
                     	Match(".l"); 
 
@@ -1178,7 +1178,7 @@ public partial class MovimentumLexer : Lexer {
                     }
                     break;
                 case 2 :
-                    // Movimentum.g:273:23: '.LENGTH'
+                    // Movimentum.g:274:23: '.LENGTH'
                     {
                     	Match(".LENGTH"); 
 
@@ -1203,10 +1203,10 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = NUMBER;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:276:7: ( ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+ )? )
-            // Movimentum.g:276:9: ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+ )?
+            // Movimentum.g:277:7: ( ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+ )? )
+            // Movimentum.g:277:9: ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+ )?
             {
-            	// Movimentum.g:276:9: ( '0' .. '9' )+
+            	// Movimentum.g:277:9: ( '0' .. '9' )+
             	int cnt8 = 0;
             	do 
             	{
@@ -1222,7 +1222,7 @@ public partial class MovimentumLexer : Lexer {
             	    switch (alt8) 
             		{
             			case 1 :
-            			    // Movimentum.g:276:10: '0' .. '9'
+            			    // Movimentum.g:277:10: '0' .. '9'
             			    {
             			    	MatchRange('0','9'); 
 
@@ -1241,7 +1241,7 @@ public partial class MovimentumLexer : Lexer {
             	loop8:
             		;	// Stops C# compiler whinging that label 'loop8' has no statements
 
-            	// Movimentum.g:277:10: ( '.' ( '0' .. '9' )* )?
+            	// Movimentum.g:278:10: ( '.' ( '0' .. '9' )* )?
             	int alt10 = 2;
             	int LA10_0 = input.LA(1);
 
@@ -1252,10 +1252,10 @@ public partial class MovimentumLexer : Lexer {
             	switch (alt10) 
             	{
             	    case 1 :
-            	        // Movimentum.g:277:12: '.' ( '0' .. '9' )*
+            	        // Movimentum.g:278:12: '.' ( '0' .. '9' )*
             	        {
             	        	Match('.'); 
-            	        	// Movimentum.g:278:12: ( '0' .. '9' )*
+            	        	// Movimentum.g:279:12: ( '0' .. '9' )*
             	        	do 
             	        	{
             	        	    int alt9 = 2;
@@ -1270,7 +1270,7 @@ public partial class MovimentumLexer : Lexer {
             	        	    switch (alt9) 
             	        		{
             	        			case 1 :
-            	        			    // Movimentum.g:278:13: '0' .. '9'
+            	        			    // Movimentum.g:279:13: '0' .. '9'
             	        			    {
             	        			    	MatchRange('0','9'); 
 
@@ -1291,7 +1291,7 @@ public partial class MovimentumLexer : Lexer {
 
             	}
 
-            	// Movimentum.g:280:9: ( ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+ )?
+            	// Movimentum.g:281:9: ( ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+ )?
             	int alt13 = 2;
             	int LA13_0 = input.LA(1);
 
@@ -1302,7 +1302,7 @@ public partial class MovimentumLexer : Lexer {
             	switch (alt13) 
             	{
             	    case 1 :
-            	        // Movimentum.g:280:11: ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+
+            	        // Movimentum.g:281:11: ( 'E' | 'e' ) ( '-' )? ( '0' .. '9' )+
             	        {
             	        	if ( input.LA(1) == 'E' || input.LA(1) == 'e' ) 
             	        	{
@@ -1315,7 +1315,7 @@ public partial class MovimentumLexer : Lexer {
             	        	    Recover(mse);
             	        	    throw mse;}
 
-            	        	// Movimentum.g:281:11: ( '-' )?
+            	        	// Movimentum.g:282:11: ( '-' )?
             	        	int alt11 = 2;
             	        	int LA11_0 = input.LA(1);
 
@@ -1326,7 +1326,7 @@ public partial class MovimentumLexer : Lexer {
             	        	switch (alt11) 
             	        	{
             	        	    case 1 :
-            	        	        // Movimentum.g:281:12: '-'
+            	        	        // Movimentum.g:282:12: '-'
             	        	        {
             	        	        	Match('-'); 
 
@@ -1335,7 +1335,7 @@ public partial class MovimentumLexer : Lexer {
 
             	        	}
 
-            	        	// Movimentum.g:282:11: ( '0' .. '9' )+
+            	        	// Movimentum.g:283:11: ( '0' .. '9' )+
             	        	int cnt12 = 0;
             	        	do 
             	        	{
@@ -1351,7 +1351,7 @@ public partial class MovimentumLexer : Lexer {
             	        	    switch (alt12) 
             	        		{
             	        			case 1 :
-            	        			    // Movimentum.g:282:12: '0' .. '9'
+            	        			    // Movimentum.g:283:12: '0' .. '9'
             	        			    {
             	        			    	MatchRange('0','9'); 
 
@@ -1395,10 +1395,10 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = WHITESPACE;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:287:7: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
-            // Movimentum.g:287:9: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // Movimentum.g:288:7: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
+            // Movimentum.g:288:9: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             {
-            	// Movimentum.g:287:9: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            	// Movimentum.g:288:9: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             	int cnt14 = 0;
             	do 
             	{
@@ -1463,12 +1463,12 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = COMMENT;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:291:7: ( '/' '/' ( . )* ( '\\r' | '\\n' ) )
-            // Movimentum.g:291:9: '/' '/' ( . )* ( '\\r' | '\\n' )
+            // Movimentum.g:292:7: ( '/' '/' ( . )* ( '\\r' | '\\n' ) )
+            // Movimentum.g:292:9: '/' '/' ( . )* ( '\\r' | '\\n' )
             {
             	Match('/'); 
             	Match('/'); 
-            	// Movimentum.g:291:17: ( . )*
+            	// Movimentum.g:292:17: ( . )*
             	do 
             	{
             	    int alt15 = 2;
@@ -1487,7 +1487,7 @@ public partial class MovimentumLexer : Lexer {
             	    switch (alt15) 
             		{
             			case 1 :
-            			    // Movimentum.g:291:17: .
+            			    // Movimentum.g:292:17: .
             			    {
             			    	MatchAny(); 
 
@@ -1533,8 +1533,8 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = IDENT;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:295:7: ( ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
-            // Movimentum.g:295:9: ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // Movimentum.g:296:7: ( ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
+            // Movimentum.g:296:9: ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             {
             	if ( (input.LA(1) >= 'A' && input.LA(1) <= 'Z') || (input.LA(1) >= 'a' && input.LA(1) <= 'z') ) 
             	{
@@ -1547,7 +1547,7 @@ public partial class MovimentumLexer : Lexer {
             	    Recover(mse);
             	    throw mse;}
 
-            	// Movimentum.g:295:28: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            	// Movimentum.g:296:28: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             	do 
             	{
             	    int alt16 = 2;
@@ -1606,11 +1606,11 @@ public partial class MovimentumLexer : Lexer {
     		{
             int _type = FILENAME;
     	int _channel = DEFAULT_TOKEN_CHANNEL;
-            // Movimentum.g:301:7: ( '\\'' (~ ( '\\'' ) )* '\\'' )
-            // Movimentum.g:301:10: '\\'' (~ ( '\\'' ) )* '\\''
+            // Movimentum.g:302:7: ( '\\'' (~ ( '\\'' ) )* '\\'' )
+            // Movimentum.g:302:10: '\\'' (~ ( '\\'' ) )* '\\''
             {
             	Match('\''); 
-            	// Movimentum.g:302:9: (~ ( '\\'' ) )*
+            	// Movimentum.g:303:9: (~ ( '\\'' ) )*
             	do 
             	{
             	    int alt17 = 2;
@@ -1625,7 +1625,7 @@ public partial class MovimentumLexer : Lexer {
             	    switch (alt17) 
             		{
             			case 1 :
-            			    // Movimentum.g:302:10: ~ ( '\\'' )
+            			    // Movimentum.g:303:10: ~ ( '\\'' )
             			    {
             			    	if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '&') || (input.LA(1) >= '(' && input.LA(1) <= '\uFFFF') ) 
             			    	{

@@ -124,8 +124,36 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(7, script.Steps.Count());
             CollectionAssert.AreEqual(new[] { 10.0, 12.0, 14.0, 16.0, 18.0, 26.0, 32.0 }, script.Steps.Select(st => st.Time).ToArray());
 
-            Step firstStep = script.Steps.First(st => st.Time == 10);
-            Assert.AreEqual(4*2 + 2, firstStep.Constraints.Count());
+            Assert.AreEqual(2       // 1 rigid body constraint pair
+                            + 1     // 1 constraint ZERO = 0
+                            + 2     // 2 2d constraints
+                            + 2     // 2 constraints specified in step 0
+                            , script.Steps.ElementAt(0).Constraints.Count());
+
+            Assert.AreEqual(2       // 1 rigid body constraint pair
+                            + 2     // 2 2d constraints
+                            + 2     // 2 constraints specified in step 1
+                            , script.Steps.ElementAt(1).Constraints.Count());
+
+            Assert.AreEqual(2       // 1 rigid body constraint pair
+                            + 2     // 2 2d constraints
+                            + 3     // 3 constraints specified in step 2
+                            , script.Steps.ElementAt(2).Constraints.Count());
+
+            Assert.AreEqual(2       // 1 rigid body constraint pair
+                            + 2     // 2 2d constraints
+                            + 1     // 1 constraint specified in step 3
+                            , script.Steps.ElementAt(3).Constraints.Count());
+
+            Assert.AreEqual(1       // 1 constraint specified in step 4
+                            , script.Steps.ElementAt(4).Constraints.Count());
+
+            Assert.AreEqual(3       // 3 constraints specified in step 5
+                            , script.Steps.ElementAt(5).Constraints.Count());
+
+            Assert.AreEqual(1       // 1 constraint specified in step 6
+                            , script.Steps.ElementAt(6).Constraints.Count());
+
         }
 
 
