@@ -21,7 +21,7 @@ namespace Movimentum.Model {
                 // Therefore, we must create a copy of the list before we iterate over it.
                 VectorEqualityConstraint[] vectorConstraints = st.Constraints.OfType<VectorEqualityConstraint>().ToArray();
                 foreach (var c in vectorConstraints) {
-                    string thingName = c.Variable.Thing;
+                    string thingName = c.Anchor.Thing;
                     if (!rigidThings.Contains(thingName)) {
                         // first time that this thing appears -> we create rigid body constraints
                         // and maybe 2d constraints.
@@ -41,29 +41,24 @@ namespace Movimentum.Model {
         }
 
         private static void AddRigidBodyAnd2DConstraintsFor(Step st, Thing th) {
-            string[] anchorNames = th.Anchors.Keys.ToArray();
+            ConstAnchor[] anchors = th.Anchors.ToArray();
             // For each pair of different Anchors, we create a rigid body
             // constraint. For 5 or more anchors, this will create
             // redundant constraints - I don't care, as most things will
             // have only two anchors.
-            for (int i = 0; i < anchorNames.Length; i++) {
-                string anchorName1 = anchorNames[i];
-                ConstVector anchor1 = th.Anchors[anchorName1];
-
-                for (int j = i + 1; j < anchorNames.Length; j++) {
-                    string anchorName2 = anchorNames[j];
-                    AddRigidBodyConstraint(st, th.Name,
-                        anchorName1, anchorName2,
-                        anchor1, th.Anchors[anchorName2]);
+            for (int i = 0; i < anchors.Length; i++) {
+                var anchor1 = anchors[i];
+                for (int j = i + 1; j < anchors.Length; j++) {
+                    AddRigidBodyConstraint(st, th.Name, anchor1, anchors[j]);
                 }
 
                 // For 2D anchors, we create an additional "2d constraint", which
                 // fixes the z coordinate at 0. A constraint that equals
                 // ZERO_VARIABLE to 0 has been created in the outermost loop once.
-                if (anchor1.Is2D()) {
+                if (anchor1.Location.Is2D()) {
                     st.AddConstraint(new ScalarEqualityConstraint(
                         ZERO_VARIABLE,
-                        new UnaryScalarVectorExpr(new Anchor(th.Name, anchorName1), UnaryScalarVectorOperator.Z)));
+                        new UnaryVectorScalarExpr(new Anchor(th.Name, anchor1.Name), UnaryVectorScalarOperator.Z)));
                 }
             }
         }
@@ -71,21 +66,24 @@ namespace Movimentum.Model {
         /// <summary>
         /// Add auxVar = (P.x - Q.x)² + (P.y - Q.y)² + (P.z - Q.z)² and auxVar = constant (of value |P - Q|²) to step <c>st</c>.
         /// </summary>
-        private static void AddRigidBodyConstraint(Step st, string thing, string anchorName1, string anchorName2, ConstVector cv1, ConstVector cv2) {
-            string auxVar = thing + "_" + anchorName1 + "_" + anchorName2;
+        private static void AddRigidBodyConstraint(Step st, string thing, ConstAnchor constAnchor1, ConstAnchor constAnchor2) {
+            string auxVar = thing + "_" + constAnchor1.Name + "_" + constAnchor2.Name;
+            ConstVector cv1 = constAnchor1.Location;
+            ConstVector cv2 = constAnchor2.Location;
+
             ScalarEqualityConstraint constraint1, constraint2;
             {
                 // Create constraint auxVar = (P.x - Q.x)² + (P.y - Q.y)² + (P.z - Q.z)²
-                var anchor1 = new Anchor(thing, anchorName1);
-                var anchor2 = new Anchor(thing, anchorName2);
-                UnaryScalarExpr xSquared = SquareCoord(UnaryScalarVectorOperator.X, anchor1, anchor2);
-                UnaryScalarExpr ySquared = SquareCoord(UnaryScalarVectorOperator.Y, anchor1, anchor2);
+                var anchor1 = new Anchor(thing, constAnchor1.Name);
+                var anchor2 = new Anchor(thing, constAnchor2.Name);
+                UnaryScalarExpr xSquared = SquareCoord(UnaryVectorScalarOperator.X, anchor1, anchor2);
+                UnaryScalarExpr ySquared = SquareCoord(UnaryVectorScalarOperator.Y, anchor1, anchor2);
                 BinaryScalarExpr squaredSum = new BinaryScalarExpr(xSquared, BinaryScalarOperator.PLUS, ySquared);
 
                 // If both vectors are 2d, we drop the square of the z distance. This makes life a little easier
                 // for the constraint solver.
                 if (!cv1.Is2D() || !cv2.Is2D()) {
-                    UnaryScalarExpr zSquared = SquareCoord(UnaryScalarVectorOperator.Z, anchor1, anchor2);
+                    UnaryScalarExpr zSquared = SquareCoord(UnaryVectorScalarOperator.Z, anchor1, anchor2);
                     squaredSum = new BinaryScalarExpr(squaredSum, BinaryScalarOperator.PLUS, zSquared);
                 }
 
@@ -109,13 +107,13 @@ namespace Movimentum.Model {
         /// <summary>
         /// Return (anchor1.c - anchor2.c)², where .c is .x or .y or .z
         /// </summary>
-        private static UnaryScalarExpr SquareCoord(UnaryScalarVectorOperator coordOp,
+        private static UnaryScalarExpr SquareCoord(UnaryVectorScalarOperator coordOp,
                                                    Anchor anchor1, Anchor anchor2) {
             return new UnaryScalarExpr(UnaryScalarOperator.SQUARED,
                 new BinaryScalarExpr(
-                    new UnaryScalarVectorExpr(anchor1, coordOp),
+                    new UnaryVectorScalarExpr(anchor1, coordOp),
                     BinaryScalarOperator.MINUS,
-                    new UnaryScalarVectorExpr(anchor2, coordOp))
+                    new UnaryVectorScalarExpr(anchor2, coordOp))
                 );
         }
 
@@ -126,31 +124,64 @@ namespace Movimentum.Model {
         public IEnumerable<Frame> CreateFrames() {
             var result = new List<Frame>();
             IEnumerator<Step> stepEnumerator = _steps.GetEnumerator();
+
             if (stepEnumerator.MoveNext()) {
-                Step nextStep = stepEnumerator.Current;
                 var activeConstraints = new Dictionary<string, List<Constraint>>();
-                Step currentStep = nextStep;
-                nextStep = UpdateActiveConstraintsAndGetNextStep(currentStep, activeConstraints, stepEnumerator);
-                for (double t = _steps.First().Time; nextStep != null; t += 1.0 / _config.FramesPerTimeunit) {
-                    result.Add(new Frame(t, t - currentStep.Time, nextStep.Time - currentStep.Time, activeConstraints.Values.SelectMany(c => c)));
-                    if (t >= nextStep.Time) {
+
+                Step currentStep = stepEnumerator.Current;
+                Step nextStep = UpdateActiveConstraintsAndGetNextStep(currentStep, activeConstraints, stepEnumerator);
+
+                // We do not want t to miss a step due to rounding, hence
+                // we "push each frame a little bit too far" (< a nanosec ...).
+                double deltaT = 1.0 / _config.FramesPerTimeunit + 1e-10;
+
+                int seqNo = 1;
+                for (var t = currentStep.Time; nextStep != null; t += deltaT) {
+
+                    while (nextStep != null && t >= nextStep.Time) {
                         currentStep = nextStep;
                         nextStep = UpdateActiveConstraintsAndGetNextStep(currentStep, activeConstraints, stepEnumerator);
                     }
+
+                    result.Add(new Frame(
+                        absoluteTime: t,
+                        relativeTime: t - currentStep.Time,
+
+                        // In last step - when nextStep is null -, we use
+                        // currentStep instead of nextStep -> iv is set to 0.
+                        iv: (nextStep ?? currentStep).Time - currentStep.Time,
+
+                        // ToArray() necessary to COPY result into Frame.
+                        // Otherwise, the iterator will run on the constraints
+                        // of the LAST frame when it is executed at some time.
+                        constraints: activeConstraints.Values
+                                        .SelectMany(c => c)
+                                        .ToArray(),
+                        frameNo: seqNo++)
+                    );
                 }
             }
             return result;
         }
 
+        /// <summary>
+        /// Concept: If there are constraints with key K in this step, we
+        /// remove ALL earlier constraints with that key from the active
+        /// constraints; and afterwards add all the constraints with this
+        /// key from the step.
+        /// </summary>
+        /// <returns>next step; or null if there is none.</returns>
         private Step UpdateActiveConstraintsAndGetNextStep(Step step,
-                Dictionary<string, List<Constraint>> currentConstraints,
-                IEnumerator<Step> stepEnumerator) {
+                            Dictionary<string, List<Constraint>> activeConstraints,
+                            IEnumerator<Step> stepEnumerator) {
+
             foreach (var c in step.Constraints) {
-                currentConstraints.Remove(c.Key);
-                currentConstraints.Add(c.Key, new List<Constraint>());
+                // For more than one constraint with same key, the following
+                // will init c.Key to the empty list more than once. So what.
+                activeConstraints[c.Key] = new List<Constraint>();
             }
             foreach (var c in step.Constraints) {
-                currentConstraints[c.Key].Add(c);
+                activeConstraints[c.Key].Add(c);
             }
             return stepEnumerator.MoveNext() ? stepEnumerator.Current : null;
         }

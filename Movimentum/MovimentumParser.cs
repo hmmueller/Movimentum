@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Movimentum.Model;
 
 namespace Movimentum.Parser {
@@ -14,16 +15,17 @@ namespace Movimentum.Parser {
 
         private ConstVector ConstAdd(
                 int lineNo,
-                Dictionary<string, ConstVector> defs,
+                IEnumerable<ConstAnchor> defs,
                 string lhsName,
                 ConstVector rhs,
                 bool plus) {
-            ConstVector lhs;
-            if (!defs.TryGetValue(lhsName, out lhs)) {
+            ConstAnchor lhsAnchor = defs.FirstOrDefault(a => a.Name == lhsName);
+            if (lhsAnchor == null) {
                 throw new Exception(string.Format(
                     "Line {0}: Anchor {1} not yet defined",
                     lineNo, lhsName));
             }
+            ConstVector lhs = lhsAnchor.Location;
             if (lhs.Is2D() && rhs.Is2D()) {
                 return plus
                     ? new ConstVector(lhs.X + rhs.X, lhs.Y + rhs.Y)

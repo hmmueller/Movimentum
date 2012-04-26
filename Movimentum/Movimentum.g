@@ -32,30 +32,40 @@
     config returns [Config result]
       : CONFIG '('
               fptu=number  // frames per time unit
-        ')'                 { result = new Config(fptu); }
+          ',' width=number
+          ',' height=number
+        ')'                 { result = new Config(fptu, width, height); }
         ';'
       ;
 
     thingdefinition returns [Thing result]
       : IDENT
-        ':'
-        s=source            {{ var defs = new Dictionary<string, ConstVector>(); }}
-        (anchordefinition[defs]
-        )+
-        ';'                 { result = new Thing($IDENT.Text, s, defs); }
+        ':'                 {{ var defs = new List<ConstAnchor>(); }}
+		( FILENAME
+          anchordefinitions[defs]
+		                    { result = new ImageThing($IDENT.Text, 
+							                          ImageFromFile($FILENAME.Text), 
+													  defs);
+		                    }
+		| BAR
+          anchordefinitions[defs]
+		                    { result = new BarThing($IDENT.Text, defs); }
+		)
+        ';'
       ;
 
-    source returns [Image result]
-      : FILENAME            { result = ImageFromFile($FILENAME.Text); }
-      ;
+    anchordefinitions [List<ConstAnchor> defs]
+	  : ( anchordefinition[defs]          
+	    )+
+	  ;
 
-    anchordefinition [Dictionary<string, ConstVector> defs]
+    anchordefinition [List<ConstAnchor> defs]
       : n=IDENT
         '='                          {{ ConstVector v = null; }}
         ( c=constvector              { v = c; }
         | i=IDENT '+' c=constvector  { v = ConstAdd($i.Line, defs, $i.Text, c, true); }
         | i=IDENT '-' c=constvector  { v = ConstAdd($i.Line, defs, $i.Text, c, false); }
-        )                            { defs[$n.Text] = v; }
+        )                            { defs.Add(new ConstAnchor($n.Text, v)); }
       ;
 
     constvector returns [ConstVector result]
@@ -124,10 +134,10 @@
       : v=vectorexpr3       { result = v; }
         ( ROTATE
           '('
-          s=scalarexpr      { result = new VectorScalarExpr(result, VectorScalarOperator.ROTATE, s); }
+          s=scalarexpr      { result = new BinaryScalarVectorExpr(result, BinaryScalarVectorOperator.ROTATE, s); }
           ')'
 		| '*'
-		  s=scalarexpr4     { result = new VectorScalarExpr(result, VectorScalarOperator.TIMES, s); }
+		  s=scalarexpr4     { result = new BinaryScalarVectorExpr(result, BinaryScalarVectorOperator.TIMES, s); }
         )*
       ;
 
@@ -229,7 +239,7 @@
           v1=vectorexpr     
           ','               
           v2=vectorexpr
-          ')'               { result = new BinaryScalarVectorExpr(v1, BinaryScalarVectorOperator.ANGLE, v2); }
+          ')'               { result = new BinaryVectorScalarExpr(v1, BinaryVectorScalarOperator.ANGLE, v2); }
       | n=number            { result = new Constant(n); }
       | IDENT               { result = new ScalarVariable($IDENT.Text); }
       | '_'                 { result = new ScalarVariable("_" + _anonymousVarCt++); }
@@ -241,10 +251,10 @@
    scalarexpr5Ambiguous returns [ScalarExpr result]
                     options { backtrack = true; }
      :  v=vectorexpr5
-       ( X                  { result = new UnaryScalarVectorExpr(v, UnaryScalarVectorOperator.X); }
-       | Y                  { result = new UnaryScalarVectorExpr(v, UnaryScalarVectorOperator.Y); }
-       | Z                  { result = new UnaryScalarVectorExpr(v, UnaryScalarVectorOperator.Z); }
-       | LENGTH             { result = new UnaryScalarVectorExpr(v, UnaryScalarVectorOperator.LENGTH); }
+       ( X                  { result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.X); }
+       | Y                  { result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.Y); }
+       | Z                  { result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.Z); }
+       | LENGTH             { result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.LENGTH); }
        )                
      | '('              
        s=scalarexpr         { result = s; }
@@ -259,11 +269,13 @@
 
     CONFIG : '.config';
 
-    X :  '.x';
-    Y :  '.y';
-    Z :  '.z';
-    T :  '.t';
-    IV :  '.iv';
+	BAR : '.bar';
+
+    X   :  '.x';
+    Y   :  '.y';
+    Z   :  '.z';
+    T   :  '.t';
+    IV  :  '.iv';
 
     SQRT         : '.q' | '.sqrt';
     ROTATE       : '.r' | '.rotate';
@@ -271,7 +283,7 @@
     DIFFERENTIAL : '.d' | '.differential';
     ANGLE        : '.a' | '.angle';
     COLOR        : '.c' | '.color';
-    LENGTH       : '.l' | '.LENGTH';
+    LENGTH       : '.l' | '.length';
 
     NUMBER
       : ('0'..'9')+

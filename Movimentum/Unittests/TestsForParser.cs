@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Linq;
 using Antlr.Runtime;
 using Movimentum.Lexer;
@@ -9,12 +8,13 @@ using NUnit.Framework;
 
 namespace Movimentum.Unittests {
     [TestFixture]
-    class ParseTests {
+    class TestsForParser {
         #region Script parsing
 
         [Test]
         public void TestParseSliderCrankSetup() {
-            const string s = @".config(12); // number of  frames per time unit
+            const string s = @".config(12,      // number of  frames per time unit
+                                       1, 1);   // width/height of output
         
             Engine : 'engine.gif' P = [30,50] Q = P+[1,0];
             Crank  : 'crank.gif'  P = [20,20] Q = P+[0,30];
@@ -28,7 +28,8 @@ namespace Movimentum.Unittests {
         [Test]
         [ExpectedException(typeof(Exception))]
         public void TestParseSliderCrankSetupWithError() {
-            const string s = @".config(12); // number of  frames per time unit
+            const string s = @".config(12,      // number of  frames per time unit
+                                       1, 1);   // width/height of output
         
             Engine : 'engine.gif' P = [30,50] Q = P+[1,0];
             Crank  : 'crank.gif'  P = [20,20] Q = P+...";
@@ -38,7 +39,8 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestParseSliderCrankScript() {
-            const string s = @".config(12); // number of  frames per time unit
+            const string s = @".config(12,      // number of  frames per time unit
+                                       1, 1);   // width/height of output
         
             Engine : 'engine.gif' P = [30,50] Q = P+[1,0];
             Crank  : 'crank.gif'  P = [20,20] Q = P+[0,30];
@@ -65,20 +67,43 @@ namespace Movimentum.Unittests {
             Program.Parse(s, tokens => new TestMovimentumParser(tokens));
         }
 
+        [Test]
+        public void TestParseBar() {
+            const string s =
+                @".config(12,          // number of  frames per time unit
+                          100, 100);   // width/height of output
+                B1 : .bar P = [0,0] Q = [0,20] R = [20,0];
+                B2 : .bar P = [0,0] Q = [20,20] R = [40,0];";
+
+            Program.Parse(s, tokens => new TestMovimentumParser(tokens));
+        }
+
+        [Test, Ignore("Anchors link and sink do not yet work! - grammar problem.")]
+        public void TestPrefixIdents() {
+            const string s =
+                @".config(12,          // number of  frames per time unit
+                          100, 100);   // width/height of output
+                B : .bar pink = [0,0]; link = [1,1]; sink = [2,2];
+
+                @1 B.pink = [10,10]; B.link = [11,11]; B.sink = [12,12];";
+
+            Program.Parse(s, tokens => new TestMovimentumParser(tokens));
+        }
+
         #endregion Script parsing
 
         #region Model building
 
         [Test]
         public void TestParseAndBuildSliderCrankSetup() {
-            const string s = @".config(12); // number of  frames per time unit
+            const string s = @".config(12,      // number of  frames per time unit
+                                       1, 1);   // width/height of output
         
             Engine : 'engine.gif' P = [30,50] Q = P+[1,0];
             Crank  : 'crank.gif'  P = [20,20] Q = P+[0,30];
             Piston : 'piston.gif' P = [30,50] Q = P+[1,0];
             Conrod : 'conrod.gif' P = [0,50] 
-                                  Q = P+[100,50]; // lies horizontally in gif
-        ";
+                                  Q = P+[100,50]; // lies horizontally in gif";
 
             Script script = Program.Parse(s, tokens => new TestMovimentumParser(tokens));
             Assert.IsNotNull(script);
@@ -90,7 +115,8 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestParseAndBuildSliderCrank() {
-            const string s = @".config(12); // number of  frames per time unit
+            const string s = @".config(12,      // number of  frames per time unit
+                                       1, 1);   // width/height of output
         
             Engine : 'engine.gif' P = [30,50] Q = P+[1,0];
             Crank  : 'crank.gif'  P = [20,20] Q = P+[0,30];
@@ -237,8 +263,8 @@ namespace Movimentum.Unittests {
             {
                 ScalarExpr x = CreateParserForSyntacticTests("-.a([0,1],[1,1]) ;").scalarexpr();
                 Assert.AreEqual(new UnaryScalarExpr(UnaryScalarOperator.MINUS,
-                        new BinaryScalarVectorExpr(new Vector(new Constant(0), new Constant(1), new Constant(0)), 
-                        BinaryScalarVectorOperator.ANGLE,
+                        new BinaryVectorScalarExpr(new Vector(new Constant(0), new Constant(1), new Constant(0)),
+                        BinaryVectorScalarOperator.ANGLE,
                         new Vector(new Constant(1), new Constant(1), new Constant(0))))
                     , x);
             }
@@ -270,11 +296,11 @@ namespace Movimentum.Unittests {
             {
                 ScalarExpr x = CreateParserForSyntacticTests("(((_-_)+_).x) ;").scalarexpr();
                 Assert.AreEqual(
-                    new UnaryScalarVectorExpr(
+                    new UnaryVectorScalarExpr(
                     new BinaryVectorExpr(new BinaryVectorExpr(new VectorVariable("#0"), BinaryVectorOperator.MINUS, new VectorVariable("#1")),
                                                      BinaryVectorOperator.PLUS,
                                                      new VectorVariable("#2")),
-                                                     UnaryScalarVectorOperator.X)
+                                                     UnaryVectorScalarOperator.X)
                     , x);
             }
         }
@@ -305,20 +331,20 @@ namespace Movimentum.Unittests {
             {
                 VectorExpr x = CreateParserForSyntacticTests("(-a.P-b.Q).r(1).r(.a([0,1,2],[1,1,1])) ;").vectorexpr();
                 Assert.AreEqual(
-                    new VectorScalarExpr(
-                        new VectorScalarExpr(
+                    new BinaryScalarVectorExpr(
+                        new BinaryScalarVectorExpr(
                             new BinaryVectorExpr(
                                 new UnaryVectorExpr(UnaryVectorOperator.MINUS, new Anchor("a", "P")),
                                 BinaryVectorOperator.MINUS,
                                 new Anchor("b", "Q")
                             ),
-                            VectorScalarOperator.ROTATE,
+                            BinaryScalarVectorOperator.ROTATE,
                             new Constant(1)
                             ),
-                        VectorScalarOperator.ROTATE,
-                        new BinaryScalarVectorExpr(
-                            new Vector(new Constant(0), new Constant(1), new Constant(2)), 
-                            BinaryScalarVectorOperator.ANGLE,
+                        BinaryScalarVectorOperator.ROTATE,
+                        new BinaryVectorScalarExpr(
+                            new Vector(new Constant(0), new Constant(1), new Constant(2)),
+                            BinaryVectorScalarOperator.ANGLE,
                             new Vector(new Constant(1), new Constant(1), new Constant(1)))
                         )
                     , x);
@@ -341,7 +367,7 @@ namespace Movimentum.Unittests {
         }
 
         [Test]
-        public void TestJustParse_setup() {
+        public void TestWrongOrderOfAcnhorsInSetup() {
             CreateParserForSyntacticTests("Engine : 'engine.gif' P = [30,50] Q = P+[1,0];").thingdefinition();
             Assert.Throws<Exception>(() =>
                 CreateParserForSyntacticTests("Engine : 'engine.gif' Q = P+[1,0] P = [30,50];").thingdefinition()
@@ -349,16 +375,5 @@ namespace Movimentum.Unittests {
         }
 
         #endregion Model building
-    }
-
-    internal class TestMovimentumParser : MovimentumParser {
-        public TestMovimentumParser(ITokenStream tokens)
-            : base(tokens) {
-            // empty
-        }
-
-        protected override Image ImageFromFile(string filename) {
-            return default(Image);
-        }
     }
 }

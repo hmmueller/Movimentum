@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 
 // This file contains only the "boilerplate code" for the model classes, which is:
 // * field definitions for model fields.
@@ -37,31 +36,46 @@ namespace Movimentum.Model {
 
     public class Config {
         private readonly double _framesPerTimeunit;
-        public Config(double framesPerTimeunit) {
+        private readonly int _width;
+        private readonly int _height;
+        public Config(double framesPerTimeunit, double width, double height) {
             _framesPerTimeunit = framesPerTimeunit;
+            _width = (int)Math.Round(width);
+            _height = (int)Math.Round(height);
         }
 
         public double FramesPerTimeunit { get { return _framesPerTimeunit; } }
+        public int Width { get { return _width; } }
+        public int Height { get { return _height; } }
     }
 
     #endregion Script
 
     #region Thingdefinition
 
-    public class Thing {
+    public abstract partial class Thing {
         private readonly string _name;
-        private readonly Image _image;
-        private readonly IReadOnlyDictionary<string, ConstVector> _anchors;
+        private readonly IEnumerable<ConstAnchor> _anchors;
 
-        public Thing(string name, Image image, Dictionary<string, ConstVector> anchors) {
+        protected Thing(string name, IEnumerable<ConstAnchor> anchors) {
             _name = name;
-            _image = image;
-            _anchors = new ReadOnlyDictionary<string, ConstVector>(anchors);
+            _anchors = new List<ConstAnchor>(anchors);
         }
 
         public string Name { get { return _name; } }
-        public Image Image { get { return _image; } }
-        public IReadOnlyDictionary<string, ConstVector> Anchors { get { return _anchors; } }
+        public IEnumerable<ConstAnchor> Anchors { get { return _anchors; } }
+    }
+
+    public class ConstAnchor {
+        private readonly string _name;
+        private readonly ConstVector _location;
+        public ConstAnchor(string name, ConstVector location) {
+            _name = name;
+            _location = location;
+        }
+
+        public string Name { get { return _name; } }
+        public ConstVector Location { get { return _location; } }
     }
 
     public partial class ConstVector { // mhm ... shouldn't the doubles be scalar expressions?
@@ -112,6 +126,10 @@ namespace Movimentum.Model {
         public IEnumerable<Constraint> Constraints {
             get { return _constraints; }
         }
+
+        public override string ToString() {
+            return base.ToString() + "[@" + _time + "]: " + string.Join("; ", _constraints);
+        }
     }
 
     abstract public class Constraint {
@@ -119,22 +137,35 @@ namespace Movimentum.Model {
     }
 
     public class VectorEqualityConstraint : Constraint {
-        private readonly Anchor _variable;
+        private readonly Anchor _anchor;
         private readonly VectorExpr _rhs;
-        public VectorEqualityConstraint(Anchor variable, VectorExpr rhs) {
-            _variable = variable;
+        public VectorEqualityConstraint(Anchor anchor, VectorExpr rhs) {
+            _anchor = anchor;
             _rhs = rhs;
         }
 
-        public Anchor Variable { get { return _variable; } }
+        public Anchor Anchor { get { return _anchor; } }
         public VectorExpr Rhs { get { return _rhs; } }
 
         public override string ToString() {
-            return _variable + "#=#" + _rhs;
+            return _anchor + "#=#" + _rhs;
         }
 
         public override string Key {
-            get { return _variable.Thing + "_" + _variable.Name; }
+            get { return _anchor.Thing + "_" + _anchor.Name; }
+        }
+
+        public override bool Equals(object obj) {
+            VectorEqualityConstraint other = obj as VectorEqualityConstraint;
+            return other != null && other._anchor == _anchor && other._rhs.Equals(_rhs);
+        }
+
+        public bool Equals(VectorEqualityConstraint other) {
+            return Equals((object)other);
+        }
+
+        public override int GetHashCode() {
+            return _anchor.GetHashCode() + _rhs.GetHashCode();
         }
     }
 
@@ -155,6 +186,19 @@ namespace Movimentum.Model {
 
         public override string Key {
             get { return _variable; }
+        }
+
+        public override bool Equals(object obj) {
+            ScalarEqualityConstraint other = obj as ScalarEqualityConstraint;
+            return other != null && other._variable == _variable && other._rhs.Equals(_rhs);
+        }
+
+        public bool Equals(ScalarEqualityConstraint other) {
+            return Equals((object) other);
+        }
+
+        public override int GetHashCode() {
+            return _variable.GetHashCode() + _rhs.GetHashCode();
         }
     }
 
@@ -178,6 +222,19 @@ namespace Movimentum.Model {
 
         public override string Key {
             get { return _variable + _operator; }
+        }
+
+        public override bool Equals(object obj) {
+            ScalarInequalityConstraint other = obj as ScalarInequalityConstraint;
+            return other != null && other._variable == _variable && other._operator.Equals(_operator) && other._rhs.Equals(_rhs);
+        }
+
+        public bool Equals(ScalarInequalityConstraint other) {
+            return Equals((object)other);
+        }
+
+        public override int GetHashCode() {
+            return _variable.GetHashCode() + _rhs.GetHashCode();
         }
     }
 
@@ -231,25 +288,25 @@ namespace Movimentum.Model {
         public static BinaryVectorOperator MINUS = new BinaryVectorOperator(1, " #- ");
     }
 
-    public class VectorScalarExpr : VectorExpr {
+    public class BinaryScalarVectorExpr : VectorExpr {
         private readonly VectorExpr _lhs;
-        private readonly VectorScalarOperator _operator;
+        private readonly BinaryScalarVectorOperator _operator;
         private readonly ScalarExpr _rhs;
-        public VectorScalarExpr(VectorExpr lhs, VectorScalarOperator @operator, ScalarExpr rhs) {
+        public BinaryScalarVectorExpr(VectorExpr lhs, BinaryScalarVectorOperator @operator, ScalarExpr rhs) {
             _lhs = lhs;
             _operator = @operator;
             _rhs = rhs;
         }
 
         public VectorExpr Lhs { get { return _lhs; } }
-        public VectorScalarOperator Operator { get { return _operator; } }
+        public BinaryScalarVectorOperator Operator { get { return _operator; } }
         public ScalarExpr Rhs { get { return _rhs; } }
 
-        public bool Equals(VectorScalarExpr obj) {
+        public bool Equals(BinaryScalarVectorExpr obj) {
             return Equals((object)obj);
         }
         public override bool Equals(object obj) {
-            VectorScalarExpr o = obj as VectorScalarExpr;
+            BinaryScalarVectorExpr o = obj as BinaryScalarVectorExpr;
             return o != null && o._lhs.Equals(_lhs) && o._operator.Equals(_operator) && o._rhs.Equals(_rhs);
         }
         public override int GetHashCode() {
@@ -261,10 +318,10 @@ namespace Movimentum.Model {
         }
     }
 
-    public class VectorScalarOperator : AbstractOperator {
-        private VectorScalarOperator(int precedence, string asString) : base(precedence, asString) { }
-        public static VectorScalarOperator ROTATE = new VectorScalarOperator(2, ".R");
-        public static VectorScalarOperator TIMES = new VectorScalarOperator(2, " *# ");
+    public class BinaryScalarVectorOperator : AbstractOperator {
+        private BinaryScalarVectorOperator(int precedence, string asString) : base(precedence, asString) { }
+        public static BinaryScalarVectorOperator ROTATE = new BinaryScalarVectorOperator(2, ".R");
+        public static BinaryScalarVectorOperator TIMES = new BinaryScalarVectorOperator(2, " *# ");
     }
 
     public class UnaryVectorExpr : VectorExpr {
@@ -464,25 +521,25 @@ namespace Movimentum.Model {
         public static UnaryScalarOperator DIFFERENTIAL = new UnaryScalarOperator(5, "._d");
     }
 
-    public class BinaryScalarVectorExpr : ScalarExpr {
+    public class BinaryVectorScalarExpr : ScalarExpr {
         private readonly VectorExpr _lhs;
-        private readonly BinaryScalarVectorOperator _operator;
+        private readonly BinaryVectorScalarOperator _operator;
         private readonly VectorExpr _rhs;
-        public BinaryScalarVectorExpr(VectorExpr lhs, BinaryScalarVectorOperator @operator, VectorExpr rhs) {
+        public BinaryVectorScalarExpr(VectorExpr lhs, BinaryVectorScalarOperator @operator, VectorExpr rhs) {
             _lhs = lhs;
             _operator = @operator;
             _rhs = rhs;
         }
 
         public VectorExpr Lhs { get { return _lhs; } }
-        public BinaryScalarVectorOperator Operator { get { return _operator; } }
+        public BinaryVectorScalarOperator Operator { get { return _operator; } }
         public VectorExpr Rhs { get { return _rhs; } }
 
-        public bool Equals(BinaryScalarVectorExpr obj) {
+        public bool Equals(BinaryVectorScalarExpr obj) {
             return Equals((object)obj);
         }
         public override bool Equals(object obj) {
-            BinaryScalarVectorExpr o = obj as BinaryScalarVectorExpr;
+            BinaryVectorScalarExpr o = obj as BinaryVectorScalarExpr;
             return o != null && o._lhs.Equals(_lhs) && o._operator.Equals(_operator) && o._rhs.Equals(_rhs);
         }
         public override int GetHashCode() {
@@ -494,27 +551,27 @@ namespace Movimentum.Model {
         }
     }
 
-    public class BinaryScalarVectorOperator : AbstractOperator {
-        private BinaryScalarVectorOperator(int precedence, string asString) : base(precedence, asString) { }
-        public static BinaryScalarVectorOperator ANGLE = new BinaryScalarVectorOperator(5, " #a# ");
+    public class BinaryVectorScalarOperator : AbstractOperator {
+        private BinaryVectorScalarOperator(int precedence, string asString) : base(precedence, asString) { }
+        public static BinaryVectorScalarOperator ANGLE = new BinaryVectorScalarOperator(5, " #a# ");
     }
 
-    public class UnaryScalarVectorExpr : ScalarExpr {
+    public class UnaryVectorScalarExpr : ScalarExpr {
         private readonly VectorExpr _inner;
-        private readonly UnaryScalarVectorOperator _operator;
-        public UnaryScalarVectorExpr(VectorExpr inner, UnaryScalarVectorOperator @operator) {
+        private readonly UnaryVectorScalarOperator _operator;
+        public UnaryVectorScalarExpr(VectorExpr inner, UnaryVectorScalarOperator @operator) {
             _inner = inner;
             _operator = @operator;
         }
 
         public VectorExpr Inner { get { return _inner; } }
-        public UnaryScalarVectorOperator Operator { get { return _operator; } }
+        public UnaryVectorScalarOperator Operator { get { return _operator; } }
 
-        public bool Equals(UnaryScalarVectorExpr obj) {
+        public bool Equals(UnaryVectorScalarExpr obj) {
             return Equals((object)obj);
         }
         public override bool Equals(object obj) {
-            UnaryScalarVectorExpr o = obj as UnaryScalarVectorExpr;
+            UnaryVectorScalarExpr o = obj as UnaryVectorScalarExpr;
             return o != null && o._inner.Equals(_inner) && o._operator.Equals(_operator);
         }
         public override int GetHashCode() {
@@ -526,12 +583,12 @@ namespace Movimentum.Model {
         }
     }
 
-    public class UnaryScalarVectorOperator : AbstractOperator {
-        private UnaryScalarVectorOperator(int precedence, string asString) : base(precedence, asString) { }
-        public static UnaryScalarVectorOperator X = new UnaryScalarVectorOperator(5, ".x");
-        public static UnaryScalarVectorOperator Y = new UnaryScalarVectorOperator(5, ".y");
-        public static UnaryScalarVectorOperator Z = new UnaryScalarVectorOperator(5, ".z");
-        public static UnaryScalarVectorOperator LENGTH = new UnaryScalarVectorOperator(5, ".l");
+    public class UnaryVectorScalarOperator : AbstractOperator {
+        private UnaryVectorScalarOperator(int precedence, string asString) : base(precedence, asString) { }
+        public static UnaryVectorScalarOperator X = new UnaryVectorScalarOperator(5, ".x");
+        public static UnaryVectorScalarOperator Y = new UnaryVectorScalarOperator(5, ".y");
+        public static UnaryVectorScalarOperator Z = new UnaryVectorScalarOperator(5, ".z");
+        public static UnaryVectorScalarOperator LENGTH = new UnaryVectorScalarOperator(5, ".l");
     }
 
     public class Constant : ScalarExpr {

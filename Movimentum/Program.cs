@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using Antlr.Runtime;
 using Movimentum.Lexer;
@@ -14,7 +16,7 @@ namespace Movimentum {
                 scriptText = sr.ReadToEnd();
             }
             Script script = Parse(scriptText);
-            Interpret(script);
+            Interpret(script, args[1]);
         }
 
         internal static Script Parse(string text, Func<ITokenStream, MovimentumParser> createParser = null) {
@@ -32,11 +34,22 @@ namespace Movimentum {
             return script;
         }
 
-        private static void Interpret(Script script) {
+        internal static void Interpret(Script script, string prefix = "F") {
             IEnumerable<Frame> frames = script.CreateFrames();
 
-            throw new NotImplementedException();
-        }
+            foreach (var f in frames) {
+                var bitmap = new Bitmap(script.Config.Width, script.Config.Height);
+                Graphics drawingPane = Graphics.FromImage(bitmap);
 
+                // Compute locations for each anchor of each thing.
+                IDictionary<string, 
+                    IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints();
+                foreach (var th in script.Things) {
+                    th.Draw(drawingPane, anchorLocations[th.Name]);
+                }
+
+                bitmap.Save(string.Format("{0}{1:000000}.jpg", prefix, f.FrameNo), ImageFormat.Jpeg);
+            }
+        }
     }
 }
