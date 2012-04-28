@@ -121,12 +121,13 @@
       ;
 
     vectorexpr returns [VectorExpr result]
+		options { greedy = true; } // Still, ANTLR3 emits warning :-(          
       : v=vectorexpr2       { result = v; }
         (                   {{ BinaryVectorOperator op = null; }}
           ( '+'             {{ op = BinaryVectorOperator.PLUS; }}
           | '-'             {{ op = BinaryVectorOperator.MINUS; }}
           )                 
-          v=vectorexpr2     { result = new BinaryVectorExpr(result, op, v); }
+          v=vectorexpr      { result = new BinaryVectorExpr(result, op, v); }
         )*                  
       ;                     
                             
@@ -134,7 +135,7 @@
       : v=vectorexpr3       { result = v; }
         ( ROTATE
           '('
-          s=scalarexpr      { result = new BinaryScalarVectorExpr(result, BinaryScalarVectorOperator.ROTATE, s); }
+          s=scalarexpr      { result = new BinaryScalarVectorExpr(result, BinaryScalarVectorOperator.ROTATE2D, s); }
           ')'
 		| '*'
 		  s=scalarexpr4     { result = new BinaryScalarVectorExpr(result, BinaryScalarVectorOperator.TIMES, s); }
@@ -176,7 +177,7 @@
         ( ','
           s3=scalarexpr
 		)?
-        ']'                 { result = new Vector(s1, s2, s3 ?? new Constant(0)); }
+        ']'                 { result = new Vector(s1, s2, s3 ?? new ConstScalar(0)); }
       ;
 
     anchor returns [Anchor result]
@@ -190,22 +191,24 @@
       ;
 
     scalarexpr returns [ScalarExpr result]
+		options { greedy = true; } // Still, ANTLR3 emits warning :-(          
       : s=scalarexpr2       { result = s; }
         (                   {{ BinaryScalarOperator op = null; }}
           ( '+'             {{ op = BinaryScalarOperator.PLUS; }}
           | '-'             {{ op = BinaryScalarOperator.MINUS; }}
           )                 
-          s=scalarexpr2     { result = new BinaryScalarExpr(result, op, s); }
+          s=scalarexpr      { result = new BinaryScalarExpr(result, op, s); }
         )*
       ;
 
     scalarexpr2 returns [ScalarExpr result]
+		options { greedy = true; } // Still, ANTLR3 emits warning :-(          
       : s=scalarexpr3       { result = s; }
         (                   {{ BinaryScalarOperator op = null; }}
           ( '*'             {{ op = BinaryScalarOperator.TIMES; }}
           | '/'             {{ op = BinaryScalarOperator.DIVIDE; }}
           )                 
-          s=scalarexpr3     { result = new BinaryScalarExpr(result, op, s); }
+          s=scalarexpr2     { result = new BinaryScalarExpr(result, op, s); }
         )*                  
       ;                     
 
@@ -240,7 +243,7 @@
           ','               
           v2=vectorexpr
           ')'               { result = new BinaryVectorScalarExpr(v1, BinaryVectorScalarOperator.ANGLE, v2); }
-      | n=number            { result = new Constant(n); }
+      | n=number            { result = new ConstScalar(n); }
       | IDENT               { result = new ScalarVariable($IDENT.Text); }
       | '_'                 { result = new ScalarVariable("_" + _anonymousVarCt++); }
       // | thing COLOR      { result = ...; }

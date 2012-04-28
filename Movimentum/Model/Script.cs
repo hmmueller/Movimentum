@@ -29,7 +29,7 @@ namespace Movimentum.Model {
                         if (!zeroConstraintAdded) {
                             // At the first step where any 2D constraint might be necessary, we add
                             // the constraint ZERO = 0.
-                            st.AddConstraint(new ScalarEqualityConstraint(ZERO_VARIABLE, new Constant(0)));
+                            st.AddConstraint(new ScalarEqualityConstraint(ZERO_VARIABLE, new ConstScalar(0)));
                             zeroConstraintAdded = true;
                         }
 
@@ -94,7 +94,7 @@ namespace Movimentum.Model {
                 double squaredDistance = Square(cv1.X - cv2.X)
                                        + Square(cv1.Y - cv2.Y)
                                        + Square(cv1.Z - cv2.Z);
-                constraint2 = new ScalarEqualityConstraint(auxVar, new Constant(squaredDistance));
+                constraint2 = new ScalarEqualityConstraint(auxVar, new ConstScalar(squaredDistance));
             }
             st.AddConstraint(constraint1);
             st.AddConstraint(constraint2);

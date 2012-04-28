@@ -62,6 +62,7 @@
     <Compile Include="Model\AbstractOperator.cs" />
     <Compile Include="Model\ConstVector.cs" />
     <Compile Include="Model\BarThing.cs" />
+    <Compile Include="Model\ModelCreateSolverModel.cs" />
     <Compile Include="Model\Thing.cs" />
     <Compile Include="Model\Expr.cs" />
     <Compile Include="Model\ImageThing.cs" />
@@ -71,8 +72,9 @@
     <Compile Include="MovimentumParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Unittests\TestsForParser.cs" />
+    <Compile Include="Solver1\SolverModel.cs" />
     <Compile Include="Unittests\TestMovimentumParser.cs" />
+    <Compile Include="Unittests\TestsForParsing.cs" />
     <Compile Include="Unittests\TestsWithFrames.cs" />
   </ItemGroup>
   <ItemGroup>

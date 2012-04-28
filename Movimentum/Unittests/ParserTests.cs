@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace Movimentum.Unittests {
     [TestFixture]
-    class TestsForParser {
+    class TestsForParserxxxx {
         #region Script parsing
 
         [Test]
@@ -86,6 +86,21 @@ namespace Movimentum.Unittests {
                 B : .bar pink = [0,0]; link = [1,1]; sink = [2,2];
 
                 @1 B.pink = [10,10]; B.link = [11,11]; B.sink = [12,12];";
+
+            Program.Parse(s, tokens => new TestMovimentumParser(tokens));
+        }
+
+        [Test]
+        public void TestParseBar1() {
+            const string s = @".config(10, 600, 400);
+
+                    // reversing rod (reach rod) (3)
+                    ER	:	.bar L = [0,0]	R = [30,0]; 
+                    // lifting lever (5, 6)
+                    LL	:	.bar L = [0,10] C = [0,0] R = [10,0]	;
+
+                    @0
+	                    ER.L = ER.R - [_,0];";
 
             Program.Parse(s, tokens => new TestMovimentumParser(tokens));
         }
@@ -258,14 +273,14 @@ namespace Movimentum.Unittests {
             {
                 ScalarExpr x = CreateParserForSyntacticTests(".i(a+2*b) ;").scalarexpr();
                 Assert.AreEqual(new UnaryScalarExpr(UnaryScalarOperator.INTEGRAL, new BinaryScalarExpr(new ScalarVariable("a"), BinaryScalarOperator.PLUS,
-                                                     new BinaryScalarExpr(new Constant(2.0), BinaryScalarOperator.TIMES, new ScalarVariable("b")))), x);
+                                                     new BinaryScalarExpr(new ConstScalar(2.0), BinaryScalarOperator.TIMES, new ScalarVariable("b")))), x);
             }
             {
                 ScalarExpr x = CreateParserForSyntacticTests("-.a([0,1],[1,1]) ;").scalarexpr();
                 Assert.AreEqual(new UnaryScalarExpr(UnaryScalarOperator.MINUS,
-                        new BinaryVectorScalarExpr(new Vector(new Constant(0), new Constant(1), new Constant(0)),
+                        new BinaryVectorScalarExpr(new Vector(new ConstScalar(0), new ConstScalar(1), new ConstScalar(0)),
                         BinaryVectorScalarOperator.ANGLE,
-                        new Vector(new Constant(1), new Constant(1), new Constant(0))))
+                        new Vector(new ConstScalar(1), new ConstScalar(1), new ConstScalar(0))))
                     , x);
             }
             {
@@ -277,13 +292,13 @@ namespace Movimentum.Unittests {
             }
             {
                 ScalarExpr x = CreateParserForSyntacticTests("3*.t ;").scalarexpr();
-                Assert.AreEqual(new BinaryScalarExpr(new Constant(3), BinaryScalarOperator.TIMES, new T())
+                Assert.AreEqual(new BinaryScalarExpr(new ConstScalar(3), BinaryScalarOperator.TIMES, new T())
                     , x);
             }
             {
                 ScalarExpr x = CreateParserForSyntacticTests("(.iv-.t)/2 ;").scalarexpr();
                 Assert.AreEqual(new BinaryScalarExpr(
-                    new BinaryScalarExpr(new IV(), BinaryScalarOperator.MINUS, new T()), BinaryScalarOperator.DIVIDE, new Constant(2))
+                    new BinaryScalarExpr(new IV(), BinaryScalarOperator.MINUS, new T()), BinaryScalarOperator.DIVIDE, new ConstScalar(2))
                     , x);
             }
             {
@@ -338,14 +353,14 @@ namespace Movimentum.Unittests {
                                 BinaryVectorOperator.MINUS,
                                 new Anchor("b", "Q")
                             ),
-                            BinaryScalarVectorOperator.ROTATE,
-                            new Constant(1)
+                            BinaryScalarVectorOperator.ROTATE2D,
+                            new ConstScalar(1)
                             ),
-                        BinaryScalarVectorOperator.ROTATE,
+                        BinaryScalarVectorOperator.ROTATE2D,
                         new BinaryVectorScalarExpr(
-                            new Vector(new Constant(0), new Constant(1), new Constant(2)),
+                            new Vector(new ConstScalar(0), new ConstScalar(1), new ConstScalar(2)),
                             BinaryVectorScalarOperator.ANGLE,
-                            new Vector(new Constant(1), new Constant(1), new Constant(1)))
+                            new Vector(new ConstScalar(1), new ConstScalar(1), new ConstScalar(1)))
                         )
                     , x);
             }

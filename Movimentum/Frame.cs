@@ -68,7 +68,7 @@ namespace Movimentum {
 
         #region --------------- TEMPORARY CODE FOR TRYING OUT THE DRAWING MACHINE!! --------------
         private double Get(BinaryScalarExpr expr) {
-                var lhs = (Constant)expr.Lhs;
+                var lhs = (ConstScalar)expr.Lhs;
                 return lhs.Value + _relativeTime; // Expression MUST be (c + .t), with constant c.
         }
         #endregion ------------ TEMPORARY CODE FOR TRYING OUT THE DRAWING MACHINE!! --------------

@@ -67,7 +67,7 @@ namespace Movimentum.Unittests {
             // ReSharper restore UnusedParameter.Local
             int constant;
             ScalarEqualityConstraint compare = int.TryParse(constraintPattern, out constant)
-                                                   ? new ScalarEqualityConstraint(key, new Constant(constant))
+                                                   ? new ScalarEqualityConstraint(key, new ConstScalar(constant))
                                                    : new ScalarEqualityConstraint(key, new ScalarVariable(constraintPattern));
             Assert.IsTrue(constraints.Any(c => c.Equals(compare)), "No constraint found with key {0} and rhs {1}", key, compare);
         }
@@ -150,6 +150,61 @@ namespace Movimentum.Unittests {
             Script script = Program.Parse(s);
             Program.Interpret(script);
 
+        }
+
+        [Test]
+        public void TestWalschaertsHeusinger() {
+            const string s = @".config(10, 600, 400);
+
+                    // see http://en.wikipedia.org/wiki/Walschaerts_valve_gear, 
+                    //     http://www.illisoft.net/trains/books/images/how_steam_2.jpg
+                    //     http://www.dampf-hobby.de/html/steuerungen.html
+                    //
+                    // reversing rod (reach rod) (3)
+                    ER	:	.bar L = [0,0]	R = [30,0]; 
+                    // lifting lever (5, 6)
+                    LL	:	.bar L = [0,10] C = [0,0] R = [10,0]	;
+                    // expansion link (7) 
+                    EL	:	.bar U = [0,20] C = [0,10] L = [0,0]	;
+                    // radius rod (8)
+                    RR	: .bar L = [0,0] E = [5,0] R = [30,0]	;
+                    // combination lever (12)
+                    CL	:	.bar U = [0,30] C = [0,25] L = [0,0]	;
+                    // valve spindle (13)
+                    VS	:	.bar L = [0,0] R = [20,0] R2 = [20,5] R3 = [30,5] R4 = [30,0] 	;
+                    // union link (11) 
+                    UL	:	.bar L = [0,0] R = [15,0]	;
+                    // piston rod 
+                    PR	:	.bar C = [-5,0] L = [0,0] R = [40,0] R2 = [40,10] R3 = [40,-10]	;
+                    // connecting rod
+                    CR	:	.bar L = [0,0] R = [50,0]	;
+                    // wheel with crank and return crank (1)
+                    WH	:	.bar C = [0,0] P = [0,-20] R = [0,5]	;
+                    // return crank rod (2)
+                    CR	:	.bar L = [0,0] R = [30,0]	;
+
+                    @0
+	                    ER.L = ER.R - [_,0];
+	                    ER.R = LL.L;
+	                    LL.C = [100,200];
+	                    LL.R = RR.L;
+	                    RR.E = EL.C + (EL.L - EL.U) * _;
+	                    EL.C = [120,180];
+	                    RR.R = CL.U;
+	                    CL.C = VS.L;
+	                    VS.R = VS.L + [_,0];
+	                    CL.L = UL.R;
+	                    UL.L = PR.C;
+	                    PR.R = PR.L + [_,0];
+	                    CR.R = PR.L;
+	                    CR.L = WH.P;
+	                    WH.R = CR.L;
+	                    CR.R = EL.L;
+                        WH.C = [70,100];
+                        WH.P = [0,1].r(t/4);
+                    @20";
+            Script script = Program.Parse(s);
+            Program.Interpret(script);
         }
     }
 }
