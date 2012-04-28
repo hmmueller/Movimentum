@@ -1,4 +1,4 @@
-// $ANTLR 3.1.1 Movimentum.g 2012-04-28 17:47:24
+// $ANTLR 3.1.1 Movimentum.g 2012-04-28 18:14:27
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
 // Unreachable code detected.
@@ -1328,7 +1328,7 @@ public partial class MovimentumParser : Parser
 
 
     // $ANTLR start "vectorexpr"
-    // Movimentum.g:123:5: vectorexpr returns [VectorExpr result] options {greedy=true; } : v= vectorexpr2 ( ( '+' | '-' ) v= vectorexpr )* ;
+    // Movimentum.g:123:5: vectorexpr returns [VectorExpr result] options {greedy=true; } : v= vectorexpr2 ( ( '+' | '-' ) v= vectorexpr2 )* ;
     public VectorExpr vectorexpr() // throws RecognitionException [1]
     {   
         VectorExpr result = default(VectorExpr);
@@ -1338,8 +1338,8 @@ public partial class MovimentumParser : Parser
 
         try 
     	{
-            // Movimentum.g:125:7: (v= vectorexpr2 ( ( '+' | '-' ) v= vectorexpr )* )
-            // Movimentum.g:125:9: v= vectorexpr2 ( ( '+' | '-' ) v= vectorexpr )*
+            // Movimentum.g:125:7: (v= vectorexpr2 ( ( '+' | '-' ) v= vectorexpr2 )* )
+            // Movimentum.g:125:9: v= vectorexpr2 ( ( '+' | '-' ) v= vectorexpr2 )*
             {
             	PushFollow(FOLLOW_vectorexpr2_in_vectorexpr1728);
             	v = vectorexpr2();
@@ -1349,17 +1349,13 @@ public partial class MovimentumParser : Parser
             	{
             	   result = v; 
             	}
-            	// Movimentum.g:126:9: ( ( '+' | '-' ) v= vectorexpr )*
+            	// Movimentum.g:126:9: ( ( '+' | '-' ) v= vectorexpr2 )*
             	do 
             	{
             	    int alt17 = 2;
             	    int LA17_0 = input.LA(1);
 
-            	    if ( (LA17_0 == 29) )
-            	    {
-            	        alt17 = 1;
-            	    }
-            	    else if ( (LA17_0 == 30) )
+            	    if ( ((LA17_0 >= 29 && LA17_0 <= 30)) )
             	    {
             	        alt17 = 1;
             	    }
@@ -1368,7 +1364,7 @@ public partial class MovimentumParser : Parser
             	    switch (alt17) 
             		{
             			case 1 :
-            			    // Movimentum.g:126:29: ( '+' | '-' ) v= vectorexpr
+            			    // Movimentum.g:126:29: ( '+' | '-' ) v= vectorexpr2
             			    {
             			    	 BinaryVectorOperator op = null; 
             			    	// Movimentum.g:127:11: ( '+' | '-' )
@@ -1412,8 +1408,8 @@ public partial class MovimentumParser : Parser
 
             			    	}
 
-            			    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr1865);
-            			    	v = vectorexpr();
+            			    	PushFollow(FOLLOW_vectorexpr2_in_vectorexpr1865);
+            			    	v = vectorexpr2();
             			    	state.followingStackPointer--;
             			    	if (state.failed) return result;
             			    	if ( state.backtracking == 0 ) 
@@ -1465,7 +1461,7 @@ public partial class MovimentumParser : Parser
             // Movimentum.g:135:7: (v= vectorexpr3 ( ROTATE '(' s= scalarexpr ')' | '*' s= scalarexpr4 )* )
             // Movimentum.g:135:9: v= vectorexpr3 ( ROTATE '(' s= scalarexpr ')' | '*' s= scalarexpr4 )*
             {
-            	PushFollow(FOLLOW_vectorexpr3_in_vectorexpr21981);
+            	PushFollow(FOLLOW_vectorexpr3_in_vectorexpr21980);
             	v = vectorexpr3();
             	state.followingStackPointer--;
             	if (state.failed) return result;
@@ -1494,9 +1490,9 @@ public partial class MovimentumParser : Parser
             			case 1 :
             			    // Movimentum.g:136:11: ROTATE '(' s= scalarexpr ')'
             			    {
-            			    	Match(input,ROTATE,FOLLOW_ROTATE_in_vectorexpr22001); if (state.failed) return result;
-            			    	Match(input,23,FOLLOW_23_in_vectorexpr22013); if (state.failed) return result;
-            			    	PushFollow(FOLLOW_scalarexpr_in_vectorexpr22027);
+            			    	Match(input,ROTATE,FOLLOW_ROTATE_in_vectorexpr22000); if (state.failed) return result;
+            			    	Match(input,23,FOLLOW_23_in_vectorexpr22012); if (state.failed) return result;
+            			    	PushFollow(FOLLOW_scalarexpr_in_vectorexpr22026);
             			    	s = scalarexpr();
             			    	state.followingStackPointer--;
             			    	if (state.failed) return result;
@@ -1504,15 +1500,15 @@ public partial class MovimentumParser : Parser
             			    	{
             			    	   result = new BinaryScalarVectorExpr(result, BinaryScalarVectorOperator.ROTATE2D, s); 
             			    	}
-            			    	Match(input,25,FOLLOW_25_in_vectorexpr22046); if (state.failed) return result;
+            			    	Match(input,25,FOLLOW_25_in_vectorexpr22045); if (state.failed) return result;
 
             			    }
             			    break;
             			case 2 :
             			    // Movimentum.g:140:5: '*' s= scalarexpr4
             			    {
-            			    	Match(input,38,FOLLOW_38_in_vectorexpr22052); if (state.failed) return result;
-            			    	PushFollow(FOLLOW_scalarexpr4_in_vectorexpr22060);
+            			    	Match(input,38,FOLLOW_38_in_vectorexpr22051); if (state.failed) return result;
+            			    	PushFollow(FOLLOW_scalarexpr4_in_vectorexpr22059);
             			    	s = scalarexpr4();
             			    	state.followingStackPointer--;
             			    	if (state.failed) return result;
@@ -1585,8 +1581,8 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:146:9: '-' v= vectorexpr4
                     {
-                    	Match(input,30,FOLLOW_30_in_vectorexpr32106); if (state.failed) return result;
-                    	PushFollow(FOLLOW_vectorexpr4_in_vectorexpr32110);
+                    	Match(input,30,FOLLOW_30_in_vectorexpr32105); if (state.failed) return result;
+                    	PushFollow(FOLLOW_vectorexpr4_in_vectorexpr32109);
                     	v = vectorexpr4();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1600,7 +1596,7 @@ public partial class MovimentumParser : Parser
                 case 2 :
                     // Movimentum.g:147:9: v= vectorexpr4
                     {
-                    	PushFollow(FOLLOW_vectorexpr4_in_vectorexpr32126);
+                    	PushFollow(FOLLOW_vectorexpr4_in_vectorexpr32125);
                     	v = vectorexpr4();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1673,9 +1669,9 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:151:9: INTEGRAL '(' v= vectorexpr ')'
                     {
-                    	Match(input,INTEGRAL,FOLLOW_INTEGRAL_in_vectorexpr42163); if (state.failed) return result;
-                    	Match(input,23,FOLLOW_23_in_vectorexpr42173); if (state.failed) return result;
-                    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr42185);
+                    	Match(input,INTEGRAL,FOLLOW_INTEGRAL_in_vectorexpr42162); if (state.failed) return result;
+                    	Match(input,23,FOLLOW_23_in_vectorexpr42172); if (state.failed) return result;
+                    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr42184);
                     	v = vectorexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1683,16 +1679,16 @@ public partial class MovimentumParser : Parser
                     	{
                     	   result = new UnaryVectorExpr(UnaryVectorOperator.INTEGRAL, v); 
                     	}
-                    	Match(input,25,FOLLOW_25_in_vectorexpr42204); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_vectorexpr42203); if (state.failed) return result;
 
                     }
                     break;
                 case 2 :
                     // Movimentum.g:155:9: DIFFERENTIAL '(' v= vectorexpr ')'
                     {
-                    	Match(input,DIFFERENTIAL,FOLLOW_DIFFERENTIAL_in_vectorexpr42231); if (state.failed) return result;
-                    	Match(input,23,FOLLOW_23_in_vectorexpr42249); if (state.failed) return result;
-                    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr42278);
+                    	Match(input,DIFFERENTIAL,FOLLOW_DIFFERENTIAL_in_vectorexpr42230); if (state.failed) return result;
+                    	Match(input,23,FOLLOW_23_in_vectorexpr42248); if (state.failed) return result;
+                    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr42277);
                     	v = vectorexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1700,14 +1696,14 @@ public partial class MovimentumParser : Parser
                     	{
                     	   result = new UnaryVectorExpr(UnaryVectorOperator.DIFFERENTIAL, v); 
                     	}
-                    	Match(input,25,FOLLOW_25_in_vectorexpr42297); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_vectorexpr42296); if (state.failed) return result;
 
                     }
                     break;
                 case 3 :
                     // Movimentum.g:159:9: v= vectorexpr5
                     {
-                    	PushFollow(FOLLOW_vectorexpr5_in_vectorexpr42326);
+                    	PushFollow(FOLLOW_vectorexpr5_in_vectorexpr42325);
                     	v = vectorexpr5();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1804,8 +1800,8 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:163:9: '(' e= vectorexpr ')'
                     {
-                    	Match(input,23,FOLLOW_23_in_vectorexpr52363); if (state.failed) return result;
-                    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr52375);
+                    	Match(input,23,FOLLOW_23_in_vectorexpr52362); if (state.failed) return result;
+                    	PushFollow(FOLLOW_vectorexpr_in_vectorexpr52374);
                     	e = vectorexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1813,14 +1809,14 @@ public partial class MovimentumParser : Parser
                     	{
                     	   result = e; 
                     	}
-                    	Match(input,25,FOLLOW_25_in_vectorexpr52394); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_vectorexpr52393); if (state.failed) return result;
 
                     }
                     break;
                 case 2 :
                     // Movimentum.g:166:9: v= vector
                     {
-                    	PushFollow(FOLLOW_vector_in_vectorexpr52423);
+                    	PushFollow(FOLLOW_vector_in_vectorexpr52422);
                     	v = vector();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1834,7 +1830,7 @@ public partial class MovimentumParser : Parser
                 case 3 :
                     // Movimentum.g:167:9: a= anchor
                     {
-                    	PushFollow(FOLLOW_anchor_in_vectorexpr52448);
+                    	PushFollow(FOLLOW_anchor_in_vectorexpr52447);
                     	a = anchor();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -1848,7 +1844,7 @@ public partial class MovimentumParser : Parser
                 case 4 :
                     // Movimentum.g:168:9: IDENT
                     {
-                    	IDENT3=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_vectorexpr52471); if (state.failed) return result;
+                    	IDENT3=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_vectorexpr52470); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new VectorVariable(IDENT3.Text); 
@@ -1859,7 +1855,7 @@ public partial class MovimentumParser : Parser
                 case 5 :
                     // Movimentum.g:169:9: '_'
                     {
-                    	Match(input,39,FOLLOW_39_in_vectorexpr52497); if (state.failed) return result;
+                    	Match(input,39,FOLLOW_39_in_vectorexpr52496); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new VectorVariable("#" + _anonymousVarCt++); 
@@ -1901,13 +1897,13 @@ public partial class MovimentumParser : Parser
             // Movimentum.g:173:7: ( '[' s1= scalarexpr ',' s2= scalarexpr ( ',' s3= scalarexpr )? ']' )
             // Movimentum.g:173:9: '[' s1= scalarexpr ',' s2= scalarexpr ( ',' s3= scalarexpr )? ']'
             {
-            	Match(input,31,FOLLOW_31_in_vector2593); if (state.failed) return result;
-            	PushFollow(FOLLOW_scalarexpr_in_vector2605);
+            	Match(input,31,FOLLOW_31_in_vector2592); if (state.failed) return result;
+            	PushFollow(FOLLOW_scalarexpr_in_vector2604);
             	s1 = scalarexpr();
             	state.followingStackPointer--;
             	if (state.failed) return result;
-            	Match(input,24,FOLLOW_24_in_vector2615); if (state.failed) return result;
-            	PushFollow(FOLLOW_scalarexpr_in_vector2627);
+            	Match(input,24,FOLLOW_24_in_vector2614); if (state.failed) return result;
+            	PushFollow(FOLLOW_scalarexpr_in_vector2626);
             	s2 = scalarexpr();
             	state.followingStackPointer--;
             	if (state.failed) return result;
@@ -1924,8 +1920,8 @@ public partial class MovimentumParser : Parser
             	    case 1 :
             	        // Movimentum.g:177:11: ',' s3= scalarexpr
             	        {
-            	        	Match(input,24,FOLLOW_24_in_vector2639); if (state.failed) return result;
-            	        	PushFollow(FOLLOW_scalarexpr_in_vector2653);
+            	        	Match(input,24,FOLLOW_24_in_vector2638); if (state.failed) return result;
+            	        	PushFollow(FOLLOW_scalarexpr_in_vector2652);
             	        	s3 = scalarexpr();
             	        	state.followingStackPointer--;
             	        	if (state.failed) return result;
@@ -1935,7 +1931,7 @@ public partial class MovimentumParser : Parser
 
             	}
 
-            	Match(input,32,FOLLOW_32_in_vector2668); if (state.failed) return result;
+            	Match(input,32,FOLLOW_32_in_vector2667); if (state.failed) return result;
             	if ( state.backtracking == 0 ) 
             	{
             	   result = new Vector(s1, s2, s3 ?? new ConstScalar(0)); 
@@ -1972,12 +1968,12 @@ public partial class MovimentumParser : Parser
             // Movimentum.g:184:7: (th= thing '.' IDENT )
             // Movimentum.g:184:10: th= thing '.' IDENT
             {
-            	PushFollow(FOLLOW_thing_in_anchor2718);
+            	PushFollow(FOLLOW_thing_in_anchor2717);
             	th = thing();
             	state.followingStackPointer--;
             	if (state.failed) return result;
-            	Match(input,40,FOLLOW_40_in_anchor2730); if (state.failed) return result;
-            	IDENT4=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_anchor2742); if (state.failed) return result;
+            	Match(input,40,FOLLOW_40_in_anchor2729); if (state.failed) return result;
+            	IDENT4=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_anchor2741); if (state.failed) return result;
             	if ( state.backtracking == 0 ) 
             	{
             	   result = new Anchor(th, IDENT4.Text); 
@@ -2012,7 +2008,7 @@ public partial class MovimentumParser : Parser
             // Movimentum.g:190:7: ( IDENT )
             // Movimentum.g:190:9: IDENT
             {
-            	IDENT5=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_thing2786); if (state.failed) return result;
+            	IDENT5=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_thing2785); if (state.failed) return result;
             	if ( state.backtracking == 0 ) 
             	{
             	   result = IDENT5.Text; 
@@ -2035,7 +2031,7 @@ public partial class MovimentumParser : Parser
 
 
     // $ANTLR start "scalarexpr"
-    // Movimentum.g:193:5: scalarexpr returns [ScalarExpr result] options {greedy=true; } : s= scalarexpr2 ( ( '+' | '-' ) s= scalarexpr )* ;
+    // Movimentum.g:193:5: scalarexpr returns [ScalarExpr result] options {greedy=true; } : s= scalarexpr2 ( ( '+' | '-' ) s= scalarexpr2 )* ;
     public ScalarExpr scalarexpr() // throws RecognitionException [1]
     {   
         ScalarExpr result = default(ScalarExpr);
@@ -2045,10 +2041,10 @@ public partial class MovimentumParser : Parser
 
         try 
     	{
-            // Movimentum.g:195:7: (s= scalarexpr2 ( ( '+' | '-' ) s= scalarexpr )* )
-            // Movimentum.g:195:9: s= scalarexpr2 ( ( '+' | '-' ) s= scalarexpr )*
+            // Movimentum.g:195:7: (s= scalarexpr2 ( ( '+' | '-' ) s= scalarexpr2 )* )
+            // Movimentum.g:195:9: s= scalarexpr2 ( ( '+' | '-' ) s= scalarexpr2 )*
             {
-            	PushFollow(FOLLOW_scalarexpr2_in_scalarexpr2847);
+            	PushFollow(FOLLOW_scalarexpr2_in_scalarexpr2846);
             	s = scalarexpr2();
             	state.followingStackPointer--;
             	if (state.failed) return result;
@@ -2056,17 +2052,13 @@ public partial class MovimentumParser : Parser
             	{
             	   result = s; 
             	}
-            	// Movimentum.g:196:9: ( ( '+' | '-' ) s= scalarexpr )*
+            	// Movimentum.g:196:9: ( ( '+' | '-' ) s= scalarexpr2 )*
             	do 
             	{
             	    int alt24 = 2;
             	    int LA24_0 = input.LA(1);
 
-            	    if ( (LA24_0 == 29) )
-            	    {
-            	        alt24 = 1;
-            	    }
-            	    else if ( (LA24_0 == 30) )
+            	    if ( ((LA24_0 >= 29 && LA24_0 <= 30)) )
             	    {
             	        alt24 = 1;
             	    }
@@ -2075,10 +2067,10 @@ public partial class MovimentumParser : Parser
             	    switch (alt24) 
             		{
             			case 1 :
-            			    // Movimentum.g:196:29: ( '+' | '-' ) s= scalarexpr
+            			    // Movimentum.g:196:29: ( '+' | '-' ) s= scalarexpr2
             			    {
             			    	 BinaryScalarOperator op = null; 
-            			    	// Movimentum.g:197:5: ( '+' | '-' )
+            			    	// Movimentum.g:197:11: ( '+' | '-' )
             			    	int alt23 = 2;
             			    	int LA23_0 = input.LA(1);
 
@@ -2101,9 +2093,9 @@ public partial class MovimentumParser : Parser
             			    	switch (alt23) 
             			    	{
             			    	    case 1 :
-            			    	        // Movimentum.g:197:7: '+'
+            			    	        // Movimentum.g:197:13: '+'
             			    	        {
-            			    	        	Match(input,29,FOLLOW_29_in_scalarexpr2893); if (state.failed) return result;
+            			    	        	Match(input,29,FOLLOW_29_in_scalarexpr2898); if (state.failed) return result;
             			    	        	 op = BinaryScalarOperator.PLUS; 
 
             			    	        }
@@ -2111,7 +2103,7 @@ public partial class MovimentumParser : Parser
             			    	    case 2 :
             			    	        // Movimentum.g:198:13: '-'
             			    	        {
-            			    	        	Match(input,30,FOLLOW_30_in_scalarexpr2921); if (state.failed) return result;
+            			    	        	Match(input,30,FOLLOW_30_in_scalarexpr2926); if (state.failed) return result;
             			    	        	 op = BinaryScalarOperator.MINUS; 
 
             			    	        }
@@ -2119,8 +2111,8 @@ public partial class MovimentumParser : Parser
 
             			    	}
 
-            			    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr2978);
-            			    	s = scalarexpr();
+            			    	PushFollow(FOLLOW_scalarexpr2_in_scalarexpr2983);
+            			    	s = scalarexpr2();
             			    	state.followingStackPointer--;
             			    	if (state.failed) return result;
             			    	if ( state.backtracking == 0 ) 
@@ -2157,7 +2149,7 @@ public partial class MovimentumParser : Parser
 
 
     // $ANTLR start "scalarexpr2"
-    // Movimentum.g:204:5: scalarexpr2 returns [ScalarExpr result] options {greedy=true; } : s= scalarexpr3 ( ( '*' | '/' ) s= scalarexpr2 )* ;
+    // Movimentum.g:204:5: scalarexpr2 returns [ScalarExpr result] options {greedy=true; } : s= scalarexpr3 ( ( '*' | '/' ) s= scalarexpr3 )* ;
     public ScalarExpr scalarexpr2() // throws RecognitionException [1]
     {   
         ScalarExpr result = default(ScalarExpr);
@@ -2167,10 +2159,10 @@ public partial class MovimentumParser : Parser
 
         try 
     	{
-            // Movimentum.g:206:7: (s= scalarexpr3 ( ( '*' | '/' ) s= scalarexpr2 )* )
-            // Movimentum.g:206:9: s= scalarexpr3 ( ( '*' | '/' ) s= scalarexpr2 )*
+            // Movimentum.g:206:7: (s= scalarexpr3 ( ( '*' | '/' ) s= scalarexpr3 )* )
+            // Movimentum.g:206:9: s= scalarexpr3 ( ( '*' | '/' ) s= scalarexpr3 )*
             {
-            	PushFollow(FOLLOW_scalarexpr3_in_scalarexpr23041);
+            	PushFollow(FOLLOW_scalarexpr3_in_scalarexpr23045);
             	s = scalarexpr3();
             	state.followingStackPointer--;
             	if (state.failed) return result;
@@ -2178,17 +2170,13 @@ public partial class MovimentumParser : Parser
             	{
             	   result = s; 
             	}
-            	// Movimentum.g:207:9: ( ( '*' | '/' ) s= scalarexpr2 )*
+            	// Movimentum.g:207:9: ( ( '*' | '/' ) s= scalarexpr3 )*
             	do 
             	{
             	    int alt26 = 2;
             	    int LA26_0 = input.LA(1);
 
-            	    if ( (LA26_0 == 38) )
-            	    {
-            	        alt26 = 1;
-            	    }
-            	    else if ( (LA26_0 == 41) )
+            	    if ( (LA26_0 == 38 || LA26_0 == 41) )
             	    {
             	        alt26 = 1;
             	    }
@@ -2197,7 +2185,7 @@ public partial class MovimentumParser : Parser
             	    switch (alt26) 
             		{
             			case 1 :
-            			    // Movimentum.g:207:29: ( '*' | '/' ) s= scalarexpr2
+            			    // Movimentum.g:207:29: ( '*' | '/' ) s= scalarexpr3
             			    {
             			    	 BinaryScalarOperator op = null; 
             			    	// Movimentum.g:208:11: ( '*' | '/' )
@@ -2225,7 +2213,7 @@ public partial class MovimentumParser : Parser
             			    	    case 1 :
             			    	        // Movimentum.g:208:13: '*'
             			    	        {
-            			    	        	Match(input,38,FOLLOW_38_in_scalarexpr23093); if (state.failed) return result;
+            			    	        	Match(input,38,FOLLOW_38_in_scalarexpr23097); if (state.failed) return result;
             			    	        	 op = BinaryScalarOperator.TIMES; 
 
             			    	        }
@@ -2233,7 +2221,7 @@ public partial class MovimentumParser : Parser
             			    	    case 2 :
             			    	        // Movimentum.g:209:13: '/'
             			    	        {
-            			    	        	Match(input,41,FOLLOW_41_in_scalarexpr23121); if (state.failed) return result;
+            			    	        	Match(input,41,FOLLOW_41_in_scalarexpr23125); if (state.failed) return result;
             			    	        	 op = BinaryScalarOperator.DIVIDE; 
 
             			    	        }
@@ -2241,8 +2229,8 @@ public partial class MovimentumParser : Parser
 
             			    	}
 
-            			    	PushFollow(FOLLOW_scalarexpr2_in_scalarexpr23178);
-            			    	s = scalarexpr2();
+            			    	PushFollow(FOLLOW_scalarexpr3_in_scalarexpr23182);
+            			    	s = scalarexpr3();
             			    	state.followingStackPointer--;
             			    	if (state.failed) return result;
             			    	if ( state.backtracking == 0 ) 
@@ -2314,8 +2302,8 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:216:9: '-' s= scalarexpr4
                     {
-                    	Match(input,30,FOLLOW_30_in_scalarexpr33263); if (state.failed) return result;
-                    	PushFollow(FOLLOW_scalarexpr4_in_scalarexpr33267);
+                    	Match(input,30,FOLLOW_30_in_scalarexpr33267); if (state.failed) return result;
+                    	PushFollow(FOLLOW_scalarexpr4_in_scalarexpr33271);
                     	s = scalarexpr4();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2329,7 +2317,7 @@ public partial class MovimentumParser : Parser
                 case 2 :
                     // Movimentum.g:217:9: s= scalarexpr4
                     {
-                    	PushFollow(FOLLOW_scalarexpr4_in_scalarexpr33283);
+                    	PushFollow(FOLLOW_scalarexpr4_in_scalarexpr33287);
                     	s = scalarexpr4();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2392,7 +2380,7 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:221:6: s= scalarexpr5 ( '^2' | '^3' | )
                     {
-                    	PushFollow(FOLLOW_scalarexpr5_in_scalarexpr43319);
+                    	PushFollow(FOLLOW_scalarexpr5_in_scalarexpr43323);
                     	s = scalarexpr5();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2436,7 +2424,7 @@ public partial class MovimentumParser : Parser
                     	    case 1 :
                     	        // Movimentum.g:222:8: '^2'
                     	        {
-                    	        	Match(input,42,FOLLOW_42_in_scalarexpr43328); if (state.failed) return result;
+                    	        	Match(input,42,FOLLOW_42_in_scalarexpr43332); if (state.failed) return result;
                     	        	if ( state.backtracking == 0 ) 
                     	        	{
                     	        	   result = new UnaryScalarExpr(UnaryScalarOperator.SQUARED, s); 
@@ -2447,7 +2435,7 @@ public partial class MovimentumParser : Parser
                     	    case 2 :
                     	        // Movimentum.g:223:5: '^3'
                     	        {
-                    	        	Match(input,43,FOLLOW_43_in_scalarexpr43349); if (state.failed) return result;
+                    	        	Match(input,43,FOLLOW_43_in_scalarexpr43353); if (state.failed) return result;
                     	        	if ( state.backtracking == 0 ) 
                     	        	{
                     	        	   result = new UnaryScalarExpr(UnaryScalarOperator.CUBED, s); 
@@ -2474,9 +2462,9 @@ public partial class MovimentumParser : Parser
                 case 2 :
                     // Movimentum.g:226:6: SQRT '(' s= scalarexpr5 ')'
                     {
-                    	Match(input,SQRT,FOLLOW_SQRT_in_scalarexpr43399); if (state.failed) return result;
-                    	Match(input,23,FOLLOW_23_in_scalarexpr43406); if (state.failed) return result;
-                    	PushFollow(FOLLOW_scalarexpr5_in_scalarexpr43418);
+                    	Match(input,SQRT,FOLLOW_SQRT_in_scalarexpr43403); if (state.failed) return result;
+                    	Match(input,23,FOLLOW_23_in_scalarexpr43410); if (state.failed) return result;
+                    	PushFollow(FOLLOW_scalarexpr5_in_scalarexpr43422);
                     	s = scalarexpr5();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2484,7 +2472,7 @@ public partial class MovimentumParser : Parser
                     	{
                     	   result = new UnaryScalarExpr(UnaryScalarOperator.SQUAREROOT, s); 
                     	}
-                    	Match(input,25,FOLLOW_25_in_scalarexpr43433); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_scalarexpr43437); if (state.failed) return result;
 
                     }
                     break;
@@ -2530,7 +2518,7 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:233:9: s= scalarexpr5Ambiguous
                     {
-                    	PushFollow(FOLLOW_scalarexpr5Ambiguous_in_scalarexpr53461);
+                    	PushFollow(FOLLOW_scalarexpr5Ambiguous_in_scalarexpr53465);
                     	s = scalarexpr5Ambiguous();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2544,13 +2532,13 @@ public partial class MovimentumParser : Parser
                 case 2 :
                     // Movimentum.g:235:9: INTEGRAL '(' s= scalarexpr ')'
                     {
-                    	Match(input,INTEGRAL,FOLLOW_INTEGRAL_in_scalarexpr53501); if (state.failed) return result;
-                    	Match(input,23,FOLLOW_23_in_scalarexpr53503); if (state.failed) return result;
-                    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr53525);
+                    	Match(input,INTEGRAL,FOLLOW_INTEGRAL_in_scalarexpr53505); if (state.failed) return result;
+                    	Match(input,23,FOLLOW_23_in_scalarexpr53507); if (state.failed) return result;
+                    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr53529);
                     	s = scalarexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
-                    	Match(input,25,FOLLOW_25_in_scalarexpr53543); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_scalarexpr53547); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new UnaryScalarExpr(UnaryScalarOperator.INTEGRAL, s); 
@@ -2561,13 +2549,13 @@ public partial class MovimentumParser : Parser
                 case 3 :
                     // Movimentum.g:238:9: DIFFERENTIAL '(' s= scalarexpr ')'
                     {
-                    	Match(input,DIFFERENTIAL,FOLLOW_DIFFERENTIAL_in_scalarexpr53569); if (state.failed) return result;
-                    	Match(input,23,FOLLOW_23_in_scalarexpr53571); if (state.failed) return result;
-                    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr53589);
+                    	Match(input,DIFFERENTIAL,FOLLOW_DIFFERENTIAL_in_scalarexpr53573); if (state.failed) return result;
+                    	Match(input,23,FOLLOW_23_in_scalarexpr53575); if (state.failed) return result;
+                    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr53593);
                     	s = scalarexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
-                    	Match(input,25,FOLLOW_25_in_scalarexpr53607); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_scalarexpr53611); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new UnaryScalarExpr(UnaryScalarOperator.DIFFERENTIAL, s); 
@@ -2578,18 +2566,18 @@ public partial class MovimentumParser : Parser
                 case 4 :
                     // Movimentum.g:241:9: ANGLE '(' v1= vectorexpr ',' v2= vectorexpr ')'
                     {
-                    	Match(input,ANGLE,FOLLOW_ANGLE_in_scalarexpr53633); if (state.failed) return result;
-                    	Match(input,23,FOLLOW_23_in_scalarexpr53635); if (state.failed) return result;
-                    	PushFollow(FOLLOW_vectorexpr_in_scalarexpr53660);
+                    	Match(input,ANGLE,FOLLOW_ANGLE_in_scalarexpr53637); if (state.failed) return result;
+                    	Match(input,23,FOLLOW_23_in_scalarexpr53639); if (state.failed) return result;
+                    	PushFollow(FOLLOW_vectorexpr_in_scalarexpr53664);
                     	v1 = vectorexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
-                    	Match(input,24,FOLLOW_24_in_scalarexpr53677); if (state.failed) return result;
-                    	PushFollow(FOLLOW_vectorexpr_in_scalarexpr53706);
+                    	Match(input,24,FOLLOW_24_in_scalarexpr53681); if (state.failed) return result;
+                    	PushFollow(FOLLOW_vectorexpr_in_scalarexpr53710);
                     	v2 = vectorexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
-                    	Match(input,25,FOLLOW_25_in_scalarexpr53718); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_scalarexpr53722); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new BinaryVectorScalarExpr(v1, BinaryVectorScalarOperator.ANGLE, v2); 
@@ -2600,7 +2588,7 @@ public partial class MovimentumParser : Parser
                 case 5 :
                     // Movimentum.g:246:9: n= number
                     {
-                    	PushFollow(FOLLOW_number_in_scalarexpr53746);
+                    	PushFollow(FOLLOW_number_in_scalarexpr53750);
                     	n = number();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2614,7 +2602,7 @@ public partial class MovimentumParser : Parser
                 case 6 :
                     // Movimentum.g:247:9: IDENT
                     {
-                    	IDENT6=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_scalarexpr53769); if (state.failed) return result;
+                    	IDENT6=(IToken)Match(input,IDENT,FOLLOW_IDENT_in_scalarexpr53773); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new ScalarVariable(IDENT6.Text); 
@@ -2625,7 +2613,7 @@ public partial class MovimentumParser : Parser
                 case 7 :
                     // Movimentum.g:248:9: '_'
                     {
-                    	Match(input,39,FOLLOW_39_in_scalarexpr53795); if (state.failed) return result;
+                    	Match(input,39,FOLLOW_39_in_scalarexpr53799); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new ScalarVariable("_" + _anonymousVarCt++); 
@@ -2636,7 +2624,7 @@ public partial class MovimentumParser : Parser
                 case 8 :
                     // Movimentum.g:250:9: T
                     {
-                    	Match(input,T,FOLLOW_T_in_scalarexpr53830); if (state.failed) return result;
+                    	Match(input,T,FOLLOW_T_in_scalarexpr53834); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new T(); 
@@ -2647,7 +2635,7 @@ public partial class MovimentumParser : Parser
                 case 9 :
                     // Movimentum.g:251:9: IV
                     {
-                    	Match(input,IV,FOLLOW_IV_in_scalarexpr53860); if (state.failed) return result;
+                    	Match(input,IV,FOLLOW_IV_in_scalarexpr53864); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
                     	   result = new IV(); 
@@ -2726,7 +2714,7 @@ public partial class MovimentumParser : Parser
                 case 1 :
                     // Movimentum.g:256:9: v= vectorexpr5 ( X | Y | Z | LENGTH )
                     {
-                    	PushFollow(FOLLOW_vectorexpr5_in_scalarexpr5Ambiguous3961);
+                    	PushFollow(FOLLOW_vectorexpr5_in_scalarexpr5Ambiguous3965);
                     	v = vectorexpr5();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2767,7 +2755,7 @@ public partial class MovimentumParser : Parser
                     	    case 1 :
                     	        // Movimentum.g:257:10: X
                     	        {
-                    	        	Match(input,X,FOLLOW_X_in_scalarexpr5Ambiguous3972); if (state.failed) return result;
+                    	        	Match(input,X,FOLLOW_X_in_scalarexpr5Ambiguous3976); if (state.failed) return result;
                     	        	if ( state.backtracking == 0 ) 
                     	        	{
                     	        	   result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.X); 
@@ -2778,7 +2766,7 @@ public partial class MovimentumParser : Parser
                     	    case 2 :
                     	        // Movimentum.g:258:10: Y
                     	        {
-                    	        	Match(input,Y,FOLLOW_Y_in_scalarexpr5Ambiguous4002); if (state.failed) return result;
+                    	        	Match(input,Y,FOLLOW_Y_in_scalarexpr5Ambiguous4006); if (state.failed) return result;
                     	        	if ( state.backtracking == 0 ) 
                     	        	{
                     	        	   result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.Y); 
@@ -2789,7 +2777,7 @@ public partial class MovimentumParser : Parser
                     	    case 3 :
                     	        // Movimentum.g:259:10: Z
                     	        {
-                    	        	Match(input,Z,FOLLOW_Z_in_scalarexpr5Ambiguous4032); if (state.failed) return result;
+                    	        	Match(input,Z,FOLLOW_Z_in_scalarexpr5Ambiguous4036); if (state.failed) return result;
                     	        	if ( state.backtracking == 0 ) 
                     	        	{
                     	        	   result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.Z); 
@@ -2800,7 +2788,7 @@ public partial class MovimentumParser : Parser
                     	    case 4 :
                     	        // Movimentum.g:260:10: LENGTH
                     	        {
-                    	        	Match(input,LENGTH,FOLLOW_LENGTH_in_scalarexpr5Ambiguous4062); if (state.failed) return result;
+                    	        	Match(input,LENGTH,FOLLOW_LENGTH_in_scalarexpr5Ambiguous4066); if (state.failed) return result;
                     	        	if ( state.backtracking == 0 ) 
                     	        	{
                     	        	   result = new UnaryVectorScalarExpr(v, UnaryVectorScalarOperator.LENGTH); 
@@ -2817,8 +2805,8 @@ public partial class MovimentumParser : Parser
                 case 2 :
                     // Movimentum.g:262:8: '(' s= scalarexpr ')'
                     {
-                    	Match(input,23,FOLLOW_23_in_scalarexpr5Ambiguous4110); if (state.failed) return result;
-                    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr5Ambiguous4135);
+                    	Match(input,23,FOLLOW_23_in_scalarexpr5Ambiguous4114); if (state.failed) return result;
+                    	PushFollow(FOLLOW_scalarexpr_in_scalarexpr5Ambiguous4139);
                     	s = scalarexpr();
                     	state.followingStackPointer--;
                     	if (state.failed) return result;
@@ -2826,7 +2814,7 @@ public partial class MovimentumParser : Parser
                     	{
                     	   result = s; 
                     	}
-                    	Match(input,25,FOLLOW_25_in_scalarexpr5Ambiguous4154); if (state.failed) return result;
+                    	Match(input,25,FOLLOW_25_in_scalarexpr5Ambiguous4158); if (state.failed) return result;
 
                     }
                     break;
@@ -2859,7 +2847,7 @@ public partial class MovimentumParser : Parser
             // Movimentum.g:268:6: ( NUMBER )
             // Movimentum.g:268:8: NUMBER
             {
-            	NUMBER7=(IToken)Match(input,NUMBER,FOLLOW_NUMBER_in_number4180); if (state.failed) return value;
+            	NUMBER7=(IToken)Match(input,NUMBER,FOLLOW_NUMBER_in_number4184); if (state.failed) return value;
             	if ( state.backtracking == 0 ) 
             	{
             	   value = double.Parse(NUMBER7.Text, CultureInfo.InvariantCulture); 
@@ -2888,7 +2876,7 @@ public partial class MovimentumParser : Parser
         // Movimentum.g:256:9: (v= vectorexpr5 ( X | Y | Z | LENGTH ) )
         // Movimentum.g:256:9: v= vectorexpr5 ( X | Y | Z | LENGTH )
         {
-        	PushFollow(FOLLOW_vectorexpr5_in_synpred1_Movimentum3961);
+        	PushFollow(FOLLOW_vectorexpr5_in_synpred1_Movimentum3965);
         	v = vectorexpr5();
         	state.followingStackPointer--;
         	if (state.failed) return ;
@@ -3075,93 +3063,93 @@ public partial class MovimentumParser : Parser
     public static readonly BitSet FOLLOW_vectorexpr2_in_vectorexpr1728 = new BitSet(new ulong[]{0x0000000060000002UL});
     public static readonly BitSet FOLLOW_29_in_vectorexpr1780 = new BitSet(new ulong[]{0x00000080C0803020UL});
     public static readonly BitSet FOLLOW_30_in_vectorexpr1808 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr1865 = new BitSet(new ulong[]{0x0000000060000002UL});
-    public static readonly BitSet FOLLOW_vectorexpr3_in_vectorexpr21981 = new BitSet(new ulong[]{0x0000004000000802UL});
-    public static readonly BitSet FOLLOW_ROTATE_in_vectorexpr22001 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_vectorexpr22013 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_vectorexpr22027 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_vectorexpr22046 = new BitSet(new ulong[]{0x0000004000000802UL});
-    public static readonly BitSet FOLLOW_38_in_vectorexpr22052 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr4_in_vectorexpr22060 = new BitSet(new ulong[]{0x0000004000000802UL});
-    public static readonly BitSet FOLLOW_30_in_vectorexpr32106 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr4_in_vectorexpr32110 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_vectorexpr4_in_vectorexpr32126 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_INTEGRAL_in_vectorexpr42163 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_vectorexpr42173 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr42185 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_vectorexpr42204 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_DIFFERENTIAL_in_vectorexpr42231 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_vectorexpr42249 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr42278 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_vectorexpr42297 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_vectorexpr5_in_vectorexpr42326 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_23_in_vectorexpr52363 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr52375 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_vectorexpr52394 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_vector_in_vectorexpr52423 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_anchor_in_vectorexpr52448 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_IDENT_in_vectorexpr52471 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_39_in_vectorexpr52497 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_31_in_vector2593 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_vector2605 = new BitSet(new ulong[]{0x0000000001000000UL});
-    public static readonly BitSet FOLLOW_24_in_vector2615 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_vector2627 = new BitSet(new ulong[]{0x0000000101000000UL});
-    public static readonly BitSet FOLLOW_24_in_vector2639 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_vector2653 = new BitSet(new ulong[]{0x0000000100000000UL});
-    public static readonly BitSet FOLLOW_32_in_vector2668 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_thing_in_anchor2718 = new BitSet(new ulong[]{0x0000010000000000UL});
-    public static readonly BitSet FOLLOW_40_in_anchor2730 = new BitSet(new ulong[]{0x0000000000000020UL});
-    public static readonly BitSet FOLLOW_IDENT_in_anchor2742 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_IDENT_in_thing2786 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_scalarexpr2_in_scalarexpr2847 = new BitSet(new ulong[]{0x0000000060000002UL});
-    public static readonly BitSet FOLLOW_29_in_scalarexpr2893 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_30_in_scalarexpr2921 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr2978 = new BitSet(new ulong[]{0x0000000060000002UL});
-    public static readonly BitSet FOLLOW_scalarexpr3_in_scalarexpr23041 = new BitSet(new ulong[]{0x0000024000000002UL});
-    public static readonly BitSet FOLLOW_38_in_scalarexpr23093 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_41_in_scalarexpr23121 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr2_in_scalarexpr23178 = new BitSet(new ulong[]{0x0000024000000002UL});
-    public static readonly BitSet FOLLOW_30_in_scalarexpr33263 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr4_in_scalarexpr33267 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_scalarexpr4_in_scalarexpr33283 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_scalarexpr5_in_scalarexpr43319 = new BitSet(new ulong[]{0x00000C0000000002UL});
-    public static readonly BitSet FOLLOW_42_in_scalarexpr43328 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_43_in_scalarexpr43349 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_SQRT_in_scalarexpr43399 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_scalarexpr43406 = new BitSet(new ulong[]{0x00000080C08BB020UL});
-    public static readonly BitSet FOLLOW_scalarexpr5_in_scalarexpr43418 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_scalarexpr43433 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_scalarexpr5Ambiguous_in_scalarexpr53461 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_INTEGRAL_in_scalarexpr53501 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_scalarexpr53503 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr53525 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_scalarexpr53543 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_DIFFERENTIAL_in_scalarexpr53569 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_scalarexpr53571 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr53589 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_scalarexpr53607 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_ANGLE_in_scalarexpr53633 = new BitSet(new ulong[]{0x0000000000800000UL});
-    public static readonly BitSet FOLLOW_23_in_scalarexpr53635 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr_in_scalarexpr53660 = new BitSet(new ulong[]{0x0000000001000000UL});
-    public static readonly BitSet FOLLOW_24_in_scalarexpr53677 = new BitSet(new ulong[]{0x00000080C0803020UL});
-    public static readonly BitSet FOLLOW_vectorexpr_in_scalarexpr53706 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_scalarexpr53718 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_number_in_scalarexpr53746 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_IDENT_in_scalarexpr53769 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_39_in_scalarexpr53795 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_T_in_scalarexpr53830 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_IV_in_scalarexpr53860 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_vectorexpr5_in_scalarexpr5Ambiguous3961 = new BitSet(new ulong[]{0x0000000000040700UL});
-    public static readonly BitSet FOLLOW_X_in_scalarexpr5Ambiguous3972 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_Y_in_scalarexpr5Ambiguous4002 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_Z_in_scalarexpr5Ambiguous4032 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_LENGTH_in_scalarexpr5Ambiguous4062 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_23_in_scalarexpr5Ambiguous4110 = new BitSet(new ulong[]{0x00000080C08BF020UL});
-    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr5Ambiguous4135 = new BitSet(new ulong[]{0x0000000002000000UL});
-    public static readonly BitSet FOLLOW_25_in_scalarexpr5Ambiguous4154 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_NUMBER_in_number4180 = new BitSet(new ulong[]{0x0000000000000002UL});
-    public static readonly BitSet FOLLOW_vectorexpr5_in_synpred1_Movimentum3961 = new BitSet(new ulong[]{0x0000000000040700UL});
-    public static readonly BitSet FOLLOW_set_in_synpred1_Movimentum3970 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_vectorexpr2_in_vectorexpr1865 = new BitSet(new ulong[]{0x0000000060000002UL});
+    public static readonly BitSet FOLLOW_vectorexpr3_in_vectorexpr21980 = new BitSet(new ulong[]{0x0000004000000802UL});
+    public static readonly BitSet FOLLOW_ROTATE_in_vectorexpr22000 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_vectorexpr22012 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_vectorexpr22026 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_vectorexpr22045 = new BitSet(new ulong[]{0x0000004000000802UL});
+    public static readonly BitSet FOLLOW_38_in_vectorexpr22051 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr4_in_vectorexpr22059 = new BitSet(new ulong[]{0x0000004000000802UL});
+    public static readonly BitSet FOLLOW_30_in_vectorexpr32105 = new BitSet(new ulong[]{0x00000080C0803020UL});
+    public static readonly BitSet FOLLOW_vectorexpr4_in_vectorexpr32109 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_vectorexpr4_in_vectorexpr32125 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_INTEGRAL_in_vectorexpr42162 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_vectorexpr42172 = new BitSet(new ulong[]{0x00000080C0803020UL});
+    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr42184 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_vectorexpr42203 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_DIFFERENTIAL_in_vectorexpr42230 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_vectorexpr42248 = new BitSet(new ulong[]{0x00000080C0803020UL});
+    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr42277 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_vectorexpr42296 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_vectorexpr5_in_vectorexpr42325 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_23_in_vectorexpr52362 = new BitSet(new ulong[]{0x00000080C0803020UL});
+    public static readonly BitSet FOLLOW_vectorexpr_in_vectorexpr52374 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_vectorexpr52393 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_vector_in_vectorexpr52422 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_anchor_in_vectorexpr52447 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_IDENT_in_vectorexpr52470 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_39_in_vectorexpr52496 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_31_in_vector2592 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_vector2604 = new BitSet(new ulong[]{0x0000000001000000UL});
+    public static readonly BitSet FOLLOW_24_in_vector2614 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_vector2626 = new BitSet(new ulong[]{0x0000000101000000UL});
+    public static readonly BitSet FOLLOW_24_in_vector2638 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_vector2652 = new BitSet(new ulong[]{0x0000000100000000UL});
+    public static readonly BitSet FOLLOW_32_in_vector2667 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_thing_in_anchor2717 = new BitSet(new ulong[]{0x0000010000000000UL});
+    public static readonly BitSet FOLLOW_40_in_anchor2729 = new BitSet(new ulong[]{0x0000000000000020UL});
+    public static readonly BitSet FOLLOW_IDENT_in_anchor2741 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_IDENT_in_thing2785 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_scalarexpr2_in_scalarexpr2846 = new BitSet(new ulong[]{0x0000000060000002UL});
+    public static readonly BitSet FOLLOW_29_in_scalarexpr2898 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_30_in_scalarexpr2926 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr2_in_scalarexpr2983 = new BitSet(new ulong[]{0x0000000060000002UL});
+    public static readonly BitSet FOLLOW_scalarexpr3_in_scalarexpr23045 = new BitSet(new ulong[]{0x0000024000000002UL});
+    public static readonly BitSet FOLLOW_38_in_scalarexpr23097 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_41_in_scalarexpr23125 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr3_in_scalarexpr23182 = new BitSet(new ulong[]{0x0000024000000002UL});
+    public static readonly BitSet FOLLOW_30_in_scalarexpr33267 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr4_in_scalarexpr33271 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_scalarexpr4_in_scalarexpr33287 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_scalarexpr5_in_scalarexpr43323 = new BitSet(new ulong[]{0x00000C0000000002UL});
+    public static readonly BitSet FOLLOW_42_in_scalarexpr43332 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_43_in_scalarexpr43353 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_SQRT_in_scalarexpr43403 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_scalarexpr43410 = new BitSet(new ulong[]{0x00000080C08BB020UL});
+    public static readonly BitSet FOLLOW_scalarexpr5_in_scalarexpr43422 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_scalarexpr43437 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_scalarexpr5Ambiguous_in_scalarexpr53465 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_INTEGRAL_in_scalarexpr53505 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_scalarexpr53507 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr53529 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_scalarexpr53547 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_DIFFERENTIAL_in_scalarexpr53573 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_scalarexpr53575 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr53593 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_scalarexpr53611 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_ANGLE_in_scalarexpr53637 = new BitSet(new ulong[]{0x0000000000800000UL});
+    public static readonly BitSet FOLLOW_23_in_scalarexpr53639 = new BitSet(new ulong[]{0x00000080C0803020UL});
+    public static readonly BitSet FOLLOW_vectorexpr_in_scalarexpr53664 = new BitSet(new ulong[]{0x0000000001000000UL});
+    public static readonly BitSet FOLLOW_24_in_scalarexpr53681 = new BitSet(new ulong[]{0x00000080C0803020UL});
+    public static readonly BitSet FOLLOW_vectorexpr_in_scalarexpr53710 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_scalarexpr53722 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_number_in_scalarexpr53750 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_IDENT_in_scalarexpr53773 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_39_in_scalarexpr53799 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_T_in_scalarexpr53834 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_IV_in_scalarexpr53864 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_vectorexpr5_in_scalarexpr5Ambiguous3965 = new BitSet(new ulong[]{0x0000000000040700UL});
+    public static readonly BitSet FOLLOW_X_in_scalarexpr5Ambiguous3976 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_Y_in_scalarexpr5Ambiguous4006 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_Z_in_scalarexpr5Ambiguous4036 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_LENGTH_in_scalarexpr5Ambiguous4066 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_23_in_scalarexpr5Ambiguous4114 = new BitSet(new ulong[]{0x00000080C08BF020UL});
+    public static readonly BitSet FOLLOW_scalarexpr_in_scalarexpr5Ambiguous4139 = new BitSet(new ulong[]{0x0000000002000000UL});
+    public static readonly BitSet FOLLOW_25_in_scalarexpr5Ambiguous4158 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_NUMBER_in_number4184 = new BitSet(new ulong[]{0x0000000000000002UL});
+    public static readonly BitSet FOLLOW_vectorexpr5_in_synpred1_Movimentum3965 = new BitSet(new ulong[]{0x0000000000040700UL});
+    public static readonly BitSet FOLLOW_set_in_synpred1_Movimentum3974 = new BitSet(new ulong[]{0x0000000000000002UL});
 
 }
 }

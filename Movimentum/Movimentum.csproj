@@ -74,7 +74,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Solver1\SolverModel.cs" />
     <Compile Include="Unittests\TestMovimentumParser.cs" />
-    <Compile Include="Unittests\TestsForParsing.cs" />
+    <Compile Include="Unittests\TestsForParsing.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Unittests\TestsWithFrames.cs" />
   </ItemGroup>
   <ItemGroup>

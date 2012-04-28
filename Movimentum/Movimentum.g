@@ -127,7 +127,7 @@
           ( '+'             {{ op = BinaryVectorOperator.PLUS; }}
           | '-'             {{ op = BinaryVectorOperator.MINUS; }}
           )                 
-          v=vectorexpr      { result = new BinaryVectorExpr(result, op, v); }
+          v=vectorexpr2     { result = new BinaryVectorExpr(result, op, v); }
         )*                  
       ;                     
                             
@@ -197,7 +197,7 @@
           ( '+'             {{ op = BinaryScalarOperator.PLUS; }}
           | '-'             {{ op = BinaryScalarOperator.MINUS; }}
           )                 
-          s=scalarexpr      { result = new BinaryScalarExpr(result, op, s); }
+          s=scalarexpr2     { result = new BinaryScalarExpr(result, op, s); }
         )*
       ;
 
@@ -208,7 +208,7 @@
           ( '*'             {{ op = BinaryScalarOperator.TIMES; }}
           | '/'             {{ op = BinaryScalarOperator.DIVIDE; }}
           )                 
-          s=scalarexpr2     { result = new BinaryScalarExpr(result, op, s); }
+          s=scalarexpr3     { result = new BinaryScalarExpr(result, op, s); }
         )*                  
       ;                     
 
