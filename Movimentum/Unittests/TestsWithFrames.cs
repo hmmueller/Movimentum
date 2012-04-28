@@ -149,7 +149,6 @@ namespace Movimentum.Unittests {
                 @10";
             Script script = Program.Parse(s);
             Program.Interpret(script);
-
         }
 
         [Test]
@@ -201,9 +200,10 @@ namespace Movimentum.Unittests {
 	                    WH.R = CR.L;
 	                    CR.R = EL.L;
                         WH.C = [70,100];
-                        WH.P = [0,1].r(t/4);
+                        WH.P = [0,1].r(360*.t/4);
                     @20";
             Script script = Program.Parse(s);
+            script.CreateFrames();
             //Program.Interpret(script); - not yet possible to run these constraints.
         }
     }

@@ -105,6 +105,26 @@ namespace Movimentum.Unittests {
             Program.Parse(s, tokens => new TestMovimentumParser(tokens));
         }
 
+
+        [Test]
+        public void TestParseRangeExpr() {
+            const string s = @".config(10, 600, 400);
+                WH : .bar C = [0,0] P = [-10,20] Q = [10,20];
+                B  : .bar L = [0,0] R = [200,0];
+
+                @0
+	                WH.C 	= [100,100];
+	                WH.P 	= WH.C + [_,0].r(360*.t/4);
+                    B.L	 	= B.R + [_,0];
+                    B.L		= [50,y];
+                    y		= ({ WH.P.y : WH.P.y
+                               > WH.Q.y : WH.Q.y
+                               }) + 0;
+                @20";
+
+            Program.Parse(s, tokens => new TestMovimentumParser(tokens));
+        }
+
         #endregion Script parsing
 
         #region Model building
@@ -243,8 +263,8 @@ namespace Movimentum.Unittests {
             {
                 ScalarExpr x = CreateParserForSyntacticTests("a-b-c ;").scalarexpr();
                 Assert.AreEqual(new BinaryScalarExpr(
-                        new BinaryScalarExpr(new ScalarVariable("a"), BinaryScalarOperator.MINUS, new ScalarVariable("b")), 
-                        BinaryScalarOperator.MINUS, 
+                        new BinaryScalarExpr(new ScalarVariable("a"), BinaryScalarOperator.MINUS, new ScalarVariable("b")),
+                        BinaryScalarOperator.MINUS,
                         new ScalarVariable("c"))
                     , x);
             }

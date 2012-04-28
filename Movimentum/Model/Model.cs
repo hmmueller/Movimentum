@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 // This file contains only the "boilerplate code" for the model classes, which is:
 // * field definitions for model fields.
@@ -595,6 +596,45 @@ namespace Movimentum.Model {
         public static UnaryVectorScalarOperator Y = new UnaryVectorScalarOperator(5, ".y");
         public static UnaryVectorScalarOperator Z = new UnaryVectorScalarOperator(5, ".z");
         public static UnaryVectorScalarOperator LENGTH = new UnaryVectorScalarOperator(5, ".l");
+    }
+
+    public partial class RangeScalarExpr : ScalarExpr {
+        public class Pair {
+            public readonly ScalarExpr MoreThan;
+            public readonly ScalarExpr Value;
+            public Pair(ScalarExpr moreThan, ScalarExpr value) {
+                MoreThan = moreThan;
+                Value = value;
+            }
+        }
+
+        private readonly ScalarExpr _expr;
+        private readonly ScalarExpr _value0;
+        private readonly IEnumerable<Pair> _pairs;
+        public RangeScalarExpr(ScalarExpr expr, ScalarExpr value0, IEnumerable<Pair> pairs) {
+            _expr = expr;
+            _value0 = value0;
+            _pairs = pairs;
+        }
+
+        public ScalarExpr Expr { get { return _expr; } }
+        public ScalarExpr Value0 { get { return _value0; } }
+        public IEnumerable<Pair> Pairs { get { return _pairs; } }
+        
+        protected internal override string ToString(AbstractOperator parentOp) {
+            var sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append(_expr.ToString());
+            sb.Append(":");
+            sb.Append(_value0.ToString());
+            foreach (var pair in _pairs) {
+                sb.Append(pair.MoreThan.ToString());
+                sb.Append(":");
+                sb.Append(pair.Value.ToString());                
+            }
+            sb.Append("}");
+            return sb.ToString();
+        }
     }
 
     public partial class ConstScalar : ScalarExpr {

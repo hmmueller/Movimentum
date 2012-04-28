@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Movimentum.Solver1;
 
 namespace Movimentum.Model {
@@ -290,7 +291,14 @@ namespace Movimentum.Model {
             LENGTH._create = innerExpr => UnaryScalarOperator.SQUAREROOT.CreateSolverExpression(
                 BinaryVectorScalarOperator.TIMES.CreateSolverExpression(innerExpr, innerExpr));
         }
+    }
 
+    public partial class RangeScalarExpr {
+        public override AbstractExpr CreateSolverExpression(double t, double iv) {
+            return new RangeExpr(_expr.CreateSolverExpression(t, iv),
+                _value0.CreateSolverExpression(t, iv),
+                _pairs.Select(p => new RangeExpr.Pair(p.MoreThan.CreateSolverExpression(t, iv), p.Value.CreateSolverExpression(t, iv))));
+        }
     }
 
     public partial class ConstScalar {

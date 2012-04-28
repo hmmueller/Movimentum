@@ -1,4 +1,5 @@
-﻿using Movimentum.Model;
+﻿using System.Collections.Generic;
+using Movimentum.Model;
 
 namespace Movimentum.Solver1 {
     public abstract class AbstractExpr { }
@@ -80,6 +81,33 @@ namespace Movimentum.Solver1 {
     public class Times : BinaryOperator { }
     public class Divide : BinaryOperator { }
     // some more to come
+
+
+    public partial class RangeExpr : AbstractExpr {
+        public class Pair {
+            public readonly AbstractExpr MoreThan;
+            public readonly AbstractExpr Value;
+
+            public Pair(AbstractExpr moreThan, AbstractExpr value) {
+                MoreThan = moreThan;
+                Value = value;
+            }
+        }
+
+        private readonly AbstractExpr _expr;
+        private readonly AbstractExpr _value0;
+        private readonly IEnumerable<Pair> _pairs;
+
+        public RangeExpr(AbstractExpr expr, AbstractExpr value0, IEnumerable<Pair> pairs) {
+            _expr = expr;
+            _value0 = value0;
+            _pairs = pairs;
+        }
+
+        public AbstractExpr Expr { get { return _expr; } }
+        public AbstractExpr Value0 { get { return _value0; } }
+        public IEnumerable<Pair> Pairs { get { return _pairs; } }
+    }
 
     public abstract class ScalarConstraint {}
 

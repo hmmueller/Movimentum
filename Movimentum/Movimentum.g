@@ -243,6 +243,16 @@
           ','               
           v2=vectorexpr
           ')'               { result = new BinaryVectorScalarExpr(v1, BinaryVectorScalarOperator.ANGLE, v2); }
+      | '{' 
+	    t=scalarexpr
+	    ':' 
+		l=scalarexpr        {{ var pairs = new List<RangeScalarExpr.Pair>(); }}
+	    ( '>'
+          r=scalarexpr
+		  ':'
+          l=scalarexpr      { pairs.Add(new RangeScalarExpr.Pair(r,l)); }
+		)+
+		'}'                 { result = new RangeScalarExpr(t, l, pairs); }
       | n=number            { result = new ConstScalar(n); }
       | IDENT               { result = new ScalarVariable($IDENT.Text); }
       | '_'                 { result = new ScalarVariable("_" + _anonymousVarCt++); }
