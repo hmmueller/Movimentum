@@ -7,11 +7,12 @@ using Antlr.Runtime;
 using Movimentum.Lexer;
 using Movimentum.Model;
 using Movimentum.Parser;
+using Movimentum.SubstitutionSolver3;
 
 namespace Movimentum {
     class Program {
         static void Main(string[] args) {
-            string scriptText; 
+            string scriptText;
             using (StreamReader sr = new StreamReader(args[0])) {
                 scriptText = sr.ReadToEnd();
             }
@@ -34,16 +35,23 @@ namespace Movimentum {
             return script;
         }
 
-        internal static void Interpret(Script script, string prefix = "F") {
+        internal static void Interpret(Script script, string prefix) {
             IEnumerable<Frame> frames = script.CreateFrames();
+
+            double range;
+            {
+                double maxDist = (script.Config.Width + script.Config.Height) * 10;
+                range = maxDist * maxDist;
+            }
+
+            IDictionary<Variable, VariableRangeRestriction> previousState = new Dictionary<Variable, VariableRangeRestriction>();
 
             foreach (var f in frames) {
                 var bitmap = new Bitmap(script.Config.Width, script.Config.Height);
                 Graphics drawingPane = Graphics.FromImage(bitmap);
 
                 // Compute locations for each anchor of each thing.
-                IDictionary<string, 
-                    IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints();
+                IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(range, ref previousState);
                 foreach (var th in script.Things) {
                     th.Draw(drawingPane, anchorLocations[th.Name]);
                 }

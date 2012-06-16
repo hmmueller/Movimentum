@@ -166,7 +166,7 @@
       | v=vector            { result = v; }
       | a=anchor            { result = a; }
       | IDENT               { result = new VectorVariable($IDENT.Text); }
-      | '_'                 { result = new VectorVariable("#" + _anonymousVarCt++); }
+      | '_'                 { result = new VectorVariable("_#" + _anonymousVarCt++); }
     ;                       
                             
     vector returns [Vector result]
@@ -255,7 +255,7 @@
 		'}'                 { result = new RangeScalarExpr(t, l, pairs); }
       | n=number            { result = new ConstScalar(n); }
       | IDENT               { result = new ScalarVariable($IDENT.Text); }
-      | '_'                 { result = new ScalarVariable("_" + _anonymousVarCt++); }
+      | '_'                 { result = new ScalarVariable("_$" + _anonymousVarCt++); }
       // | thing COLOR      { result = ...; }
       | T                   { result = new T(); }
       | IV                  { result = new IV(); }

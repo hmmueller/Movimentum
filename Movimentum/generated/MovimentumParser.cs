@@ -1,4 +1,4 @@
-// $ANTLR 3.1.1 Movimentum.g 2012-04-28 21:31:49
+// $ANTLR 3.1.1 Movimentum.g 2012-05-01 00:11:55
 // The variable 'variable' is assigned but its value is never used.
 #pragma warning disable 168, 219
 // Unreachable code detected.
@@ -1862,7 +1862,7 @@ public partial class MovimentumParser : Parser
                     	Match(input,39,FOLLOW_39_in_vectorexpr52496); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
-                    	   result = new VectorVariable("#" + _anonymousVarCt++); 
+                    	   result = new VectorVariable("_#" + _anonymousVarCt++); 
                     	}
 
                     }
@@ -2700,7 +2700,7 @@ public partial class MovimentumParser : Parser
                     	Match(input,39,FOLLOW_39_in_scalarexpr53919); if (state.failed) return result;
                     	if ( state.backtracking == 0 ) 
                     	{
-                    	   result = new ScalarVariable("_" + _anonymousVarCt++); 
+                    	   result = new ScalarVariable("_$" + _anonymousVarCt++); 
                     	}
 
                     }

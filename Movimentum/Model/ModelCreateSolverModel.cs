@@ -1,42 +1,65 @@
 ﻿using System;
 using System.Linq;
-using Movimentum.Solver1;
+using Movimentum.SubstitutionSolver3;
 
 namespace Movimentum.Model {
     #region Step
 
     abstract public partial class Constraint {
-        public abstract ScalarConstraint[] CreateSolverConstraints(double t, double iv);
+        public abstract AbstractConstraint[] CreateSolverConstraints(double t, double iv);
+    }
+
+    public partial class RigidBodyConstraint {
+        public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
+            AbstractExpr[] anchorExpr = _anchor.CreateSolverExpressions(t, iv);
+            AbstractExpr[] rhsExpr = _rhs1.CreateSolverExpressions(t, iv);
+            return new[] {
+                CreateEqualsZero(anchorExpr[0], rhsExpr[0]),
+                CreateEqualsZero(anchorExpr[1], rhsExpr[1]),
+                CreateEqualsZero(anchorExpr[2], rhsExpr[2]),
+            };
+        }
+
+        private EqualsZeroConstraint CreateEqualsZero(AbstractExpr lhs, AbstractExpr rhs) {
+            return new EqualsZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(lhs, rhs));
+        }
     }
 
     public partial class VectorEqualityConstraint {
-        public override ScalarConstraint[] CreateSolverConstraints(double t, double iv) {
+        public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
             AbstractExpr[] anchorExpr = _anchor.CreateSolverExpressions(t, iv);
             AbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
             return new[] {
-                new Equation(anchorExpr[0], rhsExpr[0]),
-                new Equation(anchorExpr[1], rhsExpr[1]),
-                new Equation(anchorExpr[2], rhsExpr[2]),
+                CreateEqualsZero(anchorExpr[0], rhsExpr[0]),
+                CreateEqualsZero(anchorExpr[1], rhsExpr[1]),
+                CreateEqualsZero(anchorExpr[2], rhsExpr[2]),
             };
+        }
+
+        private EqualsZeroConstraint CreateEqualsZero(AbstractExpr lhs, AbstractExpr rhs) {
+            return new EqualsZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(lhs, rhs));
         }
     }
 
     public partial class ScalarEqualityConstraint {
-        public override ScalarConstraint[] CreateSolverConstraints(double t, double iv) {
-            return new[] { new Equation(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv)) };
+        public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
+
+            return new[] {
+                new EqualsZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv)))
+            };
         }
     }
 
     public partial class ScalarInequalityConstraint {
-        public override ScalarConstraint[] CreateSolverConstraints(double t, double iv) {
+        public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
             if (_operator == ScalarInequalityOperator.LT) {
-                return new[] { new LessInequality(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv)) };
+                return new[] { new MoreThanZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(_rhs.CreateSolverExpression(t, iv), new NamedVariable(_variable))) };
             } else if (_operator == ScalarInequalityOperator.LE) {
-                return new[] { new LessOrEqualInequality(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv)) };
+                return new[] { new AtLeastZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(_rhs.CreateSolverExpression(t, iv), new NamedVariable(_variable))) };
             } else if (_operator == ScalarInequalityOperator.GT) {
-                return new[] { new LessInequality(_rhs.CreateSolverExpression(t, iv), new NamedVariable(_variable)) };
+                return new[] { new MoreThanZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv))) };
             } else if (_operator == ScalarInequalityOperator.GE) {
-                return new[] { new LessOrEqualInequality(_rhs.CreateSolverExpression(t, iv), new NamedVariable(_variable)) };
+                return new[] { new AtLeastZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv))) };
             } else {
                 throw new Exception("Unexpected Operator in ScalarInequalityConstraint");
             }
@@ -66,7 +89,7 @@ namespace Movimentum.Model {
             return _create(lhsExpr, rhsExpr);
         }
 
-        static BinaryVectorOperator() {
+        static void BinaryVectorOperatorInit() {
             PLUS._create = (lhsExpr, rhsExpr) => new[] {
                 BinaryScalarOperator.PLUS.CreateSolverExpression(lhsExpr[0], rhsExpr[0]),
                 BinaryScalarOperator.PLUS.CreateSolverExpression(lhsExpr[1], rhsExpr[1]),
@@ -112,8 +135,17 @@ namespace Movimentum.Model {
             };
         }
 
-        static BinaryScalarVectorOperator() {
+        private static AbstractExpr[] Times(AbstractExpr[] lhsExpr, AbstractExpr rhsExpr) {
+            return new[] {
+                BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[0], rhsExpr),
+                BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[1], rhsExpr),
+                BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[2], rhsExpr),
+            };
+        }
+
+        static void BinaryScalarVectorOperatorInit() {
             ROTATE2D._create = Rotate2D;
+            TIMES._create = Times;
         }
     }
 
@@ -130,7 +162,7 @@ namespace Movimentum.Model {
             return _create(innerExpr);
         }
 
-        static UnaryVectorOperator() {
+        static void UnaryVectorOperatorInit() {
             MINUS._create = innerExpr => new[] {
                 UnaryScalarOperator.MINUS.CreateSolverExpression(innerExpr[0]),
                 UnaryScalarOperator.MINUS.CreateSolverExpression(innerExpr[1]),
@@ -203,7 +235,7 @@ namespace Movimentum.Model {
             return _create(lhsExpr, rhsExpr);
         }
 
-        static BinaryScalarOperator() {
+        static void BinaryScalarOperatorInit() {
             PLUS._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Plus(), rhsExpr);
             MINUS._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Plus(), new UnaryExpression(rhsExpr, new UnaryMinus()));
             TIMES._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Times(), rhsExpr);
@@ -224,13 +256,14 @@ namespace Movimentum.Model {
             return _create(innerExpr);
         }
 
-        static UnaryScalarOperator() {
+        static void UnaryScalarOperatorInit() {
             MINUS._create = innerExpr => new UnaryExpression(innerExpr, new UnaryMinus());
             SQUARED._create = innerExpr => new UnaryExpression(innerExpr, new Square());
-            CUBED._create = innerExpr => new UnaryExpression(innerExpr, new Cube());
-            SQUAREROOT._create = innerExpr => new UnaryExpression(innerExpr, new Squareroot());
-            INTEGRAL._create = innerExpr => new UnaryExpression(innerExpr, new Integral());
-            DIFFERENTIAL._create = innerExpr => new UnaryExpression(innerExpr, new Differential());
+            //CUBED._create = innerExpr =>
+            //    BinaryScalarOperator.TIMES.CreateSolverExpression(SQUARED.CreateSolverExpression(innerExpr), innerExpr);
+            SQUAREROOT._create = innerExpr => new UnaryExpression(innerExpr, new FormalSquareroot());
+            //INTEGRAL._create = innerExpr => new UnaryExpression(innerExpr, new Integral());
+            //DIFFERENTIAL._create = innerExpr => new UnaryExpression(innerExpr, new Differential());
         }
     }
 
@@ -265,7 +298,7 @@ namespace Movimentum.Model {
                 BinaryScalarOperator.PLUS.CreateSolverExpression(y, z));
         }
 
-        static BinaryVectorScalarOperator() {
+        static void BinaryVectorScalarOperatorInit() {
             ANGLE._create = Angle;
             TIMES._create = Times;
         }
@@ -284,7 +317,7 @@ namespace Movimentum.Model {
             return _create(innerExpr);
         }
 
-        static UnaryVectorScalarOperator() {
+        static void UnaryVectorScalarOperatorInit() {
             X._create = innerExpr => innerExpr[0];
             Y._create = innerExpr => innerExpr[1];
             Z._create = innerExpr => innerExpr[2];

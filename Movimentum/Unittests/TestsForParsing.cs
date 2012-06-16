@@ -117,8 +117,8 @@ namespace Movimentum.Unittests {
 	                WH.P 	= WH.C + [_,0].r(360*.t/4);
                     B.L	 	= B.R + [_,0];
                     B.L		= [50,y];
-                    y		= ({ WH.P.y : WH.P.y
-                               > WH.Q.y : WH.Q.y
+                    y		= ({ WH.P.y   : WH.P.y
+                                 > WH.Q.y : WH.Q.y
                                }) + 0;
                 @20";
 
@@ -185,23 +185,23 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(7, script.Steps.Count());
             CollectionAssert.AreEqual(new[] { 10.0, 12.0, 14.0, 16.0, 18.0, 26.0, 32.0 }, script.Steps.Select(st => st.Time).ToArray());
 
-            Assert.AreEqual(2       // 1 rigid body constraint pair
+            Assert.AreEqual(1       // 1 rigid body constraint
                             + 1     // 1 constraint ZERO = 0
                             + 2     // 2 2d constraints
                             + 2     // 2 constraints specified in step 0
                             , script.Steps.ElementAt(0).Constraints.Count());
 
-            Assert.AreEqual(2       // 1 rigid body constraint pair
+            Assert.AreEqual(1       // 1 rigid body constraint
                             + 2     // 2 2d constraints
                             + 2     // 2 constraints specified in step 1
                             , script.Steps.ElementAt(1).Constraints.Count());
 
-            Assert.AreEqual(2       // 1 rigid body constraint pair
+            Assert.AreEqual(1       // 1 rigid body constraint
                             + 2     // 2 2d constraints
                             + 3     // 3 constraints specified in step 2
                             , script.Steps.ElementAt(2).Constraints.Count());
 
-            Assert.AreEqual(2       // 1 rigid body constraint pair
+            Assert.AreEqual(1       // 1 rigid body constraint
                             + 2     // 2 2d constraints
                             + 1     // 1 constraint specified in step 3
                             , script.Steps.ElementAt(3).Constraints.Count());
@@ -214,7 +214,6 @@ namespace Movimentum.Unittests {
 
             Assert.AreEqual(1       // 1 constraint specified in step 6
                             , script.Steps.ElementAt(6).Constraints.Count());
-
         }
 
 
@@ -331,18 +330,18 @@ namespace Movimentum.Unittests {
             }
             {
                 ScalarExpr x = CreateParserForSyntacticTests("((_-_)+_) ;").scalarexpr();
-                Assert.AreEqual(new BinaryScalarExpr(new BinaryScalarExpr(new ScalarVariable("_0"), BinaryScalarOperator.MINUS, new ScalarVariable("_1")),
+                Assert.AreEqual(new BinaryScalarExpr(new BinaryScalarExpr(new ScalarVariable("_$0"), BinaryScalarOperator.MINUS, new ScalarVariable("_$1")),
                                                      BinaryScalarOperator.PLUS,
-                                                     new ScalarVariable("_2"))
+                                                     new ScalarVariable("_$2"))
                     , x);
             }
             {
                 ScalarExpr x = CreateParserForSyntacticTests("(((_-_)+_).x) ;").scalarexpr();
                 Assert.AreEqual(
                     new UnaryVectorScalarExpr(
-                    new BinaryVectorExpr(new BinaryVectorExpr(new VectorVariable("#0"), BinaryVectorOperator.MINUS, new VectorVariable("#1")),
+                    new BinaryVectorExpr(new BinaryVectorExpr(new VectorVariable("_#0"), BinaryVectorOperator.MINUS, new VectorVariable("_#1")),
                                                      BinaryVectorOperator.PLUS,
-                                                     new VectorVariable("#2")),
+                                                     new VectorVariable("_#2")),
                                                      UnaryVectorScalarOperator.X)
                     , x);
             }
@@ -402,9 +401,9 @@ namespace Movimentum.Unittests {
             //}
             {
                 VectorExpr x = CreateParserForSyntacticTests("((_-_)+_) ;").vectorexpr();
-                Assert.AreEqual(new BinaryVectorExpr(new BinaryVectorExpr(new VectorVariable("#0"), BinaryVectorOperator.MINUS, new VectorVariable("#1")),
+                Assert.AreEqual(new BinaryVectorExpr(new BinaryVectorExpr(new VectorVariable("_#0"), BinaryVectorOperator.MINUS, new VectorVariable("_#1")),
                                                      BinaryVectorOperator.PLUS,
-                                                     new VectorVariable("#2"))
+                                                     new VectorVariable("_#2"))
                     , x);
             }
         }

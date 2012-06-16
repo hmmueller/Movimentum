@@ -109,6 +109,9 @@ namespace Movimentum.Model {
         public override int GetHashCode() {
             return _x.GetHashCode() + _y.GetHashCode() + _z.GetHashCode();
         }
+        public override string ToString() {
+            return "CV[" + X + ";" + Y + ";" + Z + "]";
+        }
     }
 
     #endregion Thingdefinition
@@ -135,6 +138,19 @@ namespace Movimentum.Model {
 
     abstract public partial class Constraint {
         public abstract string Key { get; }
+    }
+
+    public partial class RigidBodyConstraint : Constraint {
+        private readonly Anchor _anchor;
+        private readonly VectorExpr _rhs1;
+        public RigidBodyConstraint(Anchor anchor, VectorExpr rhs1) {
+            _anchor = anchor;
+            _rhs1 = rhs1;
+        }
+
+        public override string Key {
+            get { return _anchor.Thing + "_" + _anchor.Name + "_RB"; }
+        }
     }
 
     public partial class VectorEqualityConstraint : Constraint {
@@ -287,6 +303,10 @@ namespace Movimentum.Model {
         private BinaryVectorOperator(int precedence, string asString) : base(precedence, asString) { }
         public static BinaryVectorOperator PLUS = new BinaryVectorOperator(1, " #+ ");
         public static BinaryVectorOperator MINUS = new BinaryVectorOperator(1, " #- ");
+
+        static BinaryVectorOperator() {
+            BinaryVectorOperatorInit();
+        }
     }
 
     public partial class BinaryScalarVectorExpr : VectorExpr {
@@ -323,6 +343,10 @@ namespace Movimentum.Model {
         private BinaryScalarVectorOperator(int precedence, string asString) : base(precedence, asString) { }
         public static BinaryScalarVectorOperator ROTATE2D = new BinaryScalarVectorOperator(2, ".R");
         public static BinaryScalarVectorOperator TIMES = new BinaryScalarVectorOperator(2, " *# ");
+
+        static BinaryScalarVectorOperator() {
+            BinaryScalarVectorOperatorInit();
+        }
     }
 
     public partial class UnaryVectorExpr : VectorExpr {
@@ -357,6 +381,10 @@ namespace Movimentum.Model {
         public static UnaryVectorOperator MINUS = new UnaryVectorOperator(3, "#-");
         public static UnaryVectorOperator INTEGRAL = new UnaryVectorOperator(4, ".#i");
         public static UnaryVectorOperator DIFFERENTIAL = new UnaryVectorOperator(4, ".#d");
+
+        static UnaryVectorOperator() {
+            UnaryVectorOperatorInit();
+        }
     }
 
     public partial class Vector : VectorExpr {
@@ -486,6 +514,10 @@ namespace Movimentum.Model {
         public static BinaryScalarOperator MINUS = new BinaryScalarOperator(1, " - ");
         public static BinaryScalarOperator TIMES = new BinaryScalarOperator(2, " * ");
         public static BinaryScalarOperator DIVIDE = new BinaryScalarOperator(2, " / ");
+
+        static BinaryScalarOperator() {
+            BinaryScalarOperatorInit();
+        }
     }
 
     public partial class UnaryScalarExpr : ScalarExpr {
@@ -525,6 +557,10 @@ namespace Movimentum.Model {
         public static UnaryScalarOperator SQUAREROOT = new UnaryScalarOperator(4, "._q");
         public static UnaryScalarOperator INTEGRAL = new UnaryScalarOperator(5, "._i");
         public static UnaryScalarOperator DIFFERENTIAL = new UnaryScalarOperator(5, "._d");
+
+        static UnaryScalarOperator() {
+            UnaryScalarOperatorInit();
+        }
     }
 
     public partial class BinaryVectorScalarExpr : ScalarExpr {
@@ -561,6 +597,10 @@ namespace Movimentum.Model {
         private BinaryVectorScalarOperator(int precedence, string asString) : base(precedence, asString) { }
         public static BinaryVectorScalarOperator ANGLE = new BinaryVectorScalarOperator(5, " #a# ");
         public static BinaryVectorScalarOperator TIMES = new BinaryVectorScalarOperator(5, " #*# ");
+
+        static BinaryVectorScalarOperator() {
+            BinaryVectorScalarOperatorInit();
+        }
     }
 
     public partial class UnaryVectorScalarExpr : ScalarExpr {
@@ -596,6 +636,10 @@ namespace Movimentum.Model {
         public static UnaryVectorScalarOperator Y = new UnaryVectorScalarOperator(5, ".y");
         public static UnaryVectorScalarOperator Z = new UnaryVectorScalarOperator(5, ".z");
         public static UnaryVectorScalarOperator LENGTH = new UnaryVectorScalarOperator(5, ".l");
+
+        static UnaryVectorScalarOperator() {
+            UnaryVectorScalarOperatorInit();
+        }
     }
 
     public partial class RangeScalarExpr : ScalarExpr {
@@ -620,7 +664,7 @@ namespace Movimentum.Model {
         public ScalarExpr Expr { get { return _expr; } }
         public ScalarExpr Value0 { get { return _value0; } }
         public IEnumerable<Pair> Pairs { get { return _pairs; } }
-        
+
         protected internal override string ToString(AbstractOperator parentOp) {
             var sb = new StringBuilder();
             sb.Append("{");
@@ -630,7 +674,7 @@ namespace Movimentum.Model {
             foreach (var pair in _pairs) {
                 sb.Append(pair.MoreThan.ToString());
                 sb.Append(":");
-                sb.Append(pair.Value.ToString());                
+                sb.Append(pair.Value.ToString());
             }
             sb.Append("}");
             return sb.ToString();

@@ -72,12 +72,37 @@
     <Compile Include="MovimentumParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Solver1\SolverModel.cs" />
+    <Compile Include="SubstitutionSolver3\ConstantFoldingVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\ConstraintSet.cs" />
+    <Compile Include="SubstitutionSolver3\SolverModel3.cs" />
+    <Compile Include="SubstitutionSolver3\SolverModel2.cs" />
+    <Compile Include="SubstitutionSolver3\SimpleToStringVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\IterationSolver.cs" />
+    <Compile Include="SubstitutionSolver3\VariableDegreeVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\EvaluationVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\FindFormalSquarerootVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\IllinoisSolver.cs" />
+    <Compile Include="SubstitutionSolver3\VariableCountingVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\RewritingVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\Ignore.cs" />
+    <Compile Include="SubstitutionSolver3\ISolverModelVisitors.cs" />
+    <Compile Include="SubstitutionSolver3\Rank.cs" />
+    <Compile Include="SubstitutionSolver3\Rewrites.cs" />
+    <Compile Include="SubstitutionSolver3\SolverModel.cs" />
+    <Compile Include="SubstitutionSolver3\ToStringVisitor.cs" />
+    <Compile Include="SubstitutionSolver3\VariableKnowledge.cs" />
+    <Compile Include="Unittests\TestStringVisitors.cs" />
+    <Compile Include="Unittests\TestSolveConstraintSet.cs" />
+    <Compile Include="Unittests\TestConstantFoldingVisitor.cs" />
+    <Compile Include="Unittests\TestCreateConstraintSet.cs" />
     <Compile Include="Unittests\TestMovimentumParser.cs" />
     <Compile Include="Unittests\TestsForParsing.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Unittests\TestsWithFrames.cs" />
+    <Compile Include="Unittests\TestsWithFrames.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Movimentum.g" />

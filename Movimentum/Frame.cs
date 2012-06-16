@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using Movimentum.Model;
+using Movimentum.SubstitutionSolver3;
 
 namespace Movimentum {
     public class Frame {
@@ -38,39 +40,34 @@ namespace Movimentum {
         }
 
         public override string ToString() {
-            return base.ToString() + "{T=" + _absoluteTime + " t=" + _relativeTime + " iv=" + _iv + "}: " + string.Join("; ", _constraints);
+            return base.ToString() + "{#=" + _frameNo + " T=" + _absoluteTime + " t=" + _relativeTime + " iv=" + _iv + "}: " + string.Join("; ", _constraints);
         }
 
-        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints() {
+        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableRangeRestriction> result) {
+            result = ConstraintSet.Solve(Constraints, _absoluteTime, _iv, 200 * Constraints.Count(), result, FrameNo);
+
+            return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetSomeValue()));
+        }
+
+        private static Dictionary<string, IDictionary<string, ConstVector>> ConvertResultToAnchorLocations(IDictionary<Variable, double> result) {
             var anchorLocations = new Dictionary<string, IDictionary<string, ConstVector>>();
-            #region ----------- TEMPORARY CODE FOR TRYING OUT THE DRAWING MACHINE!! -----------
-            foreach (var c in _constraints) {
-                var constraint = c as VectorEqualityConstraint;
-                if (constraint != null) {
-                    Anchor anchor = constraint.Anchor;
-                    Vector vector = (Vector)constraint.Rhs;
-                    double x = Get(vector.X as BinaryScalarExpr);
-                    double y = Get(vector.Y as BinaryScalarExpr);
-                    var resultVector = new ConstVector(x, y);
-                    IDictionary<string, ConstVector> anchorLocationsForThing;
-                    if (!anchorLocations.TryGetValue(anchor.Thing, out anchorLocationsForThing)) {
-                        anchorLocationsForThing = new Dictionary<string, ConstVector>();
-                        anchorLocations.Add(anchor.Thing, anchorLocationsForThing);
-                    }
-                    anchorLocationsForThing.Add(anchor.Name, resultVector);
-                } else {
-                    // We ignore the rigid body constraints and the 2d constraints for our testing.
+
+            foreach (var anchorXVariable in result.Keys.OfType<AnchorVariable>().Where(v => v.Coordinate == Anchor.Coordinate.X)) {
+                Anchor anchor = anchorXVariable.Anchor;
+                ConstVector resultVector = new ConstVector(
+                    result[anchorXVariable],
+                    result[new AnchorVariable(anchor, Anchor.Coordinate.Y)],
+                    result[new AnchorVariable(anchor, Anchor.Coordinate.Z)]
+                    );
+                IDictionary<string, ConstVector> anchorLocationsForThing;
+                if (!anchorLocations.TryGetValue(anchor.Thing, out anchorLocationsForThing)) {
+                    anchorLocationsForThing = new Dictionary<string, ConstVector>();
+                    anchorLocations.Add(anchor.Thing, anchorLocationsForThing);
                 }
+                anchorLocationsForThing.Add(anchor.Name, resultVector);
             }
-            #endregion -------- TEMPORARY CODE FOR TRYING OUT THE DRAWING MACHINE!! --------------
             return anchorLocations;
         }
 
-        #region --------------- TEMPORARY CODE FOR TRYING OUT THE DRAWING MACHINE!! --------------
-        private double Get(BinaryScalarExpr expr) {
-                var lhs = (ConstScalar)expr.Lhs;
-                return lhs.Value + _relativeTime; // Expression MUST be (c + .t), with constant c.
-        }
-        #endregion ------------ TEMPORARY CODE FOR TRYING OUT THE DRAWING MACHINE!! --------------
     }
 }

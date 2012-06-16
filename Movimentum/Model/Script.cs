@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Movimentum.SubstitutionSolver3;
 
 namespace Movimentum.Model {
     public partial class Script {
@@ -49,7 +50,9 @@ namespace Movimentum.Model {
             for (int i = 0; i < anchors.Length; i++) {
                 var anchor1 = anchors[i];
                 for (int j = i + 1; j < anchors.Length; j++) {
-                    AddRigidBodyConstraint(st, th.Name, anchor1, anchors[j]);
+                    //AddRigidBodyConstraint(st, th.Name, anchor1, anchors[j]); // ATTEMPT 2
+                    AddAssignableRigidBodyConstraints(st, th.Name, anchor1, anchors[j]); // ATTEMPT 3
+                    //AddAssignableRigidBodyConstraintsWithBothRoots(st, th.Name, anchor1, anchors[j]);  // ATTEMPT 4
                 }
 
                 // For 2D anchors, we create an additional "2d constraint", which
@@ -62,6 +65,8 @@ namespace Movimentum.Model {
                 }
             }
         }
+
+        #region ATTEMPT 2
 
         /// <summary>
         /// Add auxVar = (P.x - Q.x)² + (P.y - Q.y)² + (P.z - Q.z)² and auxVar = constant (of value |P - Q|²) to step <c>st</c>.
@@ -100,9 +105,65 @@ namespace Movimentum.Model {
             st.AddConstraint(constraint2);
         }
 
+        #endregion ATTEMPT 2
+
+        #region ATTEMPT 3
+
+        /// <summary>
+        /// Add 6 "solved" constraints |P - Q|² = (P.x - Q.x)² + (P.y - Q.y)² + (P.z - Q.z)² to step <c>st</c>.
+        /// </summary>
+        private static void AddAssignableRigidBodyConstraints(Step st, string thing, ConstAnchor constAnchor1, ConstAnchor constAnchor2) {
+            double squaredDistance;
+            {
+                ConstVector cv1 = constAnchor1.Location;
+                ConstVector cv2 = constAnchor2.Location;
+                squaredDistance = Square(cv1.X - cv2.X) + Square(cv1.Y - cv2.Y) + Square(cv1.Z - cv2.Z);
+            }
+
+            var anchor1 = new Anchor(thing, constAnchor1.Name);
+            var anchor2 = new Anchor(thing, constAnchor2.Name);
+            UnaryScalarExpr dxSquared = SquareCoord(UnaryVectorScalarOperator.X, anchor1, anchor2);
+            UnaryScalarExpr dySquared = SquareCoord(UnaryVectorScalarOperator.Y, anchor1, anchor2);
+            UnaryScalarExpr dzSquared = SquareCoord(UnaryVectorScalarOperator.Z, anchor1, anchor2);
+
+            st.AddConstraint(CreateRigidBodyConstraint(anchor1, anchor2, dxSquared, dySquared, dzSquared, new ConstScalar(squaredDistance)));
+            // ATTEMPT 4 - TODO: We drop the second constraint - while debugging the solver, I do not want so many constraints .....!!!!!
+            //st.AddConstraint(CreateRigidBodyConstraint(anchor2, anchor1, dxSquared, dySquared, dzSquared, new ConstScalar(squaredDistance)));
+        }
+
+        private static Constraint CreateRigidBodyConstraint(Anchor a1, Anchor a2, ScalarExpr dxSquared, ScalarExpr dySquared, ScalarExpr dzSquared, ConstScalar squaredDistance) {
+            // a1.X = a2.X + sqrt(squaredDistance - dySquared - dzSquared)
+            //    a1.X - a2.X = sqrt(squaredDistance - dySquared - dzSquared)
+            //    (a1.X - a2.X)² = squaredDistance - dySquared - dzSquared
+            // a1.Y = a2.Y + sqrt(squaredDistance - dxSquared - dzSquared)
+            // a1.Z = a2.Z + sqrt(squaredDistance - dxSquared - dySquared)
+            ////return new VectorEqualityConstraint(a1,
+            ////        new BinaryVectorExpr(a2, BinaryVectorOperator.PLUS, new Vector(
+            ////            SquareRootOfDMinusSquares(squaredDistance, dySquared, dzSquared),
+            ////            SquareRootOfDMinusSquares(squaredDistance, dxSquared, dzSquared),
+            ////            SquareRootOfDMinusSquares(squaredDistance, dxSquared, dySquared))));
+            // TEMPORARY TODO: Z constraint removed!!!!!!!!!!!!!!!!
+            return new VectorEqualityConstraint(a1,
+                    new BinaryVectorExpr(a2, BinaryVectorOperator.PLUS, new Vector(
+                        SquareRootOfDMinusSquares(squaredDistance, dySquared, dzSquared),
+                        SquareRootOfDMinusSquares(squaredDistance, dxSquared, dzSquared),
+                        new ConstScalar(0))));
+        }
+
+        private static ScalarExpr SquareRootOfDMinusSquares(ConstScalar squaredDistance, ScalarExpr square1, ScalarExpr square2) {
+            // sqrt(squaredDistance - square1 - square2)
+            return new UnaryScalarExpr(UnaryScalarOperator.SQUAREROOT,
+                        new BinaryScalarExpr(squaredDistance, BinaryScalarOperator.MINUS,
+                            new BinaryScalarExpr(square1, BinaryScalarOperator.PLUS, square2))
+            );
+        }
+
+        #endregion ATTEMPT 3
+
         private static double Square(double v) {
             return v * v;
         }
+
 
         /// <summary>
         /// Return (anchor1.c - anchor2.c)², where .c is .x or .y or .z

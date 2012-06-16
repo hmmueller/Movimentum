@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Movimentum.Model;
+using Movimentum.SubstitutionSolver3;
 using NUnit.Framework;
 
 namespace Movimentum.Unittests {
@@ -148,10 +151,96 @@ namespace Movimentum.Unittests {
                 		B1.Q = [20 + .t, 20 + .t];
                 @10";
             Script script = Program.Parse(s);
-            Program.Interpret(script);
+            Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
         }
 
         [Test]
+        public void TestInfinity() {
+            Assert.IsTrue(3 > double.NegativeInfinity);
+            Assert.IsTrue(3 < double.PositiveInfinity);
+            Assert.IsTrue(3 <= double.PositiveInfinity);
+            Assert.IsFalse(3 > double.PositiveInfinity);
+        }
+
+        // Works up to here ---------
+
+        [Test]
+        public void TestRotatingBarCoordinates() {
+            const string s =
+                @".config(8, 600, 400);
+                WH : .bar C = [0,0] P = [-60,80];
+                // length of bar: 100
+
+                @0
+	                WH.C 	= [200,200];
+	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
+                    x       > 0;
+                @2";
+            Script script = Program.Parse(s);
+
+            IEnumerable<Frame> frames = script.CreateFrames();
+
+            IDictionary<Variable, VariableRangeRestriction> previousState = new Dictionary<Variable, VariableRangeRestriction>();
+
+            foreach (var f in frames) {
+                IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
+                double x = previousState[new NamedVariable("x")].GetSomeValue();
+                Assert.AreEqual(10, x, 1e-2);
+
+                ConstVector whcLocation = anchorLocations["WH"]["C"];
+                Assert.AreEqual(200, whcLocation.X, 1e-2);
+                Assert.AreEqual(200, whcLocation.Y, 1e-2);
+                Assert.AreEqual(0, whcLocation.Z, 1e-2);
+
+                double alpha = f.FrameNo / 8.0 * 2 * Math.PI - Math.PI / 8;
+                //double alphaDegrees = alpha / Math.PI * 180 % 360;
+                ConstVector whpLocation = anchorLocations["WH"]["P"];
+                Assert.AreEqual(200 + 100 * Math.Cos(alpha), whpLocation.X, 1e-2);
+                Assert.AreEqual(200 + 100 * Math.Sin(alpha), whpLocation.Y, 1e-2);
+                Assert.AreEqual(0, whpLocation.Z, 1e-2);
+            }
+        }
+
+        private string MkTestDir() {
+            string dir = Path.Combine(Path.GetTempPath(), "MovimentumTest");
+            Directory.CreateDirectory(dir);
+            return Path.Combine(dir, "F_");
+        }
+
+        [Test]
+        public void TestRotatingBar() {
+            const string s =
+                @".config(8, 600, 400);
+                WH : .bar C = [0,0] P = [-60,80];
+                // length of bar: 100
+
+                @0
+	                WH.C 	= [200,200];
+	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
+                    x       > 0;
+                @2";
+            Script script = Program.Parse(s);
+
+            string prefix = MkTestDir();
+            Program.Interpret(script, prefix);
+        }
+
+        [Test, Ignore("Not yet there")]
+        public void TestRotatingTriangle() {
+            const string s =
+                @".config(10, 600, 400);
+                WH : .bar C = [0,0] P = [-10,20] Q = [10,20];
+
+                @0
+	                WH.C 	= [100,100];
+	                WH.P 	= WH.C + [x,0].r(360*.t/4);
+                    //// x       > 0; // ????
+                @20";
+            Script script = Program.Parse(s);
+            Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+        }
+
+        [Test, Ignore("Not yet there")]
         public void TestWalschaertsHeusinger() {
             const string s = @".config(10, 600, 400);
 
@@ -203,8 +292,27 @@ namespace Movimentum.Unittests {
                         WH.P = [0,1].r(360*.t/4);
                     @20";
             Script script = Program.Parse(s);
-            script.CreateFrames();
-            //Program.Interpret(script); - not yet possible to run these constraints.
+            Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+        }
+
+        [Test, Ignore("Not yet there")]
+        public void TestMaximum() {
+            const string s =
+                @".config(10, 600, 400);
+                WH : .bar C = [0,0] P = [-10,20] Q = [10,20];
+                B  : .bar L = [0,0] R = [200,0];
+
+                @0
+	                WH.C 	= [100,100];
+	                WH.P 	= WH.C + [_,0].r(360*.t/4);
+                    B.L	 	= B.R + [_,0];
+                    B.L		= [50,y];
+                    y		= ({ WH.P.y   : WH.Q.y
+                                 > WH.Q.y : WH.P.y
+                               });
+                @20";
+            Script script = Program.Parse(s);
+            Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
         }
     }
 }
