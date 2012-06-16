@@ -9,22 +9,6 @@ namespace Movimentum.Model {
         public abstract AbstractConstraint[] CreateSolverConstraints(double t, double iv);
     }
 
-    public partial class RigidBodyConstraint {
-        public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
-            AbstractExpr[] anchorExpr = _anchor.CreateSolverExpressions(t, iv);
-            AbstractExpr[] rhsExpr = _rhs1.CreateSolverExpressions(t, iv);
-            return new[] {
-                CreateEqualsZero(anchorExpr[0], rhsExpr[0]),
-                CreateEqualsZero(anchorExpr[1], rhsExpr[1]),
-                CreateEqualsZero(anchorExpr[2], rhsExpr[2]),
-            };
-        }
-
-        private EqualsZeroConstraint CreateEqualsZero(AbstractExpr lhs, AbstractExpr rhs) {
-            return new EqualsZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(lhs, rhs));
-        }
-    }
-
     public partial class VectorEqualityConstraint {
         public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
             AbstractExpr[] anchorExpr = _anchor.CreateSolverExpressions(t, iv);

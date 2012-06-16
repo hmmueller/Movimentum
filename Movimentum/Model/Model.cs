@@ -140,19 +140,6 @@ namespace Movimentum.Model {
         public abstract string Key { get; }
     }
 
-    public partial class RigidBodyConstraint : Constraint {
-        private readonly Anchor _anchor;
-        private readonly VectorExpr _rhs1;
-        public RigidBodyConstraint(Anchor anchor, VectorExpr rhs1) {
-            _anchor = anchor;
-            _rhs1 = rhs1;
-        }
-
-        public override string Key {
-            get { return _anchor.Thing + "_" + _anchor.Name + "_RB"; }
-        }
-    }
-
     public partial class VectorEqualityConstraint : Constraint {
         private readonly Anchor _anchor;
         private readonly VectorExpr _rhs;
