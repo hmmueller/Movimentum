@@ -12,14 +12,14 @@ namespace Movimentum.SubstitutionSolver3 {
             IDictionary<Variable, VariableRangeRestriction> restrictions,
             int maxNeededRank);
 
-        protected static VariableRangeRestriction GetVariableRangeRestriction(
-                Variable variable,
-                IDictionary<Variable, VariableRangeRestriction> variableRangeRestrictions) {
-            VariableRangeRestriction result;
-            return !variableRangeRestrictions.TryGetValue(variable, out result)
-                ? new VariableRangeRestriction(variable, Double.NegativeInfinity, Double.PositiveInfinity)
-                : result;
-        }
+        //protected static VariableRangeRestriction GetVariableRangeRestriction(
+        //        Variable variable,
+        //        IDictionary<Variable, VariableRangeRestriction> variableRangeRestrictions) {
+        //    VariableRangeRestriction result;
+        //    return !variableRangeRestrictions.TryGetValue(variable, out result)
+        //        ? new VariableRangeRestriction(variable, Double.NegativeInfinity, Double.PositiveInfinity)
+        //        : result;
+        //}
     }
 
     public abstract partial class ScalarConstraint {
@@ -31,36 +31,148 @@ namespace Movimentum.SubstitutionSolver3 {
     }
 
     public partial class EqualsZeroConstraint {
+        ////public override RewriteSet CreateRewritesFromSingleConstraint(IEnumerable<AbstractConstraint> allOtherConstraints, IDictionary<Variable, VariableRangeRestriction> previousValues, IDictionary<Variable, VariableRangeRestriction> restrictions, int maxNeededRank) {
+        ////    if (maxNeededRank >= 1) {
+        ////        // 0 = c
+        ////        var c = new Catch<Constant>();
+        ////        if (Expr.Unify(c)) {
+        ////            return new TrueFalseRewrite(this, c.Match.Value.Near(0)).AsSet(1);
+        ////        }
+        ////    }
+        ////    if (maxNeededRank >= 2) {
+        ////        // 0 = v
+        ////        var v = new Catch<Variable>();
+        ////        if (Expr.Unify(v)) {
+        ////            Variable variable = v.Match;
+        ////            return new ReplaceRewrite(this,
+        ////                variable,
+        ////                new Constant(0),
+        ////                cs => cs.AddVariableRestriction(new VariableRangeRestriction(variable, 0))).AsSet(2);
+        ////        }
+        ////    }
+        ////    if (maxNeededRank >= 3) {
+        ////        // 0 = v + c
+        ////        var v = new Catch<Variable>();
+        ////        var c = new Catch<Constant>();
+        ////        if (Expr.Unify(new BinaryExpression(v, new Plus(), c))) {
+        ////            Variable variable = v.Match;
+        ////            double value = -c.Match.Value;
+        ////            return new ReplaceRewrite(this,
+        ////                variable,
+        ////                new Constant(value),
+        ////                cs => cs.AddVariableRestriction(new VariableRangeRestriction(variable, value))).AsSet(3);
+        ////        }
+        ////    }
+        ////    if (maxNeededRank >= 4) {
+        ////        // Split constraint with formal square root
+        ////        var findFormalSquarerootVisitor = new FindFormalSquarerootVisitor();
+        ////        Expr.Accept(findFormalSquarerootVisitor, Ig.nore);
+        ////        if (findFormalSquarerootVisitor.InnermostFormalSquarerootExpressions.Any()) {
+        ////            IEnumerable<ReplaceRewrite> formalSquarerootRewrites = CreateFormalSquarerootRewrites(findFormalSquarerootVisitor.InnermostFormalSquarerootExpressions);
+        ////            return new RewriteSet(formalSquarerootRewrites, 4);
+        ////        }
+        ////    }
+        ////    if (maxNeededRank >= 5) {
+        ////        var dv = new VariableDegreeVisitor();
+        ////        Dictionary<Variable, VariableDegree> degrees = Expr.Accept(dv, Ig.nore);
+        ////        if (degrees.Count == 1 && degrees.First().Value == VariableDegree.One) {
+        ////            // Linear expression with a single variable!
+        ////            Variable variable = degrees.First().Key;
+        ////            double y0 = Expr.Accept(new EvaluationVisitor(variable, 0), Ig.nore);
+        ////            double y1 = Expr.Accept(new EvaluationVisitor(variable, 1), Ig.nore);
+        ////            if (y0.Near(y1)) {
+        ////                // Horizontal line
+        ////                return new TrueFalseRewrite(this, y0.Near(0)).AsSet(5);
+        ////            } else {
+        ////                // Compute solution
+        ////                double x0 = y0 / (y0 - y1);
+        ////                return new ReplaceRewrite(this,
+        ////                    variable,
+        ////                    new Constant(x0),
+        ////                    cs => cs.AddVariableRestriction(new VariableRangeRestriction(variable, x0))).AsSet(5);
+        ////            }
+        ////        }
+        ////    }
+        ////    if (maxNeededRank >= 6) {
+        ////        // 0 = v + (expr without v)
+        ////        var v = new Catch<Variable>();
+        ////        var e = new Catch<AbstractExpr>();
+        ////        if (Expr.Unify(new BinaryExpression(v, new Plus(), e))) {
+        ////            Variable variable = v.Match;
+        ////            AbstractExpr expr = e.Match.UnaryMinus();
+        ////            return new BacksubstitutionRewrite(this,
+        ////                variable,
+        ////                expr
+        ////                ).AsSet(6);
+        ////        }
+        ////    }
+        ////    // rank 7 is used for creating VariableRestrictions from AtLeastZeroConstraint - BEFORE we go into solving (with square roots!)!
+        ////    if (maxNeededRank >= 8) {
+        ////        // Solve equations with only a single variable
+        ////        ISolver solver = new CompoundSolver(Expr, 0.1);
+        ////        if (solver.IsSolvable) {
+        ////            #region TEMPORARY!!!
+
+        ////            if (solver.Variable.Name == "x") { }
+        ////            // x for our first test case is always 10.
+        ////            double value = 10;
+        ////            return new ReplaceRewrite(this,
+        ////                                      solver.Variable,
+        ////                                      new Constant(value),
+        ////                                      cs => cs.AddVariableRestriction(new VariableRangeRestriction(solver.Variable, value))).AsSet(8);
+        ////            #endregion TEMPORARY!!!
+
+
+        ////            //VariableRangeRestriction previousValue = GetVariableRangeRestriction(solver.Variable, previousValues);
+        ////            //VariableRangeRestriction restriction = GetVariableRangeRestriction(solver.Variable, restrictions);
+        ////            //double value = solver.Solve(previousValue, restriction);
+        ////            //if (double.IsNaN(value)) {
+        ////            //    return new TrueFalseRewrite(this, false).AsSet(8);
+        ////            //} else {
+        ////            //    return new ReplaceRewrite(this,
+        ////            //                              solver.Variable,
+        ////            //                              new Constant(value),
+        ////            //                              cs => cs.AddVariableRestriction(new VariableRangeRestriction(solver.Variable, value))).AsSet(8);
+        ////            //}
+        ////        }
+        ////    }
+
+        ////    return new NoRewrite(this).AsSet(int.MaxValue - 2);
+        ////}
+
         public override RewriteSet CreateRewritesFromSingleConstraint(IEnumerable<AbstractConstraint> allOtherConstraints, IDictionary<Variable, VariableRangeRestriction> previousValues, IDictionary<Variable, VariableRangeRestriction> restrictions, int maxNeededRank) {
             if (maxNeededRank >= 1) {
                 // 0 = c
-                var c = new Catch<Constant>();
-                if (Expr.Unify(c)) {
-                    return new TrueFalseRewrite(this, c.Match.Value.Near(0)).AsSet(1);
+                var c = new TypeMatchTemplate<Constant>();
+                ExpressionMatcher m = c.CreateMatcher();
+                if (m.TryMatch(Expr)) {
+                    return new TrueFalseRewrite(this, m.Match(c).Value.Near(0)).AsSet(1);
                 }
             }
             if (maxNeededRank >= 2) {
                 // 0 = v
-                var v = new Catch<Variable>();
-                if (Expr.Unify(v)) {
-                    Variable variable = v.Match;
+                var v = new TypeMatchTemplate<Variable>();
+                ExpressionMatcher m = v.CreateMatcher();
+                if (m.TryMatch(Expr)) {
+                    Variable variable = m.Match(v);
                     return new ReplaceRewrite(this,
                         variable,
                         new Constant(0),
-                        cs => cs.AddVariableRestriction(new VariableRangeRestriction(variable, 0))).AsSet(2);
+                        cs => cs.AddVariableRestriction(new VariableValueRestriction(variable, 0))).AsSet(2);
                 }
             }
             if (maxNeededRank >= 3) {
                 // 0 = v + c
-                var v = new Catch<Variable>();
-                var c = new Catch<Constant>();
-                if (Expr.Unify(new BinaryExpression(v, new Plus(), c))) {
-                    Variable variable = v.Match;
-                    double value = -c.Match.Value;
+                var v = new TypeMatchTemplate<Variable>();
+                var c = new TypeMatchTemplate<Constant>();
+                ExpressionMatcher b = (v + c).CreateMatcher();
+                if (b.TryMatch(Expr)) {
+                    Variable variable = b.Match(v);
+                    double value = -(b.Match(c)).Value;
                     return new ReplaceRewrite(this,
                         variable,
                         new Constant(value),
-                        cs => cs.AddVariableRestriction(new VariableRangeRestriction(variable, value))).AsSet(3);
+                        cs => cs.AddVariableRestriction(new VariableValueRestriction(variable, value))).AsSet(3);
                 }
             }
             if (maxNeededRank >= 4) {
@@ -89,17 +201,18 @@ namespace Movimentum.SubstitutionSolver3 {
                         return new ReplaceRewrite(this,
                             variable,
                             new Constant(x0),
-                            cs => cs.AddVariableRestriction(new VariableRangeRestriction(variable, x0))).AsSet(5);
+                            cs => cs.AddVariableRestriction(new VariableValueRestriction(variable, x0))).AsSet(5);
                     }
                 }
             }
             if (maxNeededRank >= 6) {
                 // 0 = v + (expr without v)
-                var v = new Catch<Variable>();
-                var e = new Catch<AbstractExpr>();
-                if (Expr.Unify(new BinaryExpression(v, new Plus(), e))) {
-                    Variable variable = v.Match;
-                    AbstractExpr expr = e.Match.UnaryMinus();
+                var v = new TypeMatchTemplate<Variable>();
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                ExpressionMatcher m = (v + e).CreateMatcher();
+                if (m.TryMatch(Expr)) {
+                    Variable variable = m.Match(v);
+                    AbstractExpr expr = -m.Match(e);
                     return new BacksubstitutionRewrite(this,
                         variable,
                         expr
@@ -119,7 +232,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     return new ReplaceRewrite(this,
                                               solver.Variable,
                                               new Constant(value),
-                                              cs => cs.AddVariableRestriction(new VariableRangeRestriction(solver.Variable, value))).AsSet(8);
+                                              cs => cs.AddVariableRestriction(new VariableValueRestriction(solver.Variable, value))).AsSet(8);
                     #endregion TEMPORARY!!!
 
 
@@ -148,7 +261,7 @@ namespace Movimentum.SubstitutionSolver3 {
             UnaryExpression positiveRoot = new UnaryExpression(first.Inner, new PositiveSquareroot());
             AbstractExpr negativeRoot = positiveRoot.UnaryMinus();
 
-            Action<ConstraintSet> addRootArgIsAtLeastZeroConstraint = cs => cs.AddConstraint(new AtLeastZeroConstraint(first.Inner));
+            Action<OLDSolverNode> addRootArgIsAtLeastZeroConstraint = cs => cs.AddConstraint(new AtLeastZeroConstraint(first.Inner));
 
             // If there are more, "multiply" the two rewrites with each rewrite from the other ones.
             // We get 2^k rewrites for k formal square roots.
@@ -185,17 +298,19 @@ namespace Movimentum.SubstitutionSolver3 {
         public override RewriteSet CreateRewritesFromSingleConstraint(IEnumerable<AbstractConstraint> allOtherConstraints, IDictionary<Variable, VariableRangeRestriction> previousValues, IDictionary<Variable, VariableRangeRestriction> restrictions, int maxNeededRank) {
             if (maxNeededRank >= 1) {
                 // 0 <= c
-                var c = new Catch<Constant>();
-                if (Expr.Unify(c)) {
-                    return new TrueFalseRewrite(this, c.Match.Value >= 0).AsSet(1);
+                var c = new TypeMatchTemplate<Constant>();
+                ExpressionMatcher m = c.CreateMatcher();
+                if (m.TryMatch(Expr)) {
+                    return new TrueFalseRewrite(this, m.Match(c).Value >= 0).AsSet(1);
                 }
             }
             if (maxNeededRank >= 2) {
                 // 0 <= v
-                var v = new Catch<Variable>();
-                if (Expr.Unify(v)) {
+                var v = new TypeMatchTemplate<Variable>();
+                ExpressionMatcher m = v.CreateMatcher();
+                if (m.TryMatch(Expr)) {
                     return new ActionRewrite(this, cs => cs.AddVariableRestriction(
-                        new VariableRangeRestriction(v.Match, 0, double.PositiveInfinity)
+                        new VariableMultipleRangeRestriction(m.Match(v), 0, double.PositiveInfinity)
                     )).AsSet(2);
                 }
             }
@@ -209,7 +324,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
                     return new ActionRewrite(this, cs => cs.AddVariableRestriction(
                         // x for our first test case is always 10.
-                        new VariableRangeRestriction(solver.Variable, 0, 20))).AsSet(7);
+                        new VariableMultipleRangeRestriction(solver.Variable, 0, 20))).AsSet(7);
                     #endregion TEMPORARY!!!
 
 
@@ -290,62 +405,62 @@ namespace Movimentum.SubstitutionSolver3 {
             return new MoreThanZeroConstraint(this);
         }
 
-        public abstract bool Unify(AbstractExpr other);
+        ////public abstract bool Unify(AbstractExpr other);
     }
 
-    public abstract class Catch : AbstractExpr { }
+    ////public abstract class Catch : AbstractExpr { }
 
-    public class Catch<TCatch> : Catch where TCatch : AbstractExpr {
-        private TCatch _match;
+    ////public class Catch<TCatch> : Catch where TCatch : AbstractExpr {
+    ////    private TCatch _match;
 
-        public override string ToString() {
-            return "Catch<" + typeof(TCatch).Name + ">(" + (_match == null ? "?" : _match.ToString()) + ")";
-        }
+    ////    public override string ToString() {
+    ////        return "Catch<" + typeof(TCatch).Name + ">(" + (_match == null ? "?" : _match.ToString()) + ")";
+    ////    }
 
-        public override TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p) {
-            throw new NotSupportedException();
-        }
+    ////    public override TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p) {
+    ////        throw new NotSupportedException();
+    ////    }
 
-        public override bool Unify(AbstractExpr other) {
-            // if (other is Catch) { ??? }
-            if (other is TCatch) {
-                _match = (TCatch)other;
-                return true;
-            } else {
-                return false;
-            }
-        }
+    ////    public override bool Unify(AbstractExpr other) {
+    ////        // if (other is Catch) { ??? }
+    ////        if (other is TCatch) {
+    ////            _match = (TCatch)other;
+    ////            return true;
+    ////        } else {
+    ////            return false;
+    ////        }
+    ////    }
 
-        public TCatch Match {
-            get { return _match; }
-        }
-    }
+    ////    public TCatch Match {
+    ////        get { return _match; }
+    ////    }
+    ////}
 
     public abstract partial class AbstractOperator { }
 
     public partial class Constant {
-        public override bool Unify(AbstractExpr other) {
-            if (other is Catch) {
-                return other.Unify(this);
-            } else if (other is Constant) {
-                return ((Constant)other).Value.Near(Value); // ?? or Equals??
-            } else {
-                return false;
-            }
-        }
+        //public override bool Unify(AbstractExpr other) {
+        //    if (other is Catch) {
+        //        return other.Unify(this);
+        //    } else if (other is Constant) {
+        //        return ((Constant)other).Value.Near(Value); // ?? or Equals??
+        //    } else {
+        //        return false;
+        //    }
+        //}
     }
 
     public abstract partial class Variable {
 
-        public override bool Unify(AbstractExpr other) {
-            if (other is Catch) {
-                return other.Unify(this);
-            } else if (other is Variable) {
-                return ((Variable)other).Name == Name;
-            } else {
-                return false;
-            }
-        }
+        ////public override bool Unify(AbstractExpr other) {
+        ////    if (other is Catch) {
+        ////        return other.Unify(this);
+        ////    } else if (other is Variable) {
+        ////        return ((Variable)other).Name == Name;
+        ////    } else {
+        ////        return false;
+        ////    }
+        ////}
     }
 
     public partial class NamedVariable {
@@ -360,16 +475,16 @@ namespace Movimentum.SubstitutionSolver3 {
         //    return _op is UnaryMinus ? _inner : base.UnaryMinus();
         //}
 
-        public override bool Unify(AbstractExpr other) {
-            if (other is Catch) {
-                return other.Unify(this);
-            } else if (other is UnaryExpression) {
-                var otherUnary = (UnaryExpression)other;
-                return Op.Equals(otherUnary.Op) && Inner.Unify(otherUnary.Inner);
-            } else {
-                return false;
-            }
-        }
+        ////public override bool Unify(AbstractExpr other) {
+        ////    if (other is Catch) {
+        ////        return other.Unify(this);
+        ////    } else if (other is UnaryExpression) {
+        ////        var otherUnary = (UnaryExpression)other;
+        ////        return Op.Equals(otherUnary.Op) && Inner.Unify(otherUnary.Inner);
+        ////    } else {
+        ////        return false;
+        ////    }
+        ////}
     }
 
     public abstract partial class UnaryOperator {
@@ -437,16 +552,16 @@ namespace Movimentum.SubstitutionSolver3 {
 
     public partial class BinaryExpression {
 
-        public override bool Unify(AbstractExpr other) {
-            if (other is Catch) {
-                return other.Unify(this);
-            } else if (other is BinaryExpression) {
-                var otherBinary = (BinaryExpression)other;
-                return Op.Equals(otherBinary.Op) && Lhs.Unify(otherBinary.Lhs) && Rhs.Unify(otherBinary.Rhs);
-            } else {
-                return false;
-            }
-        }
+        ////public override bool Unify(AbstractExpr other) {
+        ////    if (other is Catch) {
+        ////        return other.Unify(this);
+        ////    } else if (other is BinaryExpression) {
+        ////        var otherBinary = (BinaryExpression)other;
+        ////        return Op.Equals(otherBinary.Op) && Lhs.Unify(otherBinary.Lhs) && Rhs.Unify(otherBinary.Rhs);
+        ////    } else {
+        ////        return false;
+        ////    }
+        ////}
     }
 
     public abstract partial class BinaryOperator {
@@ -480,9 +595,9 @@ namespace Movimentum.SubstitutionSolver3 {
 
 
     public partial class RangeExpr {
-        public override bool Unify(AbstractExpr other) {
-            throw new NotImplementedException();
-        }
+        ////public override bool Unify(AbstractExpr other) {
+        ////    throw new NotImplementedException();
+        ////}
     }
 
     #endregion Expressions

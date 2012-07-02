@@ -4,7 +4,7 @@ using Movimentum.Model;
 namespace Movimentum.SubstitutionSolver3 {
     #region Input constraints
 
-    public abstract partial class AbstractConstraint {
+    public abstract class AbstractConstraint {
         private static int _debugCt = 1000;
         private readonly int _debugId = _debugCt++;
 
@@ -19,13 +19,11 @@ namespace Movimentum.SubstitutionSolver3 {
         public abstract TResult Accept<TParameter, TResult>(ISolverModelConstraintVisitor<TParameter, TResult> visitor, TParameter p);
     }
 
-    public abstract partial class ScalarConstraint : AbstractConstraint {
+    public abstract class ScalarConstraint : AbstractConstraint {
         private readonly AbstractExpr _expr;
 
-        private static readonly ConstantFoldingVisitor CONSTANT_FOLDING_VISITOR = new ConstantFoldingVisitor();
-
         protected ScalarConstraint(AbstractExpr expr) {
-            _expr = expr.Accept(CONSTANT_FOLDING_VISITOR, Ig.nore);
+            _expr = expr;
         }
 
         public AbstractExpr Expr { get { return _expr; } }
@@ -40,7 +38,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class EqualsZeroConstraint : ScalarConstraint {
+    public class EqualsZeroConstraint : ScalarConstraint {
         public EqualsZeroConstraint(AbstractExpr expr) : base(expr) { }
 
         public override TResult Accept<TParameter, TResult>(ISolverModelConstraintVisitor<TParameter, TResult> visitor, TParameter p) {
@@ -56,7 +54,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class MoreThanZeroConstraint : ScalarConstraint {
+    public class MoreThanZeroConstraint : ScalarConstraint {
         public MoreThanZeroConstraint(AbstractExpr expr)
             : base(expr) {
         }
@@ -66,7 +64,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class AtLeastZeroConstraint : ScalarConstraint {
+    public class AtLeastZeroConstraint : ScalarConstraint {
         public AtLeastZeroConstraint(AbstractExpr expr)
             : base(expr) {
         }
@@ -80,7 +78,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
     #region Expressions
 
-    public abstract partial class AbstractExpr {
+    public abstract class AbstractExpr {
         public abstract TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p);
 
         public override string ToString() {
@@ -97,12 +95,12 @@ namespace Movimentum.SubstitutionSolver3 {
             return new BinaryExpression(lhs, new Divide(), rhs);
         }
         public static AbstractExpr operator -(AbstractExpr inner) {
-            return inner.UnaryMinus();
+            return new UnaryExpression(inner, new UnaryMinus());
         }
     }
-    public abstract partial class AbstractOperator { }
+    public abstract class AbstractOperator { }
 
-    public partial class Constant : AbstractExpr {
+    public class Constant : AbstractExpr {
         private readonly double _value;
         public Constant(double value) {
             _value = value;
@@ -128,7 +126,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public abstract partial class Variable : AbstractExpr {
+    public abstract class Variable : AbstractExpr {
         private readonly string _name;
 
         protected Variable(string name) {
@@ -148,7 +146,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class NamedVariable : Variable {
+    public class NamedVariable : Variable {
         public NamedVariable(string name) : base(name) { }
 
         public override TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p) {
@@ -156,7 +154,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class AnchorVariable : Variable {
+    public class AnchorVariable : Variable {
         private readonly Anchor _anchor;
         private readonly Anchor.Coordinate _coordinate;
 
@@ -178,7 +176,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class UnaryExpression : AbstractExpr {
+    public class UnaryExpression : AbstractExpr {
         private readonly AbstractExpr _inner;
         private readonly UnaryOperator _op;
         public UnaryExpression(AbstractExpr inner, UnaryOperator op) {
@@ -204,7 +202,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public abstract partial class UnaryOperator : AbstractOperator {
+    public abstract class UnaryOperator : AbstractOperator {
         public abstract TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor,
             TExpression innerResult, TParameter p);
 
@@ -224,49 +222,49 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class UnaryMinus : UnaryOperator {
+    public class UnaryMinus : UnaryOperator {
         public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
             return visitor.Visit(this, innerResult, p);
         }
     }
-    public partial class Square : UnaryOperator {
+    public class Square : UnaryOperator {
         public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
             return visitor.Visit(this, innerResult, p);
         }
     }
-    public partial class FormalSquareroot : UnaryOperator {
-        public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
-            return visitor.Visit(this, innerResult, p);
-        }
-    }
-
-    public partial class PositiveSquareroot : UnaryOperator {
-        public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
-            return visitor.Visit(this, innerResult, p);
-        }
-    }
-    //public partial class Integral : UnaryOperator {
-    //    public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
-    //        return visitor.Visit(this, innerResult, p);
-    //    }
-    //}
-    //public partial class Differential : UnaryOperator {
-    //    public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
-    //        return visitor.Visit(this, innerResult, p);
-    //    }
-    //}
-    public partial class Sin : UnaryOperator {
-        public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
-            return visitor.Visit(this, innerResult, p);
-        }
-    }
-    public partial class Cos : UnaryOperator {
+    public class FormalSquareroot : UnaryOperator {
         public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
             return visitor.Visit(this, innerResult, p);
         }
     }
 
-    public partial class BinaryExpression : AbstractExpr {
+    public class PositiveSquareroot : UnaryOperator {
+        public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
+            return visitor.Visit(this, innerResult, p);
+        }
+    }
+    //public class Integral : UnaryOperator {
+    //    public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
+    //        return visitor.Visit(this, innerResult, p);
+    //    }
+    //}
+    //public class Differential : UnaryOperator {
+    //    public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
+    //        return visitor.Visit(this, innerResult, p);
+    //    }
+    //}
+    public class Sin : UnaryOperator {
+        public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
+            return visitor.Visit(this, innerResult, p);
+        }
+    }
+    public class Cos : UnaryOperator {
+        public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelUnaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression innerResult, TParameter p) {
+            return visitor.Visit(this, innerResult, p);
+        }
+    }
+
+    public class BinaryExpression : AbstractExpr {
         private readonly AbstractExpr _lhs;
         private readonly BinaryOperator _op;
         private readonly AbstractExpr _rhs;
@@ -294,7 +292,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public abstract partial class BinaryOperator : AbstractOperator {
+    public abstract class BinaryOperator : AbstractOperator {
         public abstract TResult Accept<TExpression, TParameter, TResult>(ISolverModelBinaryOpVisitor<TExpression, TParameter, TResult> visitor,
             TExpression lhsResult, TExpression rhsResult, TParameter p);
         public static bool operator ==(BinaryOperator op1, BinaryOperator op2) {
@@ -313,25 +311,25 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class Plus : BinaryOperator {
+    public class Plus : BinaryOperator {
         public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelBinaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression lhsResult, TExpression rhsResult, TParameter p) {
             return visitor.Visit(this, lhsResult, rhsResult, p);
         }
     }
 
-    public partial class Times : BinaryOperator {
+    public class Times : BinaryOperator {
         public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelBinaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression lhsResult, TExpression rhsResult, TParameter p) {
             return visitor.Visit(this, lhsResult, rhsResult, p);
         }
     }
 
-    public partial class Divide : BinaryOperator {
+    public class Divide : BinaryOperator {
         public override TResult Accept<TExpression, TParameter, TResult>(ISolverModelBinaryOpVisitor<TExpression, TParameter, TResult> visitor, TExpression lhsResult, TExpression rhsResult, TParameter p) {
             return visitor.Visit(this, lhsResult, rhsResult, p);
         }
     }
 
-    public partial class RangeExpr : AbstractExpr {
+    public class RangeExpr : AbstractExpr {
         public class Pair {
             public readonly AbstractExpr MoreThan;
             public readonly AbstractExpr Value;

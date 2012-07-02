@@ -21,22 +21,6 @@ namespace Movimentum.SubstitutionSolver3 {
             return "0 <= " + atLeastZero.Expr.Accept(this, 0);
         }
 
-        public string Visit(BacksubstitutionConstraint backsubstitutionConstraint, Ignore p) {
-            return backsubstitutionConstraint.Variable.Name + " := " + backsubstitutionConstraint.Expr.Accept(this, 0);
-        }
-
-        //public string Visit(VariableEqualsConstantConstraint variableEqualsConstant, Ignore p) {
-        //    return variableEqualsConstant.Variable + " == " + variableEqualsConstant.Value;
-        //}
-
-        //public string Visit(VariableInRangeConstraint variableInRange, Ignore p) {
-        //    return variableInRange.Variable + " in [" + variableInRange.Lo + ".." + variableInRange.Hi + "]";
-        //}
-
-        //public string Visit(VariableEqualsExpressionConstraint variableEqualsExpression, Ignore p) {
-        //    return variableEqualsExpression.Variable + " := " + variableEqualsExpression.Expr;
-        //}
-
         #endregion
 
         #region Implementation of ISolverModelExprVisitor<int, string>

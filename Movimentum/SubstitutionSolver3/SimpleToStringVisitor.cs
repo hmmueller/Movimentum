@@ -20,10 +20,6 @@ namespace Movimentum.SubstitutionSolver3 {
             return "0 <= " + atLeastZero.Expr.Accept(this, p);
         }
 
-        public string Visit(BacksubstitutionConstraint backsubstitutionConstraint, Ignore p) {
-            return backsubstitutionConstraint.Variable.Name + " := " + backsubstitutionConstraint.Expr.Accept(this, p);
-        }
-
         #endregion
 
         #region Implementation of ISolverModelExprVisitor<int, string>

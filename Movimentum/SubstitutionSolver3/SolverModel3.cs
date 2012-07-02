@@ -31,14 +31,21 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public override RewriteSet CreateRewritesFromSingleConstraint(IEnumerable<AbstractConstraint> allOtherConstraints, IDictionary<Variable, VariableRangeRestriction> previousValues, IDictionary<Variable, VariableRangeRestriction> restrictions, int maxNeededRank) {
             if (maxNeededRank >= 98) {
-                var c = new Catch<Constant>();
-                if (Expr.Unify(c)) {
-                    double value = c.Match.Value;
+                //var c = new Catch<Constant>();
+                //if (Expr.Unify(c)) {
+                //    double value = c.Match.Value;
+
+
+
+                var c = new TypeMatchTemplate<Constant>();
+                var m = c.CreateMatcher();
+                if (m.TryMatch(Expr)) {
+                    double value = m.Match(c).Value;
                     return new ReplaceRewrite(this,
                         Variable,
                         new Constant(value),
                         cs => {
-                            cs.AddVariableRestriction(new VariableRangeRestriction(Variable, value));
+                            cs.AddVariableRestriction(new VariableValueRestriction(Variable, value));
                             cs.RemoveConstraint(this);
                         }).AsSet(97);
                 }

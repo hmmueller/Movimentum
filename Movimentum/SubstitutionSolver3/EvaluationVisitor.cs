@@ -13,11 +13,6 @@ namespace Movimentum.SubstitutionSolver3 {
         public EvaluationVisitor(Variable variable, double value) : this(new Dictionary<Variable, double> {{variable, value}}){
         }
 
-        //public static double Evaluate(AbstractExpr expr, IDictionary<Variable, double> variableValues) {
-        //    double d = expr.Accept(new EvaluationVisitor(variableValues), Ig.nore);
-        //    return d;
-        //}
-
         #region ISolverModelExprVisitor
 
         public double Visit(Constant constant, Ignore p) {

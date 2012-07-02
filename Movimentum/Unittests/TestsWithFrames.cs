@@ -162,8 +162,6 @@ namespace Movimentum.Unittests {
             Assert.IsFalse(3 > double.PositiveInfinity);
         }
 
-        // Works up to here ---------
-
         [Test]
         public void TestRotatingBarCoordinates() {
             const string s =

@@ -187,34 +187,77 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public class VariableRangeRestriction {
-        private readonly Variable _variable;
+public abstract class VariableRangeRestriction {
+    private readonly Variable _variable;
+
+    protected VariableRangeRestriction(Variable variable) {
+        _variable = variable;
+    }
+
+    public Variable Variable { get { return _variable; } }
+
+    public abstract bool Contains(double x0);
+    public abstract IEnumerable<Range> PossibleRanges { get; }
+    public abstract double GetSomeValue();
+    public abstract VariableRangeRestriction Intersect(IEnumerable<Range> possibleRanges);
+}
+
+public class VariableValueRestriction : VariableRangeRestriction {
+    private readonly double _value;
+
+    public VariableValueRestriction(Variable variable, double value) : base(variable) {
+        _value = value;
+    }
+
+    public double Value { get { return _value; } }
+
+    public override string ToString() {
+        return Variable.Name + ":=" + Value;
+    }
+
+    #region Overrides of VariableRangeRestriction
+
+    public override bool Contains(double x0) {
+        throw new System.NotImplementedException();
+    }
+
+    public override IEnumerable<Range> PossibleRanges {
+        get { throw new System.NotImplementedException(); }
+    }
+
+    public override double GetSomeValue() {
+        throw new System.NotImplementedException();
+    }
+
+    public override VariableRangeRestriction Intersect(IEnumerable<Range> possibleRanges) {
+        throw new System.NotImplementedException();
+    }
+
+    #endregion
+}
+
+    public class VariableMultipleRangeRestriction : VariableRangeRestriction {
         private readonly Range[] _possibleRanges;
-        public VariableRangeRestriction(Variable variable, IEnumerable<Range> possibleRanges) {
-            _variable = variable;
+        private VariableMultipleRangeRestriction(Variable variable, IEnumerable<Range> possibleRanges) : base(variable){
             _possibleRanges = possibleRanges.Where(r => !r.IsEmpty()).ToArray();
         }
-        public VariableRangeRestriction(Variable variable, double lo, double hi)
+        public VariableMultipleRangeRestriction(Variable variable, double lo, double hi)
             : this(variable, new[] {
                 new Range(AbstractBoundary.CreateFrom(lo), AbstractBoundary.CreateFrom(hi)) }) { }
 
-        public VariableRangeRestriction(Variable variable, double value)
+        public VariableMultipleRangeRestriction(Variable variable, double value)
             : this(variable, value, value) { }
 
-        public Variable Variable {
-            get { return _variable; }
-        }
-
-        public IEnumerable<Range> PossibleRanges {
+        public override IEnumerable<Range> PossibleRanges {
             get { return _possibleRanges; }
         }
 
-        public bool Contains(double x) {
+        public override bool Contains(double x) {
             return _possibleRanges.Any(r => r.Contains(x));
         }
 
-        public VariableRangeRestriction Intersect(IEnumerable<Range> restrictingRanges) {
-            return new VariableRangeRestriction(_variable, _possibleRanges.SelectMany(pr => restrictingRanges.Select(rr => rr.Intersect(pr))));
+        public override VariableRangeRestriction Intersect(IEnumerable<Range> restrictingRanges) {
+            return new VariableMultipleRangeRestriction(Variable, _possibleRanges.SelectMany(pr => restrictingRanges.Select(rr => rr.Intersect(pr))));
         }
 
         //public double? GetSingleValue() {
@@ -228,12 +271,14 @@ namespace Movimentum.SubstitutionSolver3 {
         //    }
         //}
 
-        public double GetSomeValue() {
+        public override double GetSomeValue() {
             return _possibleRanges.Length == 0 ? double.NaN : _possibleRanges[0].GetSomeValue();
         }
 
         public override string ToString() {
-            return _variable.Name + " in {" + string.Join(",", (object[])_possibleRanges) + "}";
+            return Variable.Name + " in {" + string.Join(",", (object[])_possibleRanges) + "}";
         }
     }
+
+
 }

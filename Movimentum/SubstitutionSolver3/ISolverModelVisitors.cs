@@ -3,12 +3,6 @@
         TResult Visit(EqualsZeroConstraint equalsZero, TParameter p);
         TResult Visit(MoreThanZeroConstraint moreThanZero, TParameter p);
         TResult Visit(AtLeastZeroConstraint atLeastZero, TParameter p);
-        //TResult Visit(VariableEqualsConstantConstraint variableEqualsConstant, TParameter p);
-        //TResult Visit(VariableInRangeConstraint variableInRange, TParameter p);
-        //TResult Visit(VariableEqualsExpressionConstraint variableEqualsExpression, TParameter p);
-
-        // BacksubstitutionConstraints are created internally
-        TResult Visit(BacksubstitutionConstraint backsubstitutionConstraint, TParameter p);
     }
 
     public interface ISolverModelConstraintVisitor<out TResult> : ISolverModelConstraintVisitor<Ignore, TResult> { }

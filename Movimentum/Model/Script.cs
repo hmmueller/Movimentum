@@ -57,8 +57,8 @@ namespace Movimentum.Model {
                 // ZERO_VARIABLE to 0 has been created in the outermost loop once.
                 if (anchor1.Location.Is2D()) {
                     st.AddConstraint(new ScalarEqualityConstraint(
-                        ZERO_VARIABLE,
-                        new UnaryVectorScalarExpr(new Anchor(th.Name, anchor1.Name), UnaryVectorScalarOperator.Z)));
+                                         ZERO_VARIABLE,
+                                         new UnaryVectorScalarExpr(new Anchor(th.Name, anchor1.Name), UnaryVectorScalarOperator.Z)));
                 }
             }
         }
@@ -90,18 +90,18 @@ namespace Movimentum.Model {
             // a1.Y = a2.Y + root(squaredDistance - dxSquared - dzSquared)
             // a1.Z = a2.Z + root(squaredDistance - dxSquared - dySquared)
             return new VectorEqualityConstraint(a1,
-                    new BinaryVectorExpr(a2, BinaryVectorOperator.PLUS, new Vector(
-                        SquareRootOfDMinusSquares(squaredDistance, dySquared, dzSquared),
-                        SquareRootOfDMinusSquares(squaredDistance, dxSquared, dzSquared),
-                        SquareRootOfDMinusSquares(squaredDistance, dxSquared, dySquared))));
+                                                new BinaryVectorExpr(a2, BinaryVectorOperator.PLUS, new Vector(
+                                                                                                        SquareRootOfDMinusSquares(squaredDistance, dySquared, dzSquared),
+                                                                                                        SquareRootOfDMinusSquares(squaredDistance, dxSquared, dzSquared),
+                                                                                                        SquareRootOfDMinusSquares(squaredDistance, dxSquared, dySquared))));
         }
 
         private static ScalarExpr SquareRootOfDMinusSquares(ConstScalar squaredDistance, ScalarExpr square1, ScalarExpr square2) {
             // root(squaredDistance - square1 - square2)
             return new UnaryScalarExpr(UnaryScalarOperator.SQUAREROOT,
-                        new BinaryScalarExpr(squaredDistance, BinaryScalarOperator.MINUS,
-                            new BinaryScalarExpr(square1, BinaryScalarOperator.PLUS, square2))
-            );
+                                       new BinaryScalarExpr(squaredDistance, BinaryScalarOperator.MINUS,
+                                                            new BinaryScalarExpr(square1, BinaryScalarOperator.PLUS, square2))
+                );
         }
 
         private static double Square(double v) {
@@ -114,10 +114,10 @@ namespace Movimentum.Model {
         private static UnaryScalarExpr SquareCoord(UnaryVectorScalarOperator coordOp,
                                                    Anchor anchor1, Anchor anchor2) {
             return new UnaryScalarExpr(UnaryScalarOperator.SQUARED,
-                new BinaryScalarExpr(
-                    new UnaryVectorScalarExpr(anchor1, coordOp),
-                    BinaryScalarOperator.MINUS,
-                    new UnaryVectorScalarExpr(anchor2, coordOp))
+                                       new BinaryScalarExpr(
+                                           new UnaryVectorScalarExpr(anchor1, coordOp),
+                                           BinaryScalarOperator.MINUS,
+                                           new UnaryVectorScalarExpr(anchor2, coordOp))
                 );
         }
 

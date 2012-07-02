@@ -44,7 +44,10 @@ namespace Movimentum {
         }
 
         public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableRangeRestriction> result) {
-            result = ConstraintSet.Solve(Constraints, _absoluteTime, _iv, 200 * Constraints.Count(), result, FrameNo);
+            IEnumerable<Constraint> modelConstraints = Constraints;
+
+            var solverConstraints = modelConstraints.SelectMany(c => c.CreateSolverConstraints(_absoluteTime, _iv));
+            result = SolverNode.Solve(solverConstraints, 200 * Constraints.Count(), result, FrameNo);
 
             return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetSomeValue()));
         }

@@ -1,8 +1,10 @@
 ﻿using System;
 
 namespace Movimentum.SubstitutionSolver3 {
-    internal class ConstantFoldingVisitor : ISolverModelConstraintVisitor<AbstractConstraint>
-                                          , ISolverModelExprVisitor<AbstractExpr> {
+    class ConstantFoldingVisitor : ISolverModelConstraintVisitor<AbstractConstraint>
+                                          , ISolverModelExprVisitor<AbstractExpr>
+                                          , ISolverModelUnaryOpVisitor<Constant, Ignore, double>
+                                          , ISolverModelBinaryOpVisitor<Constant, Ignore, double> {
         #region Implementation of ISolverModelConstraintVisitor<in Ignore,out ScalarConstraint>
 
         public AbstractConstraint Visit(EqualsZeroConstraint equalsZero, Ignore p) {
@@ -19,24 +21,6 @@ namespace Movimentum.SubstitutionSolver3 {
             AbstractExpr result = atLeastZero.Expr.Accept(this, Ig.nore);
             return result != atLeastZero.Expr ? new AtLeastZeroConstraint(result) : atLeastZero;
         }
-
-        public AbstractConstraint Visit(BacksubstitutionConstraint backsubstitutionConstraint, Ignore p) {
-            AbstractExpr result = backsubstitutionConstraint.Expr.Accept(this, Ig.nore);
-            return result != backsubstitutionConstraint.Expr ? new BacksubstitutionConstraint(backsubstitutionConstraint.Variable, result) : backsubstitutionConstraint;
-        }
-
-        //public AbstractConstraint Visit(VariableEqualsConstantConstraint variableEqualsConstant, Ignore p) {
-        //    return variableEqualsConstant;
-        //}
-
-        //public AbstractConstraint Visit(VariableInRangeConstraint variableInRange, Ignore p) {
-        //    return variableInRange;
-        //}
-
-        //public AbstractConstraint Visit(VariableEqualsExpressionConstraint variableEqualsExpression, Ignore p) {
-        //    AbstractExpr result = variableEqualsExpression.Expr.Accept(this, Ig.nore);
-        //    return result != variableEqualsExpression.Expr ? new VariableEqualsExpressionConstraint(variableEqualsExpression.Variable, result) : variableEqualsExpression;
-        //}
 
         #endregion
 
@@ -58,7 +42,7 @@ namespace Movimentum.SubstitutionSolver3 {
             AbstractExpr oldInner = unaryExpression.Inner;
             AbstractExpr newInner = oldInner.Accept(this, Ig.nore);
             if (newInner is Constant && !(unaryExpression.Op is FormalSquareroot)) {
-                return new Constant(unaryExpression.Op.Evaluate(((Constant)newInner).Value));
+                return new Constant(unaryExpression.Op.Accept(this, (Constant)newInner, Ig.nore));
             } else if (newInner != oldInner) {
                 return new UnaryExpression(newInner, unaryExpression.Op);
             } else {
@@ -66,21 +50,13 @@ namespace Movimentum.SubstitutionSolver3 {
             }
         }
 
-        private readonly static Constant ZERO = new Constant(0);
-
         public AbstractExpr Visit(BinaryExpression binaryExpression, Ignore p) {
             AbstractExpr oldLhs = binaryExpression.Lhs;
             AbstractExpr oldRhs = binaryExpression.Rhs;
             AbstractExpr newLhs = oldLhs.Accept(this, Ig.nore);
             AbstractExpr newRhs = oldRhs.Accept(this, Ig.nore);
-            if (binaryExpression.Op is Times && (newLhs.Equals(ZERO) | newRhs.Equals(ZERO))) {
-                return ZERO;
-            } else if (binaryExpression.Op is Plus && newLhs.Equals(ZERO)) {
-                return newRhs;
-            } else if (binaryExpression.Op is Plus && newRhs.Equals(ZERO)) {
-                return newLhs;
-            } else if (newLhs is Constant & newRhs is Constant) {
-                return new Constant(binaryExpression.Op.Evaluate(((Constant)newLhs).Value, ((Constant)newRhs).Value));
+            if (newLhs is Constant & newRhs is Constant) {
+                return new Constant(binaryExpression.Op.Accept(this, (Constant)newLhs, (Constant)newRhs, Ig.nore));
             } else if (newLhs != oldLhs | newRhs != oldRhs) {
                 return new BinaryExpression(newLhs, binaryExpression.Op, newRhs);
             } else {
@@ -103,6 +79,50 @@ namespace Movimentum.SubstitutionSolver3 {
         //        ? Tuple.Create(pair, new RangeExpr.Pair(newMoreThan, newValue))
         //        : Tuple.Create(pair, pair);
         //}
+
+        #endregion
+
+        #region Implementation of ISolverModelUnaryOpVisitor<in Constant,in Ignore,out double>
+
+        public double Visit(UnaryMinus op, Constant inner, Ignore p) {
+            return -inner.Value;
+        }
+
+        public double Visit(Square op, Constant inner, Ignore p) {
+            return inner.Value * inner.Value;
+        }
+
+        public double Visit(FormalSquareroot op, Constant inner, Ignore p) {
+            throw new NotImplementedException();
+        }
+
+        public double Visit(PositiveSquareroot op, Constant inner, Ignore p) {
+            return Math.Sqrt(inner.Value);
+        }
+
+        public double Visit(Sin op, Constant inner, Ignore p) {
+            return Math.Sin(inner.Value * Math.PI / 180);
+        }
+
+        public double Visit(Cos op, Constant inner, Ignore p) {
+            return Math.Cos(inner.Value * Math.PI / 180);
+        }
+
+        #endregion
+
+        #region Implementation of ISolverModelBinaryOpVisitor<in Constant,in Constant,out double>
+
+        public double Visit(Plus op, Constant lhs, Constant rhs, Ignore p) {
+            return lhs.Value + rhs.Value;
+        }
+
+        public double Visit(Times op, Constant lhs, Constant rhs, Ignore p) {
+            return lhs.Value * rhs.Value;
+        }
+
+        public double Visit(Divide op, Constant lhs, Constant rhs, Ignore p) {
+            return lhs.Value / rhs.Value;
+        }
 
         #endregion
     }

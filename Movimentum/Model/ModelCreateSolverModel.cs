@@ -5,7 +5,7 @@ using Movimentum.SubstitutionSolver3;
 namespace Movimentum.Model {
     #region Step
 
-    abstract public partial class Constraint {
+    public abstract partial class Constraint {
         public abstract AbstractConstraint[] CreateSolverConstraints(double t, double iv);
     }
 
@@ -27,9 +27,10 @@ namespace Movimentum.Model {
 
     public partial class ScalarEqualityConstraint {
         public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
-
-            return new[] {
-                new EqualsZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv)))
+            return new[] { new EqualsZeroConstraint(
+                            BinaryScalarOperator.MINUS.CreateSolverExpression(
+                                new NamedVariable(_variable), 
+                                _rhs.CreateSolverExpression(t, iv)))
             };
         }
     }
@@ -104,6 +105,7 @@ namespace Movimentum.Model {
         private static AbstractExpr[] Rotate2D(AbstractExpr[] lhsExpr, AbstractExpr rhsExpr) {
             // X = x cos phi - y sin phi
             // Y = x sin phi + y cos phi
+            // Z = z
 
             var sin = new UnaryExpression(rhsExpr, new Sin());
             var cos = new UnaryExpression(rhsExpr, new Cos());
@@ -185,6 +187,7 @@ namespace Movimentum.Model {
             };
         }
     }
+
     public partial class Anchor {
         public enum Coordinate { X, Y, Z }
 
@@ -220,10 +223,10 @@ namespace Movimentum.Model {
         }
 
         static void BinaryScalarOperatorInit() {
-            PLUS._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Plus(), rhsExpr);
-            MINUS._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Plus(), new UnaryExpression(rhsExpr, new UnaryMinus()));
-            TIMES._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Times(), rhsExpr);
-            DIVIDE._create = (lhsExpr, rhsExpr) => new BinaryExpression(lhsExpr, new Divide(), rhsExpr);
+            PLUS._create = (lhsExpr, rhsExpr) => lhsExpr +  rhsExpr;
+            MINUS._create = (lhsExpr, rhsExpr) => lhsExpr + (-rhsExpr);
+            TIMES._create = (lhsExpr, rhsExpr) => lhsExpr *  rhsExpr;
+            DIVIDE._create = (lhsExpr, rhsExpr) => lhsExpr / rhsExpr;
         }
     }
 
