@@ -14,7 +14,7 @@ namespace Movimentum.Model {
             _asString = asString;
         }
 
-        public int Precedence { get { return _precedence; }}
+        public int Precedence { get { return _precedence; } }
         public override string ToString() { return _asString; }
 
         public string Wrap(Expr lhs, AbstractOperator op, Expr rhs) {

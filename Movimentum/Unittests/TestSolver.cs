@@ -78,15 +78,15 @@ namespace Movimentum.Unittests {
             AssertVariable(solutionOrNull.VariableInRangeKnowledges, 2, "x");
         }
 
-    private static void AssertVariable(
-            IDictionary<Variable, VariableRangeRestriction> solution,
-            double expected, string variablename) {
-        VariableValueRestriction varKnowledge =
-            solution[new NamedVariable(variablename)]
-            as VariableValueRestriction;
-        Assert.IsNotNull(varKnowledge);
-        Assert.AreEqual(expected, varKnowledge.Value, 1e-10);
-    }
+        private static void AssertVariable(
+                IDictionary<Variable, VariableRangeRestriction> solution,
+                double expected, string variablename) {
+            VariableValueRestriction varKnowledge =
+                solution[new NamedVariable(variablename)]
+                as VariableValueRestriction;
+            Assert.IsNotNull(varKnowledge);
+            Assert.AreEqual(expected, varKnowledge.Value, 1e-10);
+        }
 
         private static NamedVariable NV(string n) {
             return new NamedVariable(n);
@@ -96,9 +96,9 @@ namespace Movimentum.Unittests {
             return new UnaryExpression(e, new TOp());
         }
 
-    [Test]
-    public void TestTriagonalSystem() {
-        var constraints = new[] {
+        [Test]
+        public void TestTriagonalSystem() {
+            var constraints = new[] {
             new EqualsZeroConstraint(NV("f") + 
                 UE<Square>(NV("e") + NV("d") + NV("c") + NV("b") + NV("a") + new Constant(2.5))),
             new EqualsZeroConstraint(NV("e") + 
@@ -112,17 +112,17 @@ namespace Movimentum.Unittests {
             new EqualsZeroConstraint(NV("a") + new Constant(1))
         };
 
-        IDictionary<Variable, VariableRangeRestriction> solution = 
-            SolverNode.Solve(constraints, 
-                                12, 
-                                new Dictionary<Variable, VariableRangeRestriction>(), 
-                                0);
-        AssertVariable(solution, -1, "a");
-        AssertVariable(solution, -1, "b");
-        AssertVariable(solution, -0.5, "c");
-        AssertVariable(solution, -9, "d");
-        AssertVariable(solution, -1, "e");
-        AssertVariable(solution, -100, "f");
-    }
+            IDictionary<Variable, VariableRangeRestriction> solution =
+                SolverNode.Solve(constraints,
+                                    12,
+                                    new Dictionary<Variable, VariableRangeRestriction>(),
+                                    0);
+            AssertVariable(solution, -1, "a");
+            AssertVariable(solution, -1, "b");
+            AssertVariable(solution, -0.5, "c");
+            AssertVariable(solution, -9, "d");
+            AssertVariable(solution, -1, "e");
+            AssertVariable(solution, -100, "f");
+        }
     }
 }

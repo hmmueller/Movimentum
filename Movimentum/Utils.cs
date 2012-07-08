@@ -27,8 +27,5 @@ namespace Movimentum {
         public static bool Near(this double d1, double d2) {
             return Math.Abs(d1 - d2) < 1e-8; // ????
         }
-        public static bool RoughNear(this double d1, double d2) {
-            return Math.Abs(d1 - d2) < 1e-2; // ????
-        }
     }
 }

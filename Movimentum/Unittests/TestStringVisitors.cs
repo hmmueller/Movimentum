@@ -82,7 +82,7 @@ namespace Movimentum.Unittests {
         }
         [Test]
         public void TestComplexConstraint() {
-            var input = new EqualsZeroConstraint(((new Constant(1) + new Constant(2)) + -new Constant(4)) 
+            var input = new EqualsZeroConstraint(((new Constant(1) + new Constant(2)) + -new Constant(4))
                         / new Constant(8) + new NamedVariable("x") + -new Constant(16));
             Assert.AreEqual("{EqualsZeroConstraint}0 = (1+2+-4)/8+x+-16", input.ToString());
             //Assert.AreEqual("{EqualsZeroConstraint}0 = -0.125+x+-16", input.ToString());

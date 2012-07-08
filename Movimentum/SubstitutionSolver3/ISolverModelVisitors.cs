@@ -14,6 +14,8 @@
         TResult Visit(UnaryExpression unaryExpression, TParameter p);
         TResult Visit(BinaryExpression binaryExpression, TParameter p);
         TResult Visit(RangeExpr rangeExpr, TParameter p);
+
+        //TResult Visit(SingleVariablePolynomial singleVariablePolynomial, TParameter p);
     }
 
     public interface ISolverModelExprVisitor<out TResult> : ISolverModelExprVisitor<Ignore, TResult> { }

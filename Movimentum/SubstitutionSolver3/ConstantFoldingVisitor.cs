@@ -72,6 +72,10 @@ namespace Movimentum.SubstitutionSolver3 {
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
         }
 
+        ////public AbstractExpr Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
+        ////    return singleVariablePolynomial.Degree == 0 ? (AbstractExpr)new Constant(singleVariablePolynomial.Coefficient(0)) : singleVariablePolynomial;
+        ////}
+
         //private Tuple<RangeExpr.Pair, RangeExpr.Pair> VisitPair(RangeExpr.Pair pair) {
         //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this, Ig.nore);
         //    AbstractExpr newValue = pair.Value.Accept(this, Ig.nore);
@@ -97,7 +101,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public double Visit(PositiveSquareroot op, Constant inner, Ignore p) {
-            return Math.Sqrt(inner.Value);
+            return inner.Value.Near(0) ? 0 : Math.Sqrt(inner.Value);
         }
 
         public double Visit(Sin op, Constant inner, Ignore p) {

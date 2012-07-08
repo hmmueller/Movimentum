@@ -187,58 +187,60 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-public abstract class VariableRangeRestriction {
-    private readonly Variable _variable;
+    public abstract class VariableRangeRestriction {
+        private readonly Variable _variable;
 
-    protected VariableRangeRestriction(Variable variable) {
-        _variable = variable;
+        protected VariableRangeRestriction(Variable variable) {
+            _variable = variable;
+        }
+
+        public Variable Variable { get { return _variable; } }
+
+        public abstract bool Contains(double x0);
+        public abstract IEnumerable<Range> PossibleRanges { get; }
+        public abstract double GetSomeValue();
+        public abstract VariableRangeRestriction Intersect(IEnumerable<Range> possibleRanges);
     }
 
-    public Variable Variable { get { return _variable; } }
+    public class VariableValueRestriction : VariableRangeRestriction {
+        private readonly double _value;
 
-    public abstract bool Contains(double x0);
-    public abstract IEnumerable<Range> PossibleRanges { get; }
-    public abstract double GetSomeValue();
-    public abstract VariableRangeRestriction Intersect(IEnumerable<Range> possibleRanges);
-}
+        public VariableValueRestriction(Variable variable, double value)
+            : base(variable) {
+            _value = value;
+        }
 
-public class VariableValueRestriction : VariableRangeRestriction {
-    private readonly double _value;
+        public double Value { get { return _value; } }
 
-    public VariableValueRestriction(Variable variable, double value) : base(variable) {
-        _value = value;
+        public override string ToString() {
+            return Variable.Name + ":=" + Value;
+        }
+
+        #region Overrides of VariableRangeRestriction
+
+        public override bool Contains(double x0) {
+            throw new System.NotImplementedException();
+        }
+
+        public override IEnumerable<Range> PossibleRanges {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        public override double GetSomeValue() {
+            return Value;
+        }
+
+        public override VariableRangeRestriction Intersect(IEnumerable<Range> possibleRanges) {
+            throw new System.NotImplementedException();
+        }
+
+        #endregion
     }
-
-    public double Value { get { return _value; } }
-
-    public override string ToString() {
-        return Variable.Name + ":=" + Value;
-    }
-
-    #region Overrides of VariableRangeRestriction
-
-    public override bool Contains(double x0) {
-        throw new System.NotImplementedException();
-    }
-
-    public override IEnumerable<Range> PossibleRanges {
-        get { throw new System.NotImplementedException(); }
-    }
-
-    public override double GetSomeValue() {
-        throw new System.NotImplementedException();
-    }
-
-    public override VariableRangeRestriction Intersect(IEnumerable<Range> possibleRanges) {
-        throw new System.NotImplementedException();
-    }
-
-    #endregion
-}
 
     public class VariableMultipleRangeRestriction : VariableRangeRestriction {
         private readonly Range[] _possibleRanges;
-        private VariableMultipleRangeRestriction(Variable variable, IEnumerable<Range> possibleRanges) : base(variable){
+        private VariableMultipleRangeRestriction(Variable variable, IEnumerable<Range> possibleRanges)
+            : base(variable) {
             _possibleRanges = possibleRanges.Where(r => !r.IsEmpty()).ToArray();
         }
         public VariableMultipleRangeRestriction(Variable variable, double lo, double hi)

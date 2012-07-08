@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Movimentum.SubstitutionSolver3 {
     internal class VariableCountingVisitor : ISolverModelExprVisitor<Ignore> {
-        readonly Dictionary<Variable,int> _variableOccurrences = new Dictionary<Variable, int>();
+        readonly Dictionary<Variable, int> _variableOccurrences = new Dictionary<Variable, int>();
 
         public int Occurrences(Variable v) {
             int result;
@@ -54,6 +54,10 @@ namespace Movimentum.SubstitutionSolver3 {
             //IEnumerable<Tuple<RangeExpr.Pair, RangeExpr.Pair>> newPairs = rangeExpr.Pairs.Select(pair => VisitPair(pair));
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
         }
+
+        ////public Ignore Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
+        ////    throw new NotImplementedException();
+        ////}
 
         //private Tuple<RangeExpr.Pair, RangeExpr.Pair> VisitPair(RangeExpr.Pair pair) {
         //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this, Ig.nore);

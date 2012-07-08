@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 
 namespace Movimentum.SubstitutionSolver3 {
     class ToStringVisitor : ISolverModelConstraintVisitor<Ignore, string>
@@ -57,6 +58,29 @@ namespace Movimentum.SubstitutionSolver3 {
             return result;
         }
 
+        ////public string Visit(SingleVariablePolynomial singleVariablePolynomial, int p) {
+        ////    var result = new StringBuilder("[");
+        ////    string varName = singleVariablePolynomial.Var.Accept(this, p);
+        ////    for (int d = singleVariablePolynomial.Degree; d > 1; d--) {
+        ////        double coefficient = singleVariablePolynomial.Coefficient(d);
+        ////        if (!coefficient.Near(0)) {
+        ////            result.Append(coefficient);
+        ////            result.Append(varName);
+        ////            result.Append('^');
+        ////            result.Append(d);
+        ////        }
+        ////    }
+        ////    if (singleVariablePolynomial.Degree > 0 && !singleVariablePolynomial.Coefficient(1).Near(0)) {
+        ////        result.Append(singleVariablePolynomial.Coefficient(1));
+        ////        result.Append(varName);
+        ////    }
+        ////    if (!singleVariablePolynomial.Coefficient(0).Near(0)) {
+        ////        result.Append(singleVariablePolynomial.Coefficient(0));
+        ////    }
+        ////    result.Append("]");
+        ////    return result.ToString();
+        ////}
+
         private string VisitRangeExprPair(RangeExpr.Pair pair) {
             return pair.MoreThan.Accept(this, 0) + " : " + pair.Value.Accept(this, 0);
         }
@@ -67,39 +91,39 @@ namespace Movimentum.SubstitutionSolver3 {
 
         private const int PLUS_PRECEDENCE = 1;
         private const int TIMES_PRECEDENCE = 2;
-    private const int UNARY_MINUS_PRECEDENCE = 3;
+        private const int UNARY_MINUS_PRECEDENCE = 3;
 
-    private string Visit(AbstractExpr lhs, AbstractExpr rhs,
-                            int parentPrecedence, string opString, int localPrecedence) {
-        string r = lhs.Accept(this, localPrecedence)
-                    + opString
-                    + rhs.Accept(this, localPrecedence);
-        return Parenthesize(parentPrecedence, localPrecedence, r);
-    }
+        private string Visit(AbstractExpr lhs, AbstractExpr rhs,
+                                int parentPrecedence, string opString, int localPrecedence) {
+            string r = lhs.Accept(this, localPrecedence)
+                        + opString
+                        + rhs.Accept(this, localPrecedence);
+            return Parenthesize(parentPrecedence, localPrecedence, r);
+        }
 
         public string Visit(Plus op, AbstractExpr lhs,
                         AbstractExpr rhs, int parentPrecedence) {
-        return Visit(lhs, rhs, parentPrecedence, "+", PLUS_PRECEDENCE);
-    }
+            return Visit(lhs, rhs, parentPrecedence, "+", PLUS_PRECEDENCE);
+        }
 
-    public string Visit(Times op, AbstractExpr lhs,
-                        AbstractExpr rhs, int parentPrecedence) {
-        return Visit(lhs, rhs, parentPrecedence, "*", TIMES_PRECEDENCE);
-    }
+        public string Visit(Times op, AbstractExpr lhs,
+                            AbstractExpr rhs, int parentPrecedence) {
+            return Visit(lhs, rhs, parentPrecedence, "*", TIMES_PRECEDENCE);
+        }
 
-    public string Visit(Divide op, AbstractExpr lhs, 
-                        AbstractExpr rhs, int parentPrecedence) {
-        return Visit(lhs, rhs, parentPrecedence, "/", TIMES_PRECEDENCE);
-    }
+        public string Visit(Divide op, AbstractExpr lhs,
+                            AbstractExpr rhs, int parentPrecedence) {
+            return Visit(lhs, rhs, parentPrecedence, "/", TIMES_PRECEDENCE);
+        }
 
         #endregion
 
         #region Implementation of ISolverModelUnaryOpVisitor<in Ignore,in Ignore,out Tuple<string,int>>
 
-    public string Visit(UnaryMinus op, AbstractExpr inner, int parentPrecedence) {
-        string result = "-" + inner.Accept(this, UNARY_MINUS_PRECEDENCE);
-        return parentPrecedence > UNARY_MINUS_PRECEDENCE ? "(" + result + ")" : result;
-    }
+        public string Visit(UnaryMinus op, AbstractExpr inner, int parentPrecedence) {
+            string result = "-" + inner.Accept(this, UNARY_MINUS_PRECEDENCE);
+            return parentPrecedence > UNARY_MINUS_PRECEDENCE ? "(" + result + ")" : result;
+        }
 
         public string Visit(FormalSquareroot op, AbstractExpr inner, int parentPrecedence) {
             return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "root " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("root (", "root("); ; ;
@@ -109,22 +133,22 @@ namespace Movimentum.SubstitutionSolver3 {
             return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "sqrt " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("sqrt (", "sqrt("); ;
         }
 
-    private const int FUNCTION_PRECEDENCE = 4;
-    private const int SQUARE_PRECEDENCE = 5;
+        private const int FUNCTION_PRECEDENCE = 4;
+        private const int SQUARE_PRECEDENCE = 5;
 
-    private static string Parenthesize(int parentPrecedence, int localPrecedence, string r) {
-        return parentPrecedence > localPrecedence ? "(" + r + ")" : r;
-    }
+        private static string Parenthesize(int parentPrecedence, int localPrecedence, string r) {
+            return parentPrecedence > localPrecedence ? "(" + r + ")" : r;
+        }
 
-    public string Visit(Square op, AbstractExpr inner, int parentPrecedence) {
-        string result = inner.Accept(this, SQUARE_PRECEDENCE) + "²";
-        return Parenthesize(parentPrecedence, SQUARE_PRECEDENCE, result);
-    }
+        public string Visit(Square op, AbstractExpr inner, int parentPrecedence) {
+            string result = inner.Accept(this, SQUARE_PRECEDENCE) + "²";
+            return Parenthesize(parentPrecedence, SQUARE_PRECEDENCE, result);
+        }
 
-    public string Visit(Sin op, AbstractExpr inner, int parentPrecedence) {
-        string result = "sin " + inner.Accept(this, FUNCTION_PRECEDENCE);
-        return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, result);
-    }
+        public string Visit(Sin op, AbstractExpr inner, int parentPrecedence) {
+            string result = "sin " + inner.Accept(this, FUNCTION_PRECEDENCE);
+            return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, result);
+        }
 
         public string Visit(Cos op, AbstractExpr inner, int parentPrecedence) {
             return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "cos " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("cos (", "cos(");

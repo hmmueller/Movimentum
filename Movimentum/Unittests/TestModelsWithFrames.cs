@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace Movimentum.Unittests {
     [TestFixture]
-    internal class TestsWithFrames {
+    internal class TestModelsWithFrames {
         [Test]
         public void TestThatFramesContainCorrectTimesAndSomeConstraints() {
             const string s = @"
@@ -203,6 +203,22 @@ namespace Movimentum.Unittests {
             string dir = Path.Combine(Path.GetTempPath(), "MovimentumTest");
             Directory.CreateDirectory(dir);
             return Path.Combine(dir, "F_");
+        }
+
+        [Test]
+        public void TestMovingHockeyStick() {
+            const string s =
+                @".config (20, 200, 200);
+            B : .bar P = [0,0] Q = [5,5] R = [5,30];
+
+            @0  B.P = [60 + .t, 60 + .t];
+                B.Q = [65 + .t, 65 + .t];
+                B.R = [65 + .t, 90 + .t];
+            @10";
+            Script script = Program.Parse(s);
+
+            string prefix = MkTestDir();
+            Program.Interpret(script, prefix);
         }
 
         [Test]

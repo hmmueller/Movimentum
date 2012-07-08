@@ -10,7 +10,8 @@ namespace Movimentum.SubstitutionSolver3 {
             _variableValues = variableValues;
         }
 
-        public EvaluationVisitor(Variable variable, double value) : this(new Dictionary<Variable, double> {{variable, value}}){
+        public EvaluationVisitor(Variable variable, double value)
+            : this(new Dictionary<Variable, double> { { variable, value } }) {
         }
 
         #region ISolverModelExprVisitor
@@ -59,6 +60,10 @@ namespace Movimentum.SubstitutionSolver3 {
             //}
             //return result;
         }
+
+        ////public double Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
+        ////    return singleVariablePolynomial.EvaluateAt(GetValue(singleVariablePolynomial.Var));
+        ////}
 
         #endregion ISolverModelExprVisitor
 

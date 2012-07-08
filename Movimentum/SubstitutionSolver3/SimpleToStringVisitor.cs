@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text;
 
 namespace Movimentum.SubstitutionSolver3 {
     class SimpleToStringVisitor : ISolverModelConstraintVisitor<Ignore, string>
@@ -57,6 +58,29 @@ namespace Movimentum.SubstitutionSolver3 {
             }
             return result;
         }
+
+        ////public string Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
+        ////    var result = new StringBuilder("[");
+        ////    string varName = singleVariablePolynomial.Var.Accept(this, p);
+        ////    for (int d = singleVariablePolynomial.Degree; d > 1; d--) {
+        ////        double coefficient = singleVariablePolynomial.Coefficient(d);
+        ////        if (!coefficient.Near(0)) {
+        ////            result.Append(coefficient);
+        ////            result.Append(varName);
+        ////            result.Append('^');
+        ////            result.Append(d);
+        ////        }
+        ////    }
+        ////    if (singleVariablePolynomial.Degree > 0 && !singleVariablePolynomial.Coefficient(1).Near(0)) {
+        ////        result.Append(singleVariablePolynomial.Coefficient(1));
+        ////        result.Append(varName);
+        ////    }
+        ////    if (!singleVariablePolynomial.Coefficient(0).Near(0)) {
+        ////        result.Append(singleVariablePolynomial.Coefficient(0));
+        ////    }
+        ////    result.Append("]");
+        ////    return result.ToString();
+        ////}
 
         private string VisitRangeExprPair(RangeExpr.Pair pair) {
             return pair.MoreThan.Accept(this, Ig.nore) + " : " + pair.Value.Accept(this, Ig.nore);

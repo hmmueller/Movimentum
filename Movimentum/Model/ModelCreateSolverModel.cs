@@ -223,9 +223,9 @@ namespace Movimentum.Model {
         }
 
         static void BinaryScalarOperatorInit() {
-            PLUS._create = (lhsExpr, rhsExpr) => lhsExpr +  rhsExpr;
+            PLUS._create = (lhsExpr, rhsExpr) => lhsExpr + rhsExpr;
             MINUS._create = (lhsExpr, rhsExpr) => lhsExpr + (-rhsExpr);
-            TIMES._create = (lhsExpr, rhsExpr) => lhsExpr *  rhsExpr;
+            TIMES._create = (lhsExpr, rhsExpr) => lhsExpr * rhsExpr;
             DIVIDE._create = (lhsExpr, rhsExpr) => lhsExpr / rhsExpr;
         }
     }

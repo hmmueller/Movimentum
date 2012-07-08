@@ -574,8 +574,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    public partial class Times 
-    {
+    public partial class Times {
         public override double Evaluate(double lhs, double rhs) {
             return lhs * rhs;
         }

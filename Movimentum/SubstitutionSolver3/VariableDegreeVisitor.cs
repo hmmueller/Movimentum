@@ -72,6 +72,25 @@ namespace Movimentum.SubstitutionSolver3 {
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
         }
 
+        ////public Dictionary<Variable, VariableDegree> Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
+        ////    VariableDegree degree;
+        ////    switch (singleVariablePolynomial.Degree) {
+        ////        case 0:
+        ////            degree = VariableDegree.Zero;
+        ////            break;
+        ////        case 1:
+        ////            degree = VariableDegree.One;
+        ////            break;
+        ////        case 2:
+        ////            degree = VariableDegree.Two;
+        ////            break;
+        ////        default:
+        ////            degree = VariableDegree.Other;
+        ////            break;
+        ////    }
+        ////    return new Dictionary<Variable, VariableDegree> { { singleVariablePolynomial.Var, degree } };
+        ////}
+
         //private Tuple<RangeExpr.Pair, RangeExpr.Pair> VisitPair(RangeExpr.Pair pair) {
         //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this, Ig.nore);
         //    AbstractExpr newValue = pair.Value.Accept(this, Ig.nore);

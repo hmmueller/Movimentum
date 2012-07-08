@@ -7,12 +7,20 @@ namespace Movimentum.SubstitutionSolver3 {
     public abstract class AbstractConstraint {
         private static int _debugCt = 1000;
         private readonly int _debugId = _debugCt++;
+        private int? _debugCreatingNodeId;
 
-        public int DebugId {
-            get { return _debugId; }
+        public string DebugId {
+            get { return _debugId + "{" + _debugCreatingNodeId + "}"; }
+        }
+
+        public void SetDebugCreatingNodeIdIfMissing(int currentNodeId) {
+            if (!_debugCreatingNodeId.HasValue) {
+                _debugCreatingNodeId = currentNodeId;
+            }
         }
 
         public override string ToString() {
+            //return "{" + GetType().Name + "/" + _debugCreatingNodeId + "}" + Accept(new ToStringVisitor(), Ig.nore);
             return "{" + GetType().Name + "}" + Accept(new ToStringVisitor(), Ig.nore);
         }
 
@@ -39,7 +47,12 @@ namespace Movimentum.SubstitutionSolver3 {
     }
 
     public class EqualsZeroConstraint : ScalarConstraint {
-        public EqualsZeroConstraint(AbstractExpr expr) : base(expr) { }
+        public EqualsZeroConstraint(AbstractExpr expr)
+            : base(expr) {
+            //if (expr is Constant && double.IsNaN(((Constant)expr).Value)) {
+            //    expr = expr;
+            //}
+        }
 
         public override TResult Accept<TParameter, TResult>(ISolverModelConstraintVisitor<TParameter, TResult> visitor, TParameter p) {
             return visitor.Visit(this, p);
@@ -62,6 +75,14 @@ namespace Movimentum.SubstitutionSolver3 {
         public override TResult Accept<TParameter, TResult>(ISolverModelConstraintVisitor<TParameter, TResult> visitor, TParameter p) {
             return visitor.Visit(this, p);
         }
+
+        public override bool Equals(object obj) {
+            return ScalarConstraintEquals(obj as MoreThanZeroConstraint);
+        }
+
+        public override int GetHashCode() {
+            return ScalarConstraintGetHashCode();
+        }
     }
 
     public class AtLeastZeroConstraint : ScalarConstraint {
@@ -71,6 +92,13 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public override TResult Accept<TParameter, TResult>(ISolverModelConstraintVisitor<TParameter, TResult> visitor, TParameter p) {
             return visitor.Visit(this, p);
+        }
+        public override bool Equals(object obj) {
+            return ScalarConstraintEquals(obj as AtLeastZeroConstraint);
+        }
+
+        public override int GetHashCode() {
+            return ScalarConstraintGetHashCode();
         }
     }
 
@@ -85,22 +113,22 @@ namespace Movimentum.SubstitutionSolver3 {
             return "{" + GetType().Name + "}" + Accept(new ToStringVisitor(), 0);
         }
 
-        public static AbstractExpr operator +(AbstractExpr lhs, AbstractExpr rhs) {
+        public static BinaryExpression operator +(AbstractExpr lhs, AbstractExpr rhs) {
             return new BinaryExpression(lhs, new Plus(), rhs);
         }
-        public static AbstractExpr operator *(AbstractExpr lhs, AbstractExpr rhs) {
+        public static BinaryExpression operator *(AbstractExpr lhs, AbstractExpr rhs) {
             return new BinaryExpression(lhs, new Times(), rhs);
         }
-        public static AbstractExpr operator /(AbstractExpr lhs, AbstractExpr rhs) {
+        public static BinaryExpression operator /(AbstractExpr lhs, AbstractExpr rhs) {
             return new BinaryExpression(lhs, new Divide(), rhs);
         }
-        public static AbstractExpr operator -(AbstractExpr inner) {
+        public static UnaryExpression operator -(AbstractExpr inner) {
             return new UnaryExpression(inner, new UnaryMinus());
         }
     }
     public abstract class AbstractOperator { }
 
-    public class Constant : AbstractExpr {
+    public class Constant : AbstractExpr/*, ISingleVariablePolynomial*/ {
         private readonly double _value;
         public Constant(double value) {
             _value = value;
@@ -124,9 +152,25 @@ namespace Movimentum.SubstitutionSolver3 {
         public override int GetHashCode() {
             return _value.GetHashCode();
         }
+
+        #region Implementation of ISingleVariablePolynomial
+
+        public Variable Var {
+            get { return new NamedVariable("IGNORE_IN_CONSTANT"); }
+        }
+
+        public IEnumerable<double> Coefficients {
+            get { return new[] { _value }; }
+        }
+
+        public int Degree {
+            get { return 0; }
+        }
+
+        #endregion
     }
 
-    public abstract class Variable : AbstractExpr {
+    public abstract class Variable : AbstractExpr/*, ISingleVariablePolynomial*/ {
         private readonly string _name;
 
         protected Variable(string name) {
@@ -144,6 +188,22 @@ namespace Movimentum.SubstitutionSolver3 {
         public override int GetHashCode() {
             return _name.GetHashCode();
         }
+
+        #region Implementation of ISingleVariablePolynomial
+
+        public Variable Var {
+            get { return this; }
+        }
+
+        public IEnumerable<double> Coefficients {
+            get { return new[] { 0.0, 1.0 }; }
+        }
+
+        public int Degree {
+            get { return 1; }
+        }
+
+        #endregion
     }
 
     public class NamedVariable : Variable {
@@ -360,4 +420,63 @@ namespace Movimentum.SubstitutionSolver3 {
     }
 
     #endregion Expressions
+
+    //#region Polynom
+
+    //public interface ISingleVariablePolynomial {
+    //    Variable Var { get; }
+    //    IEnumerable<double> Coefficients { get; }
+    //    int Degree { get; }
+    //}
+
+    //public class SingleVariablePolynomial : AbstractExpr, ISingleVariablePolynomial {
+    //    private readonly Variable _var;
+    //    private readonly double[] _coefficients;
+    //    public SingleVariablePolynomial(Variable @var, IEnumerable<double> coefficients) { // ...
+    //        _var = var;
+    //        int d = 0, deg = 0;
+    //        foreach (var c in coefficients) {
+    //            if (!c.Near(0)) {
+    //                deg = d;
+    //            }
+    //            d++;
+    //        }
+    //        _coefficients = coefficients.Take(Math.Max(1, deg)).ToArray(); // ...or so...
+    //    }
+
+    //    public override TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p) {
+    //        return visitor.Visit(this, p);
+    //    }
+
+    //    // Not zero poly as -inf, but as 0 ...
+    //    public int Degree { get { return _coefficients.Length - 1; } } // ...
+
+    //    public double Coefficient(int power) { return _coefficients[power]; }
+
+    //    public IEnumerable<double> Coefficients {
+    //        get { return _coefficients; }
+    //    }
+
+    //    public Variable Var {
+    //        get { return _var; }
+    //    }
+
+    //    public double EvaluateAt(double x) { // ...
+    //        double result = 0;
+    //        for (int i = _coefficients.Length - 1; i >= 0; i--) {
+    //            result = result * x + _coefficients[i];
+    //        }
+    //        return result;
+    //    }
+
+    //    public AbstractExpr EvaluateAt(AbstractExpr x) { // ...
+    //        AbstractExpr result = new Constant(0);
+    //        for (int i = _coefficients.Length - 1; i >= 0; i--) {
+    //            result = result * x + new Constant(_coefficients[i]);
+    //        }
+    //        return result;
+    //    }
+    //}
+
+    //#endregion Polynom
 }

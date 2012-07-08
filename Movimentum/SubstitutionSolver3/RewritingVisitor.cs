@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Movimentum.SubstitutionSolver3;
 
 namespace Movimentum.SubstitutionSolver3 {
     internal class RewritingVisitor : ISolverModelConstraintVisitor<AbstractConstraint>
@@ -87,6 +86,14 @@ namespace Movimentum.SubstitutionSolver3 {
         public AbstractExpr Visit(RangeExpr rangeExpr, Ignore p) {
             throw new NotImplementedException();
         }
+
+        ////public AbstractExpr Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
+        ////    // if we rewrite a -> b + c, we get a general expression!
+        ////    var variableRewrite = Rewrite(singleVariablePolynomial.Var);
+        ////    return variableRewrite == singleVariablePolynomial.Var
+        ////        ? singleVariablePolynomial
+        ////        : singleVariablePolynomial.EvaluateAt(variableRewrite);
+        ////}
 
         #endregion
     }
