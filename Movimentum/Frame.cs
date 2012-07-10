@@ -43,7 +43,7 @@ namespace Movimentum {
             return base.ToString() + "{#=" + _frameNo + " T=" + _absoluteTime + " t=" + _relativeTime + " iv=" + _iv + "}: " + string.Join("; ", _constraints);
         }
 
-        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableRangeRestriction> result) {
+        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableValueRestriction> result) {
             IEnumerable<Constraint> modelConstraints = Constraints;
 
             var solverConstraints = modelConstraints.SelectMany(c => c.CreateSolverConstraints(_absoluteTime, _iv));

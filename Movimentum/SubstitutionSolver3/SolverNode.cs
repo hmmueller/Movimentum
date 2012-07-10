@@ -7,7 +7,9 @@ using System.Text;
 namespace Movimentum.SubstitutionSolver3 {
     public partial class SolverNode {
         private readonly IEnumerable<AbstractConstraint> _constraints;
-        private readonly Dictionary<Variable, VariableRangeRestriction> _variableInRangeKnowledges;
+        //private readonly Dictionary<Variable, VariableRangeRestriction> _variableInRangeKnowledges;
+        private readonly Dictionary<Variable, VariableValueRestriction> _variableValues;
+        private readonly IDictionary<Variable, AbstractExpr> _backsubstitutions;
 
         private static int _debugIdCount = 1000;
         public readonly int DebugId = _debugIdCount++;
@@ -35,7 +37,7 @@ namespace Movimentum.SubstitutionSolver3 {
         public override string ToString() {
             return "SolverNode " + DebugOriginChain(0) +
                     _constraints.Aggregate("", (s, c) => s + "\r\n  ! " + c) +
-                    _variableInRangeKnowledges.Aggregate("", (s, k) => s + "\r\n  " + k.Key.Name + " = " + ((VariableValueRestriction)k.Value).Value);
+                    _variableValues.Aggregate("", (s, k) => s + "\r\n  " + k.Key.Name + " = " + k.Value.Value);
         }
 
         public string GetDebugHistory(int count) {
@@ -55,32 +57,38 @@ namespace Movimentum.SubstitutionSolver3 {
             return sb.ToString();
         }
 
-        public IDictionary<Variable, VariableRangeRestriction> VariableInRangeKnowledges {
-            get { return _variableInRangeKnowledges; }
+        //public IDictionary<Variable, VariableRangeRestriction> VariableInRangeKnowledges {
+        //    get { return _variableInRangeKnowledges; }
+        //}
+        public IDictionary<Variable, VariableValueRestriction> VariableValues {
+            get { return _variableValues; }
         }
 
-        public SolverNode(IEnumerable<AbstractConstraint> constraints, SolverNode origin) {
+    public SolverNode(IEnumerable<AbstractConstraint> constraints, 
+                        IDictionary<Variable, AbstractExpr> backsubstitutions, 
+                        SolverNode origin) {
             _debugOrigin = origin;
             if (origin != null) {
                 origin._debugSuccessors++;
             }
             _constraints = constraints.Select(c => c.Accept(new ConstantFoldingVisitor(), Ig.nore));
             ////_constraints = constraints.Select(c => c.Accept(new PolynomialFoldingVisitor(), Ig.nore)).ToArray();
+            _backsubstitutions = backsubstitutions;
             foreach (var c in _constraints) {
                 c.SetDebugCreatingNodeIdIfMissing(DebugId);
             }
-            _variableInRangeKnowledges = origin == null
-                ? new Dictionary<Variable, VariableRangeRestriction>()
-                : new Dictionary<Variable, VariableRangeRestriction>(origin._variableInRangeKnowledges);
+            _variableValues = origin == null
+                ? new Dictionary<Variable, VariableValueRestriction>()
+                : new Dictionary<Variable, VariableValueRestriction>(origin._variableValues);
         }
 
-        public static IDictionary<Variable, VariableRangeRestriction>
+        public static IDictionary<Variable, VariableValueRestriction>
             Solve(IEnumerable<AbstractConstraint> solverConstraints,
                     int loopLimit,
-                    IDictionary<Variable, VariableRangeRestriction> previousValues,
+                    IDictionary<Variable, VariableValueRestriction> previousValues,
                     int frameNo) {
             // Create initial open set
-            IEnumerable<SolverNode> open = new[] { new SolverNode(solverConstraints, null) };
+                        IEnumerable<SolverNode> open = new[] { new SolverNode(solverConstraints, new Dictionary<Variable, AbstractExpr>(), null) };
 
             // Solver loop
             SolverNode solutionOrNull;
@@ -97,12 +105,22 @@ namespace Movimentum.SubstitutionSolver3 {
                     throw new Exception("Cannot find solution for frame " + frameNo + " - loop limit exhausted");
                 }
             } while (solutionOrNull == null);
-            return solutionOrNull.VariableInRangeKnowledges;
+            Debug.WriteLine("++++ solution node ++++");
+            Debug.WriteLine(solutionOrNull);
+            return solutionOrNull.VariableValues;
         }
 
         public static IEnumerable<SolverNode> SolverStep(
             IEnumerable<SolverNode> open,
-            IDictionary<Variable, VariableRangeRestriction> previousValues,
+            out SolverNode solutionOrNull) {
+            return SolverStep(open, 
+                new Dictionary<Variable, VariableValueRestriction>(), 
+                out solutionOrNull);
+        }
+
+        public static IEnumerable<SolverNode> SolverStep(
+            IEnumerable<SolverNode> open,
+            IDictionary<Variable, VariableValueRestriction> previousValues,
             out SolverNode solutionOrNull) {
             double minRank = open.Min(cs => cs.Rank);
             SolverNode selected = open.First(cs => cs.Rank <= minRank);
@@ -146,13 +164,16 @@ namespace Movimentum.SubstitutionSolver3 {
             get { return 1; }
         }
 
+        public IDictionary<Variable, AbstractExpr> Backsubstitutions {
+            get { return _backsubstitutions; }
+        }
+
         private bool IsSolved() {
             return !_constraints.Any();
         }
 
         private static readonly List<RuleAction> _ruleActions =
             new List<RuleAction>();
-
 
         private abstract class RuleAction {
             public readonly string Name;
@@ -219,19 +240,26 @@ namespace Movimentum.SubstitutionSolver3 {
         //}
 
         // Factored out RememberAndSubstituteVariable
-        private SolverNode RememberAndSubstituteVariable(Variable variable, double value) {
-            _variableInRangeKnowledges.Add(variable, new VariableValueRestriction(variable, value));
-            return SubstituteVariable(variable, new Constant(value));
+        public SolverNode RememberAndSubstituteVariable(Variable variable, 
+                double value, 
+                AbstractConstraint sourceConstraintToBeRemoved) {
+            _variableValues.Add(variable, new VariableValueRestriction(variable, value));
+            return SubstituteVariable(variable, new Constant(value), sourceConstraintToBeRemoved);
         }
 
-        private SolverNode SubstituteVariable(
-                Variable variable,
-                AbstractExpr expression) {
-            var rewriter = new RewritingVisitor(
-                new Dictionary<AbstractExpr, AbstractExpr> { { variable, expression } });
-            IEnumerable<AbstractConstraint> rewrittenConstraints =
-                Constraints.Select(c2 => c2.Accept(rewriter, Ig.nore));
-            return new SolverNode(rewrittenConstraints, this);
+    private SolverNode SubstituteVariable(Variable variable, 
+            AbstractExpr expression, 
+            AbstractConstraint sourceConstraintToBeRemoved) {
+        var rewriter = new RewritingVisitor(
+            new Dictionary<AbstractExpr, AbstractExpr> { { variable, expression } });
+        IEnumerable<AbstractConstraint> rewrittenConstraints =
+            Constraints.Except(sourceConstraintToBeRemoved)
+                        .Select(c2 => c2.Accept(rewriter, Ig.nore));
+        var newBacksubstitutions = Backsubstitutions;
+        if (!(expression is Constant)) {
+            newBacksubstitutions.Add(variable, expression);
         }
+        return new SolverNode(rewrittenConstraints, newBacksubstitutions, this);
+    }
     }
 }

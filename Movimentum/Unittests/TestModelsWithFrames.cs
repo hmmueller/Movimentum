@@ -178,7 +178,7 @@ namespace Movimentum.Unittests {
 
             IEnumerable<Frame> frames = script.CreateFrames();
 
-            IDictionary<Variable, VariableRangeRestriction> previousState = new Dictionary<Variable, VariableRangeRestriction>();
+            IDictionary<Variable, VariableValueRestriction> previousState = new Dictionary<Variable, VariableValueRestriction>();
 
             foreach (var f in frames) {
                 IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
@@ -208,12 +208,15 @@ namespace Movimentum.Unittests {
         [Test]
         public void TestMovingHockeyStick() {
             const string s =
-                @".config (20, 200, 200);
+                @".config (20, 400, 300);
             B : .bar P = [0,0] Q = [5,5] R = [5,30];
 
-            @0  B.P = [60 + .t, 60 + .t];
-                B.Q = [65 + .t, 65 + .t];
-                B.R = [65 + .t, 90 + .t];
+            @0  B.P = [20 + 20*.t, 30 + 20*.t];
+                B.Q = [25 + 20*.t, 35 + 20*.t];
+                B.R = [25 + 20*.t, 60 + 20*.t];
+            @5  B.P = [20 + 35*.t - 75, 30 + 20*5];
+                B.Q = [25 + 35*.t - 75, 35 + 20*5];
+                B.R = [25 + 35*.t - 75, 60 + 20*5];
             @10";
             Script script = Program.Parse(s);
 
@@ -221,23 +224,22 @@ namespace Movimentum.Unittests {
             Program.Interpret(script, prefix);
         }
 
-        [Test]
-        public void TestRotatingBar() {
-            const string s =
-                @".config(8, 600, 400);
-                WH : .bar C = [0,0] P = [-60,80];
-                // length of bar: 100
+    [Test]
+    public void TestRotatingBar() {
+        const string s =
+            @".config(8, 600, 400);
+            WH : .bar C = [0,0] P = [-60,80];
+            // length of bar: 100
 
-                @0
-	                WH.C 	= [200,200];
-	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
-                    x       > 0;
-                @2";
-            Script script = Program.Parse(s);
+            @0
+	            WH.C 	= [200,200];
+	            WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
+            @2";
+        Script script = Program.Parse(s);
 
-            string prefix = MkTestDir();
-            Program.Interpret(script, prefix);
-        }
+        string prefix = MkTestDir();
+        Program.Interpret(script, prefix);
+    }
 
         [Test, Ignore("Not yet there")]
         public void TestRotatingTriangle() {
