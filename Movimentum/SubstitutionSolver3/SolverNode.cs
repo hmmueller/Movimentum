@@ -64,9 +64,9 @@ namespace Movimentum.SubstitutionSolver3 {
             get { return _variableValues; }
         }
 
-    public SolverNode(IEnumerable<AbstractConstraint> constraints, 
-                        IDictionary<Variable, AbstractExpr> backsubstitutions, 
-                        SolverNode origin) {
+        public SolverNode(IEnumerable<AbstractConstraint> constraints,
+                            IDictionary<Variable, AbstractExpr> backsubstitutions,
+                            SolverNode origin) {
             _debugOrigin = origin;
             if (origin != null) {
                 origin._debugSuccessors++;
@@ -88,7 +88,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     IDictionary<Variable, VariableValueRestriction> previousValues,
                     int frameNo) {
             // Create initial open set
-                        IEnumerable<SolverNode> open = new[] { new SolverNode(solverConstraints, new Dictionary<Variable, AbstractExpr>(), null) };
+            IEnumerable<SolverNode> open = new[] { new SolverNode(solverConstraints, new Dictionary<Variable, AbstractExpr>(), null) };
 
             // Solver loop
             SolverNode solutionOrNull;
@@ -113,8 +113,8 @@ namespace Movimentum.SubstitutionSolver3 {
         public static IEnumerable<SolverNode> SolverStep(
             IEnumerable<SolverNode> open,
             out SolverNode solutionOrNull) {
-            return SolverStep(open, 
-                new Dictionary<Variable, VariableValueRestriction>(), 
+            return SolverStep(open,
+                new Dictionary<Variable, VariableValueRestriction>(),
                 out solutionOrNull);
         }
 
@@ -240,26 +240,55 @@ namespace Movimentum.SubstitutionSolver3 {
         //}
 
         // Factored out RememberAndSubstituteVariable
-        public SolverNode RememberAndSubstituteVariable(Variable variable, 
-                double value, 
+        public SolverNode RememberAndSubstituteVariable(Variable variable,
+                double value,
                 AbstractConstraint sourceConstraintToBeRemoved) {
             _variableValues.Add(variable, new VariableValueRestriction(variable, value));
-            return SubstituteVariable(variable, new Constant(value), sourceConstraintToBeRemoved);
+            var constantFolder = new ConstantFoldingVisitor();
+            IDictionary<Variable, double> workList = new Dictionary<Variable, double> { { variable, value } };
+            IDictionary<Variable, AbstractExpr> backsubstitutions = new Dictionary<Variable, AbstractExpr>(_backsubstitutions);
+            
+            var rewriter = new RewritingVisitor(
+                new Dictionary<AbstractExpr, AbstractExpr> { { variable, new Constant(value) } });
+            IEnumerable<AbstractConstraint> rewrittenConstraints =
+                Constraints.Except(sourceConstraintToBeRemoved)
+                            .Select(c2 => c2.Accept(rewriter, Ig.nore));
+
+            while (workList.Any()) {
+                var current = workList.First();
+                workList.Remove(current.Key);
+                var rewriterForBacksubstitutions = new RewritingVisitor(
+                    new Dictionary<AbstractExpr, AbstractExpr> { { current.Key, new Constant(current.Value) } });
+                IDictionary<Variable, AbstractExpr> newBacksubstitutions = new Dictionary<Variable, AbstractExpr>();
+                foreach (var b in backsubstitutions) {
+                    var e = b.Value.Accept(rewriterForBacksubstitutions, Ig.nore).Accept(constantFolder, Ig.nore);
+                    if (e is Constant) {
+                        var d = (e as Constant).Value;
+                        workList.Add(b.Key, d);
+                        _variableValues.Add(b.Key, new VariableValueRestriction(b.Key, d));
+                    } else {
+                        newBacksubstitutions.Add(b.Key, e);
+                    }
+                }
+                backsubstitutions = newBacksubstitutions;
+            }
+
+            return new SolverNode(rewrittenConstraints, backsubstitutions, this);
         }
 
-    private SolverNode SubstituteVariable(Variable variable, 
-            AbstractExpr expression, 
-            AbstractConstraint sourceConstraintToBeRemoved) {
-        var rewriter = new RewritingVisitor(
-            new Dictionary<AbstractExpr, AbstractExpr> { { variable, expression } });
-        IEnumerable<AbstractConstraint> rewrittenConstraints =
-            Constraints.Except(sourceConstraintToBeRemoved)
-                        .Select(c2 => c2.Accept(rewriter, Ig.nore));
-        var newBacksubstitutions = Backsubstitutions;
-        if (!(expression is Constant)) {
-            newBacksubstitutions.Add(variable, expression);
+        private SolverNode SubstituteVariable(Variable variable,
+                AbstractExpr expression,
+                AbstractConstraint sourceConstraintToBeRemoved) {
+            var rewriter = new RewritingVisitor(
+                new Dictionary<AbstractExpr, AbstractExpr> { { variable, expression } });
+            IEnumerable<AbstractConstraint> rewrittenConstraints =
+                Constraints.Except(sourceConstraintToBeRemoved)
+                            .Select(c2 => c2.Accept(rewriter, Ig.nore));
+            var newBacksubstitutions = Backsubstitutions;
+            if (!(expression is Constant)) {
+                newBacksubstitutions.Add(variable, expression);
+            }
+            return new SolverNode(rewrittenConstraints, newBacksubstitutions, this);
         }
-        return new SolverNode(rewrittenConstraints, newBacksubstitutions, this);
-    }
     }
 }
