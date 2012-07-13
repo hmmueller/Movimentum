@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Movimentum.Model;
-using Movimentum.SubstitutionSolver3;
+﻿using Movimentum.SubstitutionSolver3;
 using NUnit.Framework;
 
 namespace Movimentum.Unittests {

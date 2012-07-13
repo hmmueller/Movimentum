@@ -15,9 +15,8 @@ namespace Movimentum.SubstitutionSolver3 {
                             ? new SolverNode(
                                 currNode.Constraints
                                         .Except(matchedConstraint),
-                                currNode.Backsubstitutions,
                                 currNode)
-                            : null);
+                            : currNode.MarkDefinitelyDead());
                 new RuleAction<ScalarConstraintMatcher>("0<=C",
                     new AtLeastZeroConstraintTemplate(z).GetMatchDelegate(),
                     matcher => matcher != null,
@@ -27,9 +26,8 @@ namespace Movimentum.SubstitutionSolver3 {
                                     ? new SolverNode(
                                             currNode.Constraints
                                                 .Except(matchedConstraint),
-                                            currNode.Backsubstitutions,
                                             currNode)
-                                    : null;
+                                    : currNode.MarkDefinitelyDead();
                     });
             }
             {
@@ -39,8 +37,8 @@ namespace Movimentum.SubstitutionSolver3 {
                     new EqualsZeroConstraintTemplate(v).GetMatchDelegate(),
                     matcher => matcher != null,
                     (currNode, matcher, matchedConstraint) =>
-                        currNode.RememberAndSubstituteVariable(
-                            matcher.Match(v), 0, matchedConstraint));
+                        currNode.CloseVariable(
+                            matcher.Match(v), new Constant(0), matchedConstraint));
             }
 
             {
@@ -51,9 +49,10 @@ namespace Movimentum.SubstitutionSolver3 {
                     new EqualsZeroConstraintTemplate(v + e).GetMatchDelegate(),
                     matcher => matcher != null,
                     (currNode, matcher, matchedConstraint) =>
-                        currNode.RememberAndSubstituteVariable(
+                        currNode.CloseVariable(
                             matcher.Match(v),
-                            -matcher.Match(e).Value, matchedConstraint));
+                            -matcher.Match(e),
+                            matchedConstraint));
             }
             {
                 // 4. Match constraints with formal square roots
@@ -66,44 +65,44 @@ namespace Movimentum.SubstitutionSolver3 {
                         RewriteFormalSquareroot(node, formalRootFinder.SomeFormalSquareroot)
                     );
             }
-{
-    // 5. Substitute variable with expression that does not
-    //    contain the variable and has no formal square root.
-    var v = new TypeMatchTemplate<Variable>();
-    var e = new TypeMatchTemplate<AbstractExpr>();
-    new RuleAction<ScalarConstraintMatcher>("V->E",
-        constraint => {
-            // Check for v+e match.
-            ScalarConstraintMatcher m = 
-                new ScalarConstraintMatcher(
-                    new EqualsZeroConstraintTemplate(v + e))
-                .TryMatch(constraint);
-            if (m == null) {
-                return null;
+            {
+                // 5. Substitute variable with expression that does not
+                //    contain the variable and has no formal square root.
+                var v = new TypeMatchTemplate<Variable>();
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                new RuleAction<ScalarConstraintMatcher>("V->E",
+                    constraint => {
+                        // Check for v+e match.
+                        ScalarConstraintMatcher m =
+                            new ScalarConstraintMatcher(
+                                new EqualsZeroConstraintTemplate(v + e))
+                            .TryMatch(constraint);
+                        if (m == null) {
+                            return null;
+                        }
+                        // Check that no formal square root exists.
+                        FindFormalSquarerootVisitor f =
+                            constraint.Expr.Accept(
+                                new FindFormalSquarerootVisitor(), Ig.nore);
+                        if (f.SomeFormalSquareroot != null) {
+                            return null;
+                        }
+                        // Check that v is not in e.
+                        Dictionary<Variable, VariableDegree> degrees =
+                            m.Match(e).Accept(new VariableDegreeVisitor(), Ig.nore);
+                        Variable variable = m.Match(v);
+                        if (degrees.ContainsKey(variable)
+                            && degrees[variable] != VariableDegree.Zero) {
+                            return null;
+                        }
+                        return m;
+                    },
+                    m => m != null,
+                    (currNode, matcher, matchedConstraint) =>
+                        currNode.CloseVariable(matcher.Match(v),
+                                                   -matcher.Match(e), matchedConstraint)
+                );
             }
-            // Check that no formal square root exists.
-            FindFormalSquarerootVisitor f = 
-                constraint.Expr.Accept(
-                    new FindFormalSquarerootVisitor(), Ig.nore);
-            if (f.SomeFormalSquareroot != null) {
-                return null;
-            }
-            // Check that v is not in e.
-            Dictionary<Variable, VariableDegree> degrees = 
-                m.Match(e).Accept(new VariableDegreeVisitor(), Ig.nore);
-            Variable variable = m.Match(v);
-            if (degrees.ContainsKey(variable) 
-                && degrees[variable] != VariableDegree.Zero) {
-                return null;
-            }
-            return m;
-        },
-        m => m != null,
-        (currNode, matcher, matchedConstraint) =>
-            currNode.SubstituteVariable(matcher.Match(v),
-                                       -matcher.Match(e), matchedConstraint)
-    );
-}
 
 
         }
@@ -127,7 +126,6 @@ namespace Movimentum.SubstitutionSolver3 {
                 origin.Constraints.Select(c =>
                                           c.Accept(new RewritingVisitor(new Dictionary<AbstractExpr, AbstractExpr> { { first, root } }), Ig.nore))
                     .Concat(new[] { additionalConstraint }),
-                    origin.Backsubstitutions,
                     origin
                 );
         }
@@ -139,11 +137,11 @@ namespace Movimentum.SubstitutionSolver3 {
             double y1 = expr.Accept(new EvaluationVisitor(variable, 1), Ig.nore);
             if (y0.Near(y1)) {
                 // Horizontal line
-                return y0.Near(0) ? new SolverNode(origin.Constraints.Except(constraint), origin.Backsubstitutions, origin) : null; // EXCEPT!
+                return y0.Near(0) ? new SolverNode(origin.Constraints.Except(constraint), origin) : null;
             } else {
                 // Compute solution
                 double x0 = y0 / (y0 - y1);
-                return origin.RememberAndSubstituteVariable(variable, x0, constraint);
+                return origin.CloseVariable(variable, new Constant(x0), constraint);
             }
         }
     }

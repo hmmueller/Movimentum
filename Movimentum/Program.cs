@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using Antlr.Runtime;
 using Movimentum.Lexer;
 using Movimentum.Model;
@@ -35,7 +36,7 @@ namespace Movimentum {
             return script;
         }
 
-        internal static void Interpret(Script script, string prefix) {
+        internal static int Interpret(Script script, string prefix) {
             IEnumerable<Frame> frames = script.CreateFrames();
 
             double range;
@@ -44,7 +45,7 @@ namespace Movimentum {
                 range = maxDist * maxDist;
             }
 
-            IDictionary<Variable, VariableValueRestriction> previousState = new Dictionary<Variable, VariableValueRestriction>();
+            IDictionary<Variable, VariableWithValue> previousState = new Dictionary<Variable, VariableWithValue>();
 
             foreach (var f in frames) {
                 var bitmap = new Bitmap(script.Config.Width, script.Config.Height);
@@ -58,6 +59,8 @@ namespace Movimentum {
 
                 bitmap.Save(string.Format("{0}{1:000000}.jpg", prefix, f.FrameNo), ImageFormat.Jpeg);
             }
+
+            return frames.Count();
         }
     }
 }

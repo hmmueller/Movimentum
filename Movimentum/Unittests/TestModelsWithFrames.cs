@@ -178,11 +178,11 @@ namespace Movimentum.Unittests {
 
             IEnumerable<Frame> frames = script.CreateFrames();
 
-            IDictionary<Variable, VariableValueRestriction> previousState = new Dictionary<Variable, VariableValueRestriction>();
+            IDictionary<Variable, VariableWithValue> previousState = new Dictionary<Variable, VariableWithValue>();
 
             foreach (var f in frames) {
                 IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
-                double x = previousState[new NamedVariable("x")].GetSomeValue();
+                double x = previousState[new NamedVariable("x")].Value;
                 Assert.AreEqual(10, x, 1e-2);
 
                 ConstVector whcLocation = anchorLocations["WH"]["C"];
@@ -221,13 +221,14 @@ namespace Movimentum.Unittests {
             Script script = Program.Parse(s);
 
             string prefix = MkTestDir();
-            Program.Interpret(script, prefix);
+            int frameCount = Program.Interpret(script, prefix);
+            Assert.AreEqual(201, frameCount);
         }
 
-    [Test]
-    public void TestRotatingBar() {
-        const string s =
-            @".config(8, 600, 400);
+        [Test]
+        public void TestRotatingBar() {
+            const string s =
+                @".config(8, 600, 400);
             WH : .bar C = [0,0] P = [-60,80];
             // length of bar: 100
 
@@ -235,11 +236,12 @@ namespace Movimentum.Unittests {
 	            WH.C 	= [200,200];
 	            WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
             @2";
-        Script script = Program.Parse(s);
+            Script script = Program.Parse(s);
 
-        string prefix = MkTestDir();
-        Program.Interpret(script, prefix);
-    }
+            string prefix = MkTestDir();
+            int frameCount = Program.Interpret(script, prefix);
+            Assert.AreEqual(9, frameCount);
+        }
 
         [Test, Ignore("Not yet there")]
         public void TestRotatingTriangle() {

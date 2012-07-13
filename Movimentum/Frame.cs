@@ -43,13 +43,13 @@ namespace Movimentum {
             return base.ToString() + "{#=" + _frameNo + " T=" + _absoluteTime + " t=" + _relativeTime + " iv=" + _iv + "}: " + string.Join("; ", _constraints);
         }
 
-        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableValueRestriction> result) {
+        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableWithValue> result) {
             IEnumerable<Constraint> modelConstraints = Constraints;
 
             var solverConstraints = modelConstraints.SelectMany(c => c.CreateSolverConstraints(_absoluteTime, _iv));
             result = SolverNode.Solve(solverConstraints, 200 * Constraints.Count(), result, FrameNo);
 
-            return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetSomeValue()));
+            return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Value));
         }
 
         private static Dictionary<string, IDictionary<string, ConstVector>> ConvertResultToAnchorLocations(IDictionary<Variable, double> result) {
