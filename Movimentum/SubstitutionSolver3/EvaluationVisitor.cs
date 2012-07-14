@@ -5,30 +5,30 @@ namespace Movimentum.SubstitutionSolver3 {
     public class EvaluationVisitor : ISolverModelExprVisitor<Ignore, double>
                                  , ISolverModelUnaryOpVisitor<double, Ignore, double>
                                  , ISolverModelBinaryOpVisitor<double, Ignore, double> {
-        private readonly IDictionary<Variable, double> _variableValues;
-        public EvaluationVisitor(IDictionary<Variable, double> variableValues) {
+        private readonly IDictionary<IVariable, double> _variableValues;
+        public EvaluationVisitor(IDictionary<IVariable, double> variableValues) {
             _variableValues = variableValues;
         }
 
-        public EvaluationVisitor(Variable variable, double value)
-            : this(new Dictionary<Variable, double> { { variable, value } }) {
+        public EvaluationVisitor(IVariable variable, double value)
+            : this(new Dictionary<IVariable, double> { { variable, value } }) {
         }
 
         #region ISolverModelExprVisitor
 
-        public double Visit(Constant constant, Ignore p) {
+        public double Visit(IConstant constant, Ignore p) {
             return constant.Value;
         }
 
-        public double Visit(NamedVariable namedVariable, Ignore p) {
+        public double Visit(INamedVariable namedVariable, Ignore p) {
             return GetValue(namedVariable);
         }
 
-        public double Visit(AnchorVariable anchorVariable, Ignore p) {
+        public double Visit(IAnchorVariable anchorVariable, Ignore p) {
             return GetValue(anchorVariable);
         }
 
-        private double GetValue(Variable namedVariable) {
+        private double GetValue(IVariable namedVariable) {
             double result;
             if (!_variableValues.TryGetValue(namedVariable, out result)) {
                 throw new NotSupportedException("Variable " + namedVariable + " has no value");
@@ -61,9 +61,9 @@ namespace Movimentum.SubstitutionSolver3 {
             //return result;
         }
 
-        ////public double Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
-        ////    return singleVariablePolynomial.EvaluateAt(GetValue(singleVariablePolynomial.Var));
-        ////}
+        public double VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
+            return polynomial.EvaluateAtSTEPC(GetValue(polynomial.Var));
+        }
 
         #endregion ISolverModelExprVisitor
 

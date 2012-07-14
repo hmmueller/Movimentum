@@ -1,18 +1,18 @@
 namespace Movimentum.SubstitutionSolver3 {
     public abstract class AbstractClosedVariable {
-        private readonly Variable _variable;
+        private readonly IVariable _variable;
 
-        protected AbstractClosedVariable(Variable variable) {
+        protected AbstractClosedVariable(IVariable variable) {
             _variable = variable;
         }
 
-        public Variable Variable { get { return _variable; } }
+        public IVariable Variable { get { return _variable; } }
     }
 
     public class VariableWithValue : AbstractClosedVariable {
         private readonly double _value;
 
-        public VariableWithValue(Variable variable, double value)
+        public VariableWithValue(IVariable variable, double value)
             : base(variable) {
             _value = value;
         }
@@ -25,9 +25,9 @@ namespace Movimentum.SubstitutionSolver3 {
     }
 
     public class VariableWithBacksubstitution : AbstractClosedVariable {
-        public readonly AbstractExpr Expr;
+        public readonly IAbstractExpr Expr;
 
-        public VariableWithBacksubstitution(Variable variable, AbstractExpr expr)
+        public VariableWithBacksubstitution(IVariable variable, IAbstractExpr expr)
             : base(variable) {
             Expr = expr;
         }

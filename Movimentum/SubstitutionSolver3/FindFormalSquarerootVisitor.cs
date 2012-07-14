@@ -10,15 +10,15 @@ namespace Movimentum.SubstitutionSolver3 {
 
         #region Implementation of ISolverModelExprVisitor<in Ignore,out AbstractExpr>
 
-        public FindFormalSquarerootVisitor Visit(Constant constant, Ignore p) {
+        public FindFormalSquarerootVisitor Visit(IConstant constant, Ignore p) {
             return this;
         }
 
-        public FindFormalSquarerootVisitor Visit(NamedVariable namedVariable, Ignore p) {
+        public FindFormalSquarerootVisitor Visit(INamedVariable namedVariable, Ignore p) {
             return this;
         }
 
-        public FindFormalSquarerootVisitor Visit(AnchorVariable anchorVariable, Ignore p) {
+        public FindFormalSquarerootVisitor Visit(IAnchorVariable anchorVariable, Ignore p) {
             return this;
         }
 
@@ -43,6 +43,10 @@ namespace Movimentum.SubstitutionSolver3 {
             //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this, Ig.nore);
             //IEnumerable<Tuple<RangeExpr.Pair, RangeExpr.Pair>> newPairs = rangeExpr.Pairs.Select(pair => VisitPair(pair));
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
+        }
+
+        public FindFormalSquarerootVisitor VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
+            return this;
         }
 
         ////public FindFormalSquarerootVisitor Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {

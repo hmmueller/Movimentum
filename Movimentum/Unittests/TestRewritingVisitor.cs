@@ -7,35 +7,35 @@ namespace Movimentum.Unittests {
     class TestRewritingVisitor {
         [Test]
         public void TestDontReplaceConstant() {
-            Constant input = new Constant(1.5);
-            var visitor = new RewritingVisitor(new Dictionary<AbstractExpr, AbstractExpr> { { new Constant(1), new Constant(2) } });
-            AbstractExpr result = input.Accept(visitor, Ig.nore);
-            Assert.AreEqual(new Constant(1.5), result);
+            IConstant input = Polynomial.CreateConstant(1.5);
+            var visitor = new RewritingVisitor(new Dictionary<IAbstractExpr, IAbstractExpr> { { Polynomial.CreateConstant(1), Polynomial.CreateConstant(2) } });
+            IAbstractExpr result = input.Accept(visitor, Ig.nore);
+            Assert.AreEqual(Polynomial.CreateConstant(1.5), result);
             Assert.AreSame(input, result);
         }
 
         [Test]
         public void TestDoReplaceConstant() {
-            Constant input = new Constant(1.5);
-            var visitor = new RewritingVisitor(new Dictionary<AbstractExpr, AbstractExpr> { { new Constant(1.5), new Constant(1) + new Constant(0.5) } });
-            AbstractExpr result = input.Accept(visitor, Ig.nore);
-            Assert.AreEqual(new Constant(1) + new Constant(0.5), result);
+            IConstant input = Polynomial.CreateConstant(1.5);
+            var visitor = new RewritingVisitor(new Dictionary<IAbstractExpr, IAbstractExpr> { { Polynomial.CreateConstant(1.5), Polynomial.CreateConstant(1).E + Polynomial.CreateConstant(0.5) } });
+            IAbstractExpr result = input.Accept(visitor, Ig.nore);
+            Assert.AreEqual(Polynomial.CreateConstant(1).E + Polynomial.CreateConstant(0.5), result);
         }
 
         [Test]
         public void TestVariable() {
-            NamedVariable input = new NamedVariable("a");
-            var visitor = new RewritingVisitor(new Dictionary<AbstractExpr, AbstractExpr> { { new NamedVariable("b"), new Constant(2) }, { new NamedVariable("a"), new Constant(1) } });
-            AbstractExpr result = input.Accept(visitor, Ig.nore);
-            Assert.AreEqual(new Constant(1), result);
+            INamedVariable input = Polynomial.CreateNamedVariable("a");
+            var visitor = new RewritingVisitor(new Dictionary<IAbstractExpr, IAbstractExpr> { { Polynomial.CreateNamedVariable("b"), Polynomial.CreateConstant(2) }, { Polynomial.CreateNamedVariable("a"), Polynomial.CreateConstant(1) } });
+            IAbstractExpr result = input.Accept(visitor, Ig.nore);
+            Assert.AreEqual(Polynomial.CreateConstant(1), result);
         }
 
         [Test]
         public void TestVariableInExpr() {
-            AbstractExpr input = new NamedVariable("a") + new NamedVariable("c");
-            var visitor = new RewritingVisitor(new Dictionary<AbstractExpr, AbstractExpr> { { new NamedVariable("b"), new Constant(2) }, { new NamedVariable("a"), new Constant(1) } });
-            AbstractExpr result = input.Accept(visitor, Ig.nore);
-            Assert.AreEqual(new Constant(1) + new NamedVariable("c"), result);
+            AbstractExpr input = Polynomial.CreateNamedVariable("a").E + Polynomial.CreateNamedVariable("c");
+            var visitor = new RewritingVisitor(new Dictionary<IAbstractExpr, IAbstractExpr> { { Polynomial.CreateNamedVariable("b"), Polynomial.CreateConstant(2) }, { Polynomial.CreateNamedVariable("a"), Polynomial.CreateConstant(1) } });
+            IAbstractExpr result = input.Accept(visitor, Ig.nore);
+            Assert.AreEqual(Polynomial.CreateConstant(1).E + Polynomial.CreateNamedVariable("c"), result);
         }
     }
 }

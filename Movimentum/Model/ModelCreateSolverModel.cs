@@ -11,8 +11,8 @@ namespace Movimentum.Model {
 
     public partial class VectorEqualityConstraint {
         public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
-            AbstractExpr[] anchorExpr = _anchor.CreateSolverExpressions(t, iv);
-            AbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
+            IAbstractExpr[] anchorExpr = _anchor.CreateSolverExpressions(t, iv);
+            IAbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
             return new[] {
                 CreateEqualsZero(anchorExpr[0], rhsExpr[0]),
                 CreateEqualsZero(anchorExpr[1], rhsExpr[1]),
@@ -20,7 +20,7 @@ namespace Movimentum.Model {
             };
         }
 
-        private EqualsZeroConstraint CreateEqualsZero(AbstractExpr lhs, AbstractExpr rhs) {
+        private EqualsZeroConstraint CreateEqualsZero(IAbstractExpr lhs, IAbstractExpr rhs) {
             return new EqualsZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(lhs, rhs));
         }
     }
@@ -29,7 +29,7 @@ namespace Movimentum.Model {
         public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
             return new[] { new EqualsZeroConstraint(
                             BinaryScalarOperator.MINUS.CreateSolverExpression(
-                                new NamedVariable(_variable), 
+                                Polynomial.CreateNamedVariable(_variable), 
                                 _rhs.CreateSolverExpression(t, iv)))
             };
         }
@@ -38,13 +38,13 @@ namespace Movimentum.Model {
     public partial class ScalarInequalityConstraint {
         public override AbstractConstraint[] CreateSolverConstraints(double t, double iv) {
             if (_operator == ScalarInequalityOperator.LT) {
-                return new[] { new MoreThanZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(_rhs.CreateSolverExpression(t, iv), new NamedVariable(_variable))) };
+                return new[] { new MoreThanZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(_rhs.CreateSolverExpression(t, iv), Polynomial.CreateNamedVariable(_variable))) };
             } else if (_operator == ScalarInequalityOperator.LE) {
-                return new[] { new AtLeastZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(_rhs.CreateSolverExpression(t, iv), new NamedVariable(_variable))) };
+                return new[] { new AtLeastZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(_rhs.CreateSolverExpression(t, iv), Polynomial.CreateNamedVariable(_variable))) };
             } else if (_operator == ScalarInequalityOperator.GT) {
-                return new[] { new MoreThanZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv))) };
+                return new[] { new MoreThanZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(Polynomial.CreateNamedVariable(_variable), _rhs.CreateSolverExpression(t, iv))) };
             } else if (_operator == ScalarInequalityOperator.GE) {
-                return new[] { new AtLeastZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(new NamedVariable(_variable), _rhs.CreateSolverExpression(t, iv))) };
+                return new[] { new AtLeastZeroConstraint(BinaryScalarOperator.MINUS.CreateSolverExpression(Polynomial.CreateNamedVariable(_variable), _rhs.CreateSolverExpression(t, iv))) };
             } else {
                 throw new Exception("Unexpected Operator in ScalarInequalityConstraint");
             }
@@ -57,20 +57,20 @@ namespace Movimentum.Model {
     #region VectorExpr
 
     public abstract partial class VectorExpr {
-        public abstract AbstractExpr[] CreateSolverExpressions(double t, double iv);
+        public abstract IAbstractExpr[] CreateSolverExpressions(double t, double iv);
     }
 
     public partial class BinaryVectorExpr {
-        public override AbstractExpr[] CreateSolverExpressions(double t, double iv) {
-            AbstractExpr[] lhsExpr = _lhs.CreateSolverExpressions(t, iv);
-            AbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
+        public override IAbstractExpr[] CreateSolverExpressions(double t, double iv) {
+            IAbstractExpr[] lhsExpr = _lhs.CreateSolverExpressions(t, iv);
+            IAbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
             return _operator.CreateSolverExpressions(lhsExpr, rhsExpr);
         }
     }
 
     public partial class BinaryVectorOperator {
-        private Func<AbstractExpr[], AbstractExpr[], AbstractExpr[]> _create;
-        public AbstractExpr[] CreateSolverExpressions(AbstractExpr[] lhsExpr, AbstractExpr[] rhsExpr) {
+        private Func<IAbstractExpr[], IAbstractExpr[], IAbstractExpr[]> _create;
+        public IAbstractExpr[] CreateSolverExpressions(IAbstractExpr[] lhsExpr, IAbstractExpr[] rhsExpr) {
             return _create(lhsExpr, rhsExpr);
         }
 
@@ -89,20 +89,20 @@ namespace Movimentum.Model {
     }
 
     public partial class BinaryScalarVectorExpr {
-        public override AbstractExpr[] CreateSolverExpressions(double t, double iv) {
-            AbstractExpr[] lhsExpr = _lhs.CreateSolverExpressions(t, iv);
-            AbstractExpr rhsExpr = _rhs.CreateSolverExpression(t, iv);
+        public override IAbstractExpr[] CreateSolverExpressions(double t, double iv) {
+            IAbstractExpr[] lhsExpr = _lhs.CreateSolverExpressions(t, iv);
+            IAbstractExpr rhsExpr = _rhs.CreateSolverExpression(t, iv);
             return _operator.CreateSolverExpressions(lhsExpr, rhsExpr);
         }
     }
 
     public partial class BinaryScalarVectorOperator {
-        private Func<AbstractExpr[], AbstractExpr, AbstractExpr[]> _create;
-        public AbstractExpr[] CreateSolverExpressions(AbstractExpr[] lhsExpr, AbstractExpr rhsExpr) {
+        private Func<IAbstractExpr[], IAbstractExpr, IAbstractExpr[]> _create;
+        public IAbstractExpr[] CreateSolverExpressions(IAbstractExpr[] lhsExpr, IAbstractExpr rhsExpr) {
             return _create(lhsExpr, rhsExpr);
         }
 
-        private static AbstractExpr[] Rotate2D(AbstractExpr[] lhsExpr, AbstractExpr rhsExpr) {
+        private static IAbstractExpr[] Rotate2D(IAbstractExpr[] lhsExpr, IAbstractExpr rhsExpr) {
             // X = x cos phi - y sin phi
             // Y = x sin phi + y cos phi
             // Z = z
@@ -121,7 +121,7 @@ namespace Movimentum.Model {
             };
         }
 
-        private static AbstractExpr[] Times(AbstractExpr[] lhsExpr, AbstractExpr rhsExpr) {
+        private static IAbstractExpr[] Times(IAbstractExpr[] lhsExpr, IAbstractExpr rhsExpr) {
             return new[] {
                 BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[0], rhsExpr),
                 BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[1], rhsExpr),
@@ -136,15 +136,15 @@ namespace Movimentum.Model {
     }
 
     public partial class UnaryVectorExpr {
-        public override AbstractExpr[] CreateSolverExpressions(double t, double iv) {
-            AbstractExpr[] innerExpr = _inner.CreateSolverExpressions(t, iv);
+        public override IAbstractExpr[] CreateSolverExpressions(double t, double iv) {
+            IAbstractExpr[] innerExpr = _inner.CreateSolverExpressions(t, iv);
             return _operator.CreateSolverExpressions(innerExpr);
         }
     }
 
     public partial class UnaryVectorOperator {
-        private Func<AbstractExpr[], AbstractExpr[]> _create;
-        public AbstractExpr[] CreateSolverExpressions(AbstractExpr[] innerExpr) {
+        private Func<IAbstractExpr[], IAbstractExpr[]> _create;
+        public IAbstractExpr[] CreateSolverExpressions(IAbstractExpr[] innerExpr) {
             return _create(innerExpr);
         }
 
@@ -169,7 +169,7 @@ namespace Movimentum.Model {
     }
 
     public partial class Vector {
-        public override AbstractExpr[] CreateSolverExpressions(double t, double iv) {
+        public override IAbstractExpr[] CreateSolverExpressions(double t, double iv) {
             return new[] {
                 _x.CreateSolverExpression(t, iv),
                 _y.CreateSolverExpression(t, iv),
@@ -179,11 +179,11 @@ namespace Movimentum.Model {
     }
 
     public partial class VectorVariable {
-        public override AbstractExpr[] CreateSolverExpressions(double t, double iv) {
+        public override IAbstractExpr[] CreateSolverExpressions(double t, double iv) {
             return new[] {
-                new NamedVariable(_name + "^X"),
-                new NamedVariable(_name + "^Y"),
-                new NamedVariable(_name + "^Z"),
+                Polynomial.CreateNamedVariable(_name + "^X"),
+                Polynomial.CreateNamedVariable(_name + "^Y"),
+                Polynomial.CreateNamedVariable(_name + "^Z"),
             };
         }
     }
@@ -191,11 +191,11 @@ namespace Movimentum.Model {
     public partial class Anchor {
         public enum Coordinate { X, Y, Z }
 
-        public override AbstractExpr[] CreateSolverExpressions(double t, double iv) {
+        public override IAbstractExpr[] CreateSolverExpressions(double t, double iv) {
             return new[] {
-                new AnchorVariable(this, Coordinate.X),
-                new AnchorVariable(this, Coordinate.Y),
-                new AnchorVariable(this, Coordinate.Z),
+                Polynomial.CreateAnchorVariable(this, Coordinate.X),
+                Polynomial.CreateAnchorVariable(this, Coordinate.Y),
+                Polynomial.CreateAnchorVariable(this, Coordinate.Z),
             };
         }
     }
@@ -205,41 +205,41 @@ namespace Movimentum.Model {
     #region ScalarExpr
 
     public abstract partial class ScalarExpr {
-        public abstract AbstractExpr CreateSolverExpression(double t, double iv);
+        public abstract IAbstractExpr CreateSolverExpression(double t, double iv);
     }
 
     public partial class BinaryScalarExpr {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            AbstractExpr lhsExpr = _lhs.CreateSolverExpression(t, iv);
-            AbstractExpr rhsExpr = _rhs.CreateSolverExpression(t, iv);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            IAbstractExpr lhsExpr = _lhs.CreateSolverExpression(t, iv);
+            IAbstractExpr rhsExpr = _rhs.CreateSolverExpression(t, iv);
             return _operator.CreateSolverExpression(lhsExpr, rhsExpr);
         }
     }
 
     public partial class BinaryScalarOperator {
-        private Func<AbstractExpr, AbstractExpr, AbstractExpr> _create;
-        public AbstractExpr CreateSolverExpression(AbstractExpr lhsExpr, AbstractExpr rhsExpr) {
+        private Func<IAbstractExpr, IAbstractExpr, IAbstractExpr> _create;
+        public IAbstractExpr CreateSolverExpression(IAbstractExpr lhsExpr, IAbstractExpr rhsExpr) {
             return _create(lhsExpr, rhsExpr);
         }
 
         static void BinaryScalarOperatorInit() {
-            PLUS._create = (lhsExpr, rhsExpr) => lhsExpr + rhsExpr;
-            MINUS._create = (lhsExpr, rhsExpr) => lhsExpr + (-rhsExpr);
-            TIMES._create = (lhsExpr, rhsExpr) => lhsExpr * rhsExpr;
-            DIVIDE._create = (lhsExpr, rhsExpr) => lhsExpr / rhsExpr;
+            PLUS._create = (lhsExpr, rhsExpr) => lhsExpr.E + rhsExpr;
+            MINUS._create = (lhsExpr, rhsExpr) => lhsExpr.E + (-rhsExpr.E);
+            TIMES._create = (lhsExpr, rhsExpr) => lhsExpr.E * rhsExpr;
+            DIVIDE._create = (lhsExpr, rhsExpr) => lhsExpr.E / rhsExpr;
         }
     }
 
     public partial class UnaryScalarExpr {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            AbstractExpr innerExpr = _inner.CreateSolverExpression(t, iv);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            IAbstractExpr innerExpr = _inner.CreateSolverExpression(t, iv);
             return _operator.CreateSolverExpression(innerExpr);
         }
     }
 
     public partial class UnaryScalarOperator {
-        private Func<AbstractExpr, AbstractExpr> _create;
-        public AbstractExpr CreateSolverExpression(AbstractExpr innerExpr) {
+        private Func<IAbstractExpr, IAbstractExpr> _create;
+        public IAbstractExpr CreateSolverExpression(IAbstractExpr innerExpr) {
             return _create(innerExpr);
         }
 
@@ -255,20 +255,20 @@ namespace Movimentum.Model {
     }
 
     public partial class BinaryVectorScalarExpr {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            AbstractExpr[] lhsExpr = _lhs.CreateSolverExpressions(t, iv);
-            AbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            IAbstractExpr[] lhsExpr = _lhs.CreateSolverExpressions(t, iv);
+            IAbstractExpr[] rhsExpr = _rhs.CreateSolverExpressions(t, iv);
             return _operator.CreateSolverExpression(lhsExpr, rhsExpr);
         }
     }
 
     public partial class BinaryVectorScalarOperator {
-        private Func<AbstractExpr[], AbstractExpr[], AbstractExpr> _create;
-        public AbstractExpr CreateSolverExpression(AbstractExpr[] lhsExpr, AbstractExpr[] rhsExpr) {
+        private Func<IAbstractExpr[], IAbstractExpr[], IAbstractExpr> _create;
+        public IAbstractExpr CreateSolverExpression(IAbstractExpr[] lhsExpr, IAbstractExpr[] rhsExpr) {
             return _create(lhsExpr, rhsExpr);
         }
 
-        private static AbstractExpr Angle(AbstractExpr[] lhsExpr, AbstractExpr[] rhsExpr) {
+        private static IAbstractExpr Angle(IAbstractExpr[] lhsExpr, IAbstractExpr[] rhsExpr) {
             return BinaryScalarOperator.DIVIDE.CreateSolverExpression(
                     Times(lhsExpr, rhsExpr),
                     BinaryScalarOperator.TIMES.CreateSolverExpression(
@@ -277,7 +277,7 @@ namespace Movimentum.Model {
                 );
         }
 
-        private static AbstractExpr Times(AbstractExpr[] lhsExpr, AbstractExpr[] rhsExpr) {
+        private static IAbstractExpr Times(IAbstractExpr[] lhsExpr, IAbstractExpr[] rhsExpr) {
             var x = BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[0], rhsExpr[0]);
             var y = BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[1], rhsExpr[1]);
             var z = BinaryScalarOperator.TIMES.CreateSolverExpression(lhsExpr[2], rhsExpr[2]);
@@ -292,15 +292,15 @@ namespace Movimentum.Model {
     }
 
     public partial class UnaryVectorScalarExpr {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            AbstractExpr[] innerExpr = _inner.CreateSolverExpressions(t, iv);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            IAbstractExpr[] innerExpr = _inner.CreateSolverExpressions(t, iv);
             return _operator.CreateSolverExpression(innerExpr);
         }
     }
 
     public partial class UnaryVectorScalarOperator {
-        private Func<AbstractExpr[], AbstractExpr> _create;
-        public AbstractExpr CreateSolverExpression(AbstractExpr[] innerExpr) {
+        private Func<IAbstractExpr[], IAbstractExpr> _create;
+        public IAbstractExpr CreateSolverExpression(IAbstractExpr[] innerExpr) {
             return _create(innerExpr);
         }
 
@@ -314,7 +314,7 @@ namespace Movimentum.Model {
     }
 
     public partial class RangeScalarExpr {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
             return new RangeExpr(_expr.CreateSolverExpression(t, iv),
                 _value0.CreateSolverExpression(t, iv),
                 _pairs.Select(p => new RangeExpr.Pair(p.MoreThan.CreateSolverExpression(t, iv), p.Value.CreateSolverExpression(t, iv))));
@@ -322,26 +322,26 @@ namespace Movimentum.Model {
     }
 
     public partial class ConstScalar {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            return new Constant(_value);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            return Polynomial.CreateConstant(_value);
         }
     }
 
     public partial class ScalarVariable {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            return new NamedVariable(_name);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            return Polynomial.CreateNamedVariable(_name);
         }
     }
 
     public partial class T {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            return new Constant(t);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            return Polynomial.CreateConstant(t);
         }
     }
 
     public partial class IV {
-        public override AbstractExpr CreateSolverExpression(double t, double iv) {
-            return new Constant(iv);
+        public override IAbstractExpr CreateSolverExpression(double t, double iv) {
+            return Polynomial.CreateConstant(iv);
         }
     }
 

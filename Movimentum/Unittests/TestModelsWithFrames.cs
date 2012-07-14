@@ -178,11 +178,11 @@ namespace Movimentum.Unittests {
 
             IEnumerable<Frame> frames = script.CreateFrames();
 
-            IDictionary<Variable, VariableWithValue> previousState = new Dictionary<Variable, VariableWithValue>();
+            IDictionary<IVariable, VariableWithValue> previousState = new Dictionary<IVariable, VariableWithValue>();
 
             foreach (var f in frames) {
                 IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
-                double x = previousState[new NamedVariable("x")].Value;
+                double x = previousState[Polynomial.CreateNamedVariable("x")].Value;
                 Assert.AreEqual(10, x, 1e-2);
 
                 ConstVector whcLocation = anchorLocations["WH"]["C"];

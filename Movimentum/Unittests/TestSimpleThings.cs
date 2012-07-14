@@ -6,8 +6,8 @@ namespace Movimentum.Unittests {
     class TestSimpleThings {
         [Test]
         public void TestEqualityOfAtLeastZeroConstraint() {
-            var z1 = new AtLeastZeroConstraint(new Constant(0));
-            var z2 = new AtLeastZeroConstraint(new Constant(0));
+            var z1 = new AtLeastZeroConstraint(Polynomial.CreateConstant(0));
+            var z2 = new AtLeastZeroConstraint(Polynomial.CreateConstant(0));
             Assert.AreEqual(z1, z2);
         }
 

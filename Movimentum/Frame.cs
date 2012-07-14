@@ -43,7 +43,7 @@ namespace Movimentum {
             return base.ToString() + "{#=" + _frameNo + " T=" + _absoluteTime + " t=" + _relativeTime + " iv=" + _iv + "}: " + string.Join("; ", _constraints);
         }
 
-        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<Variable, VariableWithValue> result) {
+        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<IVariable, VariableWithValue> result) {
             IEnumerable<Constraint> modelConstraints = Constraints;
 
             var solverConstraints = modelConstraints.SelectMany(c => c.CreateSolverConstraints(_absoluteTime, _iv));
@@ -52,15 +52,15 @@ namespace Movimentum {
             return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Value));
         }
 
-        private static Dictionary<string, IDictionary<string, ConstVector>> ConvertResultToAnchorLocations(IDictionary<Variable, double> result) {
+        private static Dictionary<string, IDictionary<string, ConstVector>> ConvertResultToAnchorLocations(IDictionary<IVariable, double> result) {
             var anchorLocations = new Dictionary<string, IDictionary<string, ConstVector>>();
 
-            foreach (var anchorXVariable in result.Keys.OfType<AnchorVariable>().Where(v => v.Coordinate == Anchor.Coordinate.X)) {
+            foreach (var anchorXVariable in result.Keys.OfType<IAnchorVariable>().Where(v => v.Coordinate == Anchor.Coordinate.X)) {
                 Anchor anchor = anchorXVariable.Anchor;
                 ConstVector resultVector = new ConstVector(
                     result[anchorXVariable],
-                    result[new AnchorVariable(anchor, Anchor.Coordinate.Y)],
-                    result[new AnchorVariable(anchor, Anchor.Coordinate.Z)]
+                    result[Polynomial.CreateAnchorVariable(anchor, Anchor.Coordinate.Y)],
+                    result[Polynomial.CreateAnchorVariable(anchor, Anchor.Coordinate.Z)]
                     );
                 IDictionary<string, ConstVector> anchorLocationsForThing;
                 if (!anchorLocations.TryGetValue(anchor.Thing, out anchorLocationsForThing)) {

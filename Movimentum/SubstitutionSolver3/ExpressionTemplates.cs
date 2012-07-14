@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Movimentum.SubstitutionSolver3 {
     abstract class AbstractExpressionTemplate {
         /// <returns><c>null</c> if not successful; or a dictionary of (template,expression) pairs if successful.</returns>
-        public IDictionary<AbstractExpressionTemplate, AbstractExpr> TryMatch(AbstractExpr e) {
-            var collector = new Dictionary<AbstractExpressionTemplate, AbstractExpr>();
+        public IDictionary<AbstractExpressionTemplate, IAbstractExpr> TryMatch(IAbstractExpr e) {
+            var collector = new Dictionary<AbstractExpressionTemplate, IAbstractExpr>();
             return TryMatchAndRemember(e, collector) ? collector : null;
         }
 
-        internal bool TryMatchAndRemember(AbstractExpr e, IDictionary<AbstractExpressionTemplate, AbstractExpr> matches) {
+        internal bool TryMatchAndRemember(IAbstractExpr e, IDictionary<AbstractExpressionTemplate, IAbstractExpr> matches) {
             if (matches.ContainsKey(this)) {
                 return matches[this].Equals(e);
             } else if (TryMatch(e, matches)) {
@@ -19,7 +18,7 @@ namespace Movimentum.SubstitutionSolver3 {
                 return false;
             }
         }
-        protected abstract bool TryMatch(AbstractExpr e, IDictionary<AbstractExpressionTemplate, AbstractExpr> matches);
+        protected abstract bool TryMatch(IAbstractExpr e, IDictionary<AbstractExpressionTemplate, IAbstractExpr> matches);
 
         public static BinaryExpressionTemplate operator +(AbstractExpressionTemplate lhs, AbstractExpressionTemplate rhs) {
             return new BinaryExpressionTemplate(lhs, new Plus(), rhs);
@@ -42,8 +41,8 @@ namespace Movimentum.SubstitutionSolver3 {
         }
     }
 
-    class TypeMatchTemplate<T> : AbstractExpressionTemplate where T : AbstractExpr {
-        protected override bool TryMatch(AbstractExpr e, IDictionary<AbstractExpressionTemplate, AbstractExpr> matches) {
+    class TypeMatchTemplate<T> : AbstractExpressionTemplate where T : IAbstractExpr {
+        protected override bool TryMatch(IAbstractExpr e, IDictionary<AbstractExpressionTemplate, IAbstractExpr> matches) {
             return e is T;
         }
     }
@@ -58,7 +57,7 @@ namespace Movimentum.SubstitutionSolver3 {
             get { return _expr; }
         }
 
-        protected override bool TryMatch(AbstractExpr e, IDictionary<AbstractExpressionTemplate, AbstractExpr> matches) {
+        protected override bool TryMatch(IAbstractExpr e, IDictionary<AbstractExpressionTemplate, IAbstractExpr> matches) {
             return _expr.Equals(e);
         }
     }
@@ -78,7 +77,7 @@ namespace Movimentum.SubstitutionSolver3 {
         public AbstractExpressionTemplate Inner {
             get { return _inner; }
         }
-        protected override bool TryMatch(AbstractExpr e, IDictionary<AbstractExpressionTemplate, AbstractExpr> matches) {
+        protected override bool TryMatch(IAbstractExpr e, IDictionary<AbstractExpressionTemplate, IAbstractExpr> matches) {
             var ue = e as UnaryExpression;
             return ue != null && IsSameOperatorAs(ue.Op, _op) && _inner.TryMatchAndRemember(ue.Inner, matches);
         }
@@ -109,7 +108,7 @@ namespace Movimentum.SubstitutionSolver3 {
         public AbstractExpressionTemplate Rhs {
             get { return _rhs; }
         }
-        protected override bool TryMatch(AbstractExpr e, IDictionary<AbstractExpressionTemplate, AbstractExpr> matches) {
+        protected override bool TryMatch(IAbstractExpr e, IDictionary<AbstractExpressionTemplate, IAbstractExpr> matches) {
             var be = e as BinaryExpression;
             return be != null && _lhs.TryMatchAndRemember(be.Lhs, matches) && IsSameOperatorAs(be.Op, _op) && _rhs.TryMatchAndRemember(be.Rhs, matches);
         }
@@ -121,24 +120,24 @@ namespace Movimentum.SubstitutionSolver3 {
 
     class ExpressionMatcher {
         private readonly AbstractExpressionTemplate _template;
-        private IDictionary<AbstractExpressionTemplate, AbstractExpr> _matches;
+        private IDictionary<AbstractExpressionTemplate, IAbstractExpr> _matches;
 
         public ExpressionMatcher(AbstractExpressionTemplate template) {
             _template = template;
         }
 
-        public bool TryMatch(AbstractExpr e) {
+        public bool TryMatch(IAbstractExpr e) {
             _matches = _template.TryMatch(e);
             return _matches != null;
         }
 
-        private AbstractExpr GetMatch(AbstractExpressionTemplate t) {
-            AbstractExpr result;
+        private IAbstractExpr GetMatch(AbstractExpressionTemplate t) {
+            IAbstractExpr result;
             _matches.TryGetValue(t, out result);
             return result;
         }
 
-        public AbstractExpr Match(FixedExpressionTemplate t) {
+        public IAbstractExpr Match(FixedExpressionTemplate t) {
             return GetMatch(t);
         }
 
@@ -150,7 +149,7 @@ namespace Movimentum.SubstitutionSolver3 {
             return GetMatch(t) as UnaryExpression;
         }
 
-        public T Match<T>(TypeMatchTemplate<T> t) where T : AbstractExpr {
+        public T Match<T>(TypeMatchTemplate<T> t) where T : class, IAbstractExpr {
             return GetMatch(t) as T;
         }
     }

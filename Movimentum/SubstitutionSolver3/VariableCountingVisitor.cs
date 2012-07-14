@@ -3,29 +3,29 @@ using System.Collections.Generic;
 
 namespace Movimentum.SubstitutionSolver3 {
     internal class VariableCountingVisitor : ISolverModelExprVisitor<Ignore> {
-        readonly Dictionary<Variable, int> _variableOccurrences = new Dictionary<Variable, int>();
+        readonly Dictionary<IVariable, int> _variableOccurrences = new Dictionary<IVariable, int>();
 
-        public int Occurrences(Variable v) {
+        public int Occurrences(IVariable v) {
             int result;
             _variableOccurrences.TryGetValue(v, out result);
             return result;
         }
 
-        public IEnumerable<Variable> Variables() {
+        public IEnumerable<IVariable> Variables() {
             return _variableOccurrences.Keys;
         }
 
         #region Implementation of ISolverModelExprVisitor<in Ignore,out AbstractExpr>
 
-        public Ignore Visit(Constant constant, Ignore p) {
+        public Ignore Visit(IConstant constant, Ignore p) {
             return p;
         }
 
-        public Ignore Visit(NamedVariable namedVariable, Ignore p) {
+        public Ignore Visit(INamedVariable namedVariable, Ignore p) {
             return IncrementCount(namedVariable);
         }
 
-        private Ignore IncrementCount(Variable variable) {
+        private Ignore IncrementCount(IVariable variable) {
             if (!_variableOccurrences.ContainsKey(variable)) {
                 _variableOccurrences.Add(variable, 0);
             }
@@ -33,7 +33,7 @@ namespace Movimentum.SubstitutionSolver3 {
             return Ig.nore;
         }
 
-        public Ignore Visit(AnchorVariable anchorVariable, Ignore p) {
+        public Ignore Visit(IAnchorVariable anchorVariable, Ignore p) {
             return IncrementCount(anchorVariable);
         }
 
@@ -53,6 +53,10 @@ namespace Movimentum.SubstitutionSolver3 {
             //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this, Ig.nore);
             //IEnumerable<Tuple<RangeExpr.Pair, RangeExpr.Pair>> newPairs = rangeExpr.Pairs.Select(pair => VisitPair(pair));
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
+        }
+
+        public Ignore VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore p) {
+            return polynomial.Var.Accept(this, p);
         }
 
         ////public Ignore Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {

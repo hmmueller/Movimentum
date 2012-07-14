@@ -45,7 +45,7 @@ namespace Movimentum {
                 range = maxDist * maxDist;
             }
 
-            IDictionary<Variable, VariableWithValue> previousState = new Dictionary<Variable, VariableWithValue>();
+            IDictionary<IVariable, VariableWithValue> previousState = new Dictionary<IVariable, VariableWithValue>();
 
             foreach (var f in frames) {
                 var bitmap = new Bitmap(script.Config.Width, script.Config.Height);

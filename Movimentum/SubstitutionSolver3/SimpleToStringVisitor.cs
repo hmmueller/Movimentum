@@ -25,15 +25,15 @@ namespace Movimentum.SubstitutionSolver3 {
 
         #region Implementation of ISolverModelExprVisitor<int, string>
 
-        public string Visit(Constant constant, Ignore p) {
+        public string Visit(IConstant constant, Ignore p) {
             return constant.Value.ToString(CultureInfo.InvariantCulture);
         }
 
-        public string Visit(NamedVariable namedVariable, Ignore p) {
+        public string Visit(INamedVariable namedVariable, Ignore p) {
             return namedVariable.Name;
         }
 
-        public string Visit(AnchorVariable anchorVariable, Ignore p) {
+        public string Visit(IAnchorVariable anchorVariable, Ignore p) {
             return anchorVariable.Name;
         }
 
@@ -59,28 +59,28 @@ namespace Movimentum.SubstitutionSolver3 {
             return result;
         }
 
-        ////public string Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
-        ////    var result = new StringBuilder("[");
-        ////    string varName = singleVariablePolynomial.Var.Accept(this, p);
-        ////    for (int d = singleVariablePolynomial.Degree; d > 1; d--) {
-        ////        double coefficient = singleVariablePolynomial.Coefficient(d);
-        ////        if (!coefficient.Near(0)) {
-        ////            result.Append(coefficient);
-        ////            result.Append(varName);
-        ////            result.Append('^');
-        ////            result.Append(d);
-        ////        }
-        ////    }
-        ////    if (singleVariablePolynomial.Degree > 0 && !singleVariablePolynomial.Coefficient(1).Near(0)) {
-        ////        result.Append(singleVariablePolynomial.Coefficient(1));
-        ////        result.Append(varName);
-        ////    }
-        ////    if (!singleVariablePolynomial.Coefficient(0).Near(0)) {
-        ////        result.Append(singleVariablePolynomial.Coefficient(0));
-        ////    }
-        ////    result.Append("]");
-        ////    return result.ToString();
-        ////}
+        public string VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore p) {
+            var result = new StringBuilder("[");
+            string varName = polynomial.Var.Accept(this, p);
+            for (int d = polynomial.Degree; d > 1; d--) {
+                double coefficient = polynomial.Coefficient(d);
+                if (!coefficient.Near(0)) {
+                    result.Append(coefficient);
+                    result.Append(varName);
+                    result.Append('^');
+                    result.Append(d);
+                }
+            }
+            if (polynomial.Degree > 0 && !polynomial.Coefficient(1).Near(0)) {
+                result.Append(polynomial.Coefficient(1));
+                result.Append(varName);
+            }
+            if (!polynomial.Coefficient(0).Near(0)) {
+                result.Append(polynomial.Coefficient(0));
+            }
+            result.Append("]");
+            return result.ToString();
+        }
 
         private string VisitRangeExprPair(RangeExpr.Pair pair) {
             return pair.MoreThan.Accept(this, Ig.nore) + " : " + pair.Value.Accept(this, Ig.nore);

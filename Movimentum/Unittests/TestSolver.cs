@@ -11,20 +11,22 @@ namespace Movimentum.Unittests {
             // Try to solve:
             //   0 = y + 2
             //   0 = x + y
-            EqualsZeroConstraint e1 = new EqualsZeroConstraint(NV("y") + new Constant(2));
+            EqualsZeroConstraint e1 = new EqualsZeroConstraint(NV("y").E + Polynomial.CreateConstant(2));
             EqualsZeroConstraint e2 = new EqualsZeroConstraint(NV("x") + NV("y"));
-            SolverNode current = SolverNode.CreateForTest(new[] { e1, e2 }, new Dictionary<Variable, AbstractClosedVariable>());
+            SolverNode current = SolverNode.CreateForTest(new[] { e1, e2 }, new Dictionary<IVariable, AbstractClosedVariable>());
             SolverNode solutionOrNull;
 
             // First step: Find that y = -2, and substitute -2 for y everywhere.
-            IEnumerable<SolverNode> expanded = SolverNode.SolverStep(new[] { current }, new Dictionary<Variable, VariableWithValue>(), out solutionOrNull);
+            IEnumerable<SolverNode> expanded = SolverNode.SolverStep(new[] { current }, new Dictionary<IVariable, VariableWithValue>(), out solutionOrNull);
 
             Assert.AreEqual(1, expanded.Count());
-            Assert.AreEqual(new EqualsZeroConstraint(NV("x") + new Constant(-2)), expanded.ElementAt(0).Constraints.ElementAt(0));
+            //Assert.AreEqual(new EqualsZeroConstraint(NV("x") + Polynomial.CreateConstant(-2)), expanded.ElementAt(0).Constraints.ElementAt(0));
+            Assert.AreEqual(new EqualsZeroConstraint(
+                Polynomial.CreatePolynomial(Polynomial.CreateNamedVariable("x"), 1, -2)), expanded.ElementAt(0).Constraints.ElementAt(0));
             Assert.IsNull(solutionOrNull);
         }
 
-        //expanded = SolverNode.SolverStep(expanded, new Dictionary<Variable, VariableValueRestriction>(), out solutionOrNull);
+        //expanded = SolverNode.SolverStep(expanded, new Dictionary<IVariable, VariableValueRestriction>(), out solutionOrNull);
         //Assert.AreEqual(1, expanded.Count());
         //Assert.IsNotNull(solutionOrNull);
 
@@ -35,16 +37,16 @@ namespace Movimentum.Unittests {
             //   0 = x + y
             EqualsZeroConstraint e1 =
                 new EqualsZeroConstraint(
-                    NV("y") + new Constant(2));
+                    NV("y").E + Polynomial.CreateConstant(2));
             EqualsZeroConstraint e2 =
                 new EqualsZeroConstraint(
-                    NV("x") + NV("y"));
+                    NV("x").E + NV("y"));
 
-            SolverNode current = SolverNode.CreateForTest(new[] { e1, e2 }, new Dictionary<Variable, AbstractClosedVariable>());
+            SolverNode current = SolverNode.CreateForTest(new[] { e1, e2 }, new Dictionary<IVariable, AbstractClosedVariable>());
             SolverNode solutionOrNull;
 
             // First step
-            var NoRestrictions = new Dictionary<Variable, VariableWithValue>();
+            var NoRestrictions = new Dictionary<IVariable, VariableWithValue>();
             IEnumerable<SolverNode> expanded1 =
                 SolverNode.SolverStep(new[] { current },
                     NoRestrictions,
@@ -58,21 +60,25 @@ namespace Movimentum.Unittests {
 
             // Check that we found the right solution.
             Assert.IsNotNull(solutionOrNull);
-            Assert.AreEqual(-2, solutionOrNull.GetVariableValue(NV("y")));
-            Assert.AreEqual(2, solutionOrNull.GetVariableValue(NV("x")));
+            Assert.AreEqual(-2, solutionOrNull.GetVariableValue(INV("y")));
+            Assert.AreEqual(2, solutionOrNull.GetVariableValue(INV("x")));
         }
 
         private static void AssertVariable(
-                IDictionary<Variable, VariableWithValue> solution,
+                IDictionary<IVariable, VariableWithValue> solution,
                 double expected, string variablename) {
             VariableWithValue varKnowledge =
-                solution[new NamedVariable(variablename)];
+                solution[Polynomial.CreateNamedVariable(variablename)];
             Assert.IsNotNull(varKnowledge);
             Assert.AreEqual(expected, varKnowledge.Value, 1e-10);
         }
 
-        private static NamedVariable NV(string n) {
-            return new NamedVariable(n);
+        private static AbstractExpr NV(string n) {
+            return INV(n).E;
+        }
+
+        private static INamedVariable INV(string n) {
+            return Polynomial.CreateNamedVariable(n);
         }
 
         private UnaryExpression UE<TOp>(AbstractExpr e) where TOp : UnaryOperator, new() {
@@ -83,22 +89,22 @@ namespace Movimentum.Unittests {
         public void TestTriagonalSystem() {
             var constraints = new[] {
             new EqualsZeroConstraint(NV("f") + 
-                UE<Square>(NV("e") + NV("d") + NV("c") + NV("b") + NV("a") + new Constant(2.5))),
+                UE<Square>(NV("e") + NV("d") + NV("c") + NV("b") + NV("a") + Polynomial.CreateConstant(2.5))),
             new EqualsZeroConstraint(NV("e") + 
-                UE<Cos>(NV("d") + NV("c") + NV("b") + NV("a") + new Constant(11.5))),
+                UE<Cos>(NV("d") + NV("c") + NV("b") + NV("a") + Polynomial.CreateConstant(11.5))),
             new EqualsZeroConstraint(NV("d") + 
-                UE<Square>(NV("c") + NV("b") + NV("a") + new Constant(-0.5))),
+                UE<Square>(NV("c") + NV("b") + NV("a") + Polynomial.CreateConstant(-0.5))),
             new EqualsZeroConstraint(NV("c") + 
-                UE<Cos>(NV("b") + NV("a") + new Constant(-58))),
+                UE<Cos>(NV("b") + NV("a") + Polynomial.CreateConstant(-58))),
             new EqualsZeroConstraint(NV("b") + 
-                UE<Cos>(NV("a") + new Constant(1))),
-            new EqualsZeroConstraint(NV("a") + new Constant(1))
+                UE<Cos>(NV("a") + Polynomial.CreateConstant(1))),
+            new EqualsZeroConstraint(NV("a") + Polynomial.CreateConstant(1))
         };
 
-            IDictionary<Variable, VariableWithValue> solution =
+            IDictionary<IVariable, VariableWithValue> solution =
                 SolverNode.Solve(constraints,
                                     12,
-                                    new Dictionary<Variable, VariableWithValue>(),
+                                    new Dictionary<IVariable, VariableWithValue>(),
                                     0);
             AssertVariable(solution, -1, "a");
             AssertVariable(solution, -1, "b");
@@ -114,9 +120,9 @@ namespace Movimentum.Unittests {
             EqualsZeroConstraint ve = new EqualsZeroConstraint(NV("x") + NV("y"));
             // Another constraint that contains x: 0 = y + (3x + y + 6)
             EqualsZeroConstraint other = new EqualsZeroConstraint(
-                NV("y") + (new Constant(3) * NV("x") + NV("y") + new Constant(6)));
+                NV("y") + (Polynomial.CreateConstant(3).E * NV("x") + NV("y") + Polynomial.CreateConstant(6)));
 
-            SolverNode current = SolverNode.CreateForTest(new[] { other, ve }, new Dictionary<Variable, AbstractClosedVariable>());
+            SolverNode current = SolverNode.CreateForTest(new[] { other, ve }, new Dictionary<IVariable, AbstractClosedVariable>());
 
             // Do a step
             SolverNode solutionOrNull;
@@ -131,27 +137,34 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(1, resultNode.Constraints.Count());
 
             // The single constraint is other, with x replaced with -y.
+            //Assert.AreEqual(new EqualsZeroConstraint(
+            //    NV("y") + (Polynomial.CreateConstant(3).E * -NV("y").E + NV("y") + Polynomial.CreateConstant(6))),
+            //    resultNode.Constraints.ElementAt(0)); STEPC
             Assert.AreEqual(new EqualsZeroConstraint(
-                NV("y") + (new Constant(3) * -NV("y") + NV("y") + new Constant(6))),
+                Polynomial.CreatePolynomial(Polynomial.CreateNamedVariable("y"), -1, 6)),
                 resultNode.Constraints.ElementAt(0));
 
             // Moreover, we have a backsubstitution.
-            Assert.AreEqual(-NV("y"),
+            //Assert.AreEqual(-NV("y"),
+            //    ((VariableWithBacksubstitution)resultNode
+            //        .GetClosedVariable(INV("x")))
+            //        .Expr);
+            Assert.AreEqual(Polynomial.CreatePolynomial(Polynomial.CreateNamedVariable("y"), -1, 0),
                 ((VariableWithBacksubstitution)resultNode
-                    .GetClosedVariable(NV("x")))
+                    .GetClosedVariable(INV("x")))
                     .Expr);
         }
 
         [Test]
         public void Test0VERewritingTwoSteps() {
             EqualsZeroConstraint veConstraint1 =
-                new EqualsZeroConstraint(NV("z") + (NV("x") + new Constant(4)));
+                new EqualsZeroConstraint(NV("z") + (NV("x") + Polynomial.CreateConstant(4)));
             EqualsZeroConstraint veConstraint2 =
                 new EqualsZeroConstraint(NV("x") + NV("y"));
             EqualsZeroConstraint constraint3 = new EqualsZeroConstraint(
-                NV("y") + (new Constant(5) * NV("x") + NV("y") + NV("z")));
+                NV("y") + (Polynomial.CreateConstant(5).E * NV("x") + NV("y") + NV("z")));
 
-            SolverNode current = SolverNode.CreateForTest(new[] { veConstraint1, veConstraint2, constraint3 }, new Dictionary<Variable, AbstractClosedVariable>());
+            SolverNode current = SolverNode.CreateForTest(new[] { veConstraint1, veConstraint2, constraint3 }, new Dictionary<IVariable, AbstractClosedVariable>());
 
             // Do two steps that rewrite ve1 and ve2.
             SolverNode solutionOrNull;
@@ -188,12 +201,12 @@ namespace Movimentum.Unittests {
             // We simulate this solving by creating a new node with the 
             // correct value for y:
             SolverNode result =
-                expanded2Node.CloseVariableAndResolveBacksubstitutionsForTests(NV("y"), -2);
+                expanded2Node.CloseVariableAndResolveBacksubstitutionsForTests(INV("y"), -2);
 
             // This now should put all solutions into the variable knowledge:
-            Assert.AreEqual(-2, result.GetVariableValue(NV("y")));
-            Assert.AreEqual(2, result.GetVariableValue(NV("x")));
-            Assert.AreEqual(-6, result.GetVariableValue(NV("z")));
+            Assert.AreEqual(-2, result.GetVariableValue(INV("y")));
+            Assert.AreEqual(2, result.GetVariableValue(INV("x")));
+            Assert.AreEqual(-6, result.GetVariableValue(INV("z")));
         }
     }
 }

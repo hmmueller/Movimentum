@@ -72,7 +72,7 @@ namespace Movimentum.SubstitutionSolver3 {
             return isMatch ? this : null;
         }
 
-        public AbstractExpr Match(FixedExpressionTemplate t) {
+        public IAbstractExpr Match(FixedExpressionTemplate t) {
             return _expressionMatcher.Match(t);
         }
 
@@ -84,7 +84,7 @@ namespace Movimentum.SubstitutionSolver3 {
             return _expressionMatcher.Match(t);
         }
 
-        public T Match<T>(TypeMatchTemplate<T> t) where T : AbstractExpr {
+        public T Match<T>(TypeMatchTemplate<T> t) where T : class, IAbstractExpr {
             return _expressionMatcher.Match(t);
         }
     }

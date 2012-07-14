@@ -7,7 +7,7 @@ using System.Text;
 namespace Movimentum.SubstitutionSolver3 {
     public partial class SolverNode {
         private readonly IEnumerable<AbstractConstraint> _constraints;
-        private readonly IDictionary<Variable, AbstractClosedVariable> _closedVariables;
+        private readonly IDictionary<IVariable, AbstractClosedVariable> _closedVariables;
 
         private static int _debugIdCount = 1000;
         public readonly int DebugId = _debugIdCount++;
@@ -58,19 +58,19 @@ namespace Movimentum.SubstitutionSolver3 {
             return sb.ToString();
         }
 
-        public double GetVariableValue(Variable var) {
+        public double GetVariableValue(IVariable var) {
             AbstractClosedVariable closedVariable = GetClosedVariable(var);
             VariableWithValue result = closedVariable as VariableWithValue;
             if (result == null) {
-                throw new InvalidOperationException("Variable " + var + " not closed as value in this node, but as " + closedVariable);
+                throw new InvalidOperationException("IVariable " + var + " not closed as value in this node, but as " + closedVariable);
             }
             return result.Value;
         }
 
-        public AbstractClosedVariable GetClosedVariable(Variable var) {
+        public AbstractClosedVariable GetClosedVariable(IVariable var) {
             AbstractClosedVariable closedVariable;
             if (!_closedVariables.TryGetValue(var, out closedVariable)) {
-                throw new InvalidOperationException("Variable " + var + " not closed in this node");
+                throw new InvalidOperationException("IVariable " + var + " not closed in this node");
             }
             return closedVariable;
         }
@@ -80,15 +80,16 @@ namespace Movimentum.SubstitutionSolver3 {
             : this(constraints, origin._closedVariables, origin) { }
 
         private SolverNode(IEnumerable<AbstractConstraint> constraints,
-                           IDictionary<Variable, AbstractClosedVariable> closedVariables,
+                           IDictionary<IVariable, AbstractClosedVariable> closedVariables,
                            SolverNode origin) {
             _debugOrigin = origin;
             if (origin != null) {
                 origin._debugSuccessors++;
             }
 
-            var constantFoldingVisitor = new ConstantFoldingVisitor();
-            _constraints = constraints.Select(c => c.Accept(constantFoldingVisitor, Ig.nore));
+            //var foldingVisitor = new ConstantFoldingVisitor();
+            var foldingVisitor = new PolynomialFoldingVisitor();
+            _constraints = constraints.Select(c => c.Accept(foldingVisitor, Ig.nore));
             foreach (var c in _constraints) {
                 c.SetDebugCreatingNodeIdIfMissing(DebugId);
             }
@@ -96,13 +97,13 @@ namespace Movimentum.SubstitutionSolver3 {
             _closedVariables = closedVariables;
         }
 
-        public static IDictionary<Variable, VariableWithValue>
+        public static IDictionary<IVariable, VariableWithValue>
             Solve(IEnumerable<AbstractConstraint> solverConstraints,
                   int loopLimit,
-                  IDictionary<Variable, VariableWithValue> previousValues,
+                  IDictionary<IVariable, VariableWithValue> previousValues,
                   int frameNo) {
             // Create initial open set
-            IEnumerable<SolverNode> open = new[] { new SolverNode(solverConstraints, new Dictionary<Variable, AbstractClosedVariable>(), null) };
+            IEnumerable<SolverNode> open = new[] { new SolverNode(solverConstraints, new Dictionary<IVariable, AbstractClosedVariable>(), null) };
 
             // Solver loop
             SolverNode solutionOrNull;
@@ -138,7 +139,8 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         private void ResolveBacksubstitutions() {
-            var constantFolder = new ConstantFoldingVisitor();
+            //var foldingVisitor = new ConstantFoldingVisitor();
+            var foldingVisitor = new PolynomialFoldingVisitor();
 
             // The "ToArrays" are necessary because we modify _closedVariables below. Without them,
             // we get InvalidOperationExceptions telling us that the "Collection was modified."
@@ -159,18 +161,20 @@ namespace Movimentum.SubstitutionSolver3 {
                 var newVarsWithBacksubstitutions = new List<VariableWithBacksubstitution>();
                 foreach (var varWithValue in varsWithValue) {
                     // We substitute each variable into all open backsubstitutions.
-                    var rewriter = new RewritingVisitor(new Dictionary<AbstractExpr, AbstractExpr> 
-                                                    { { varWithValue.Variable, 
-                                                        new Constant(varWithValue.Value) 
-                                                    } });
+                    //var rewriter = new RewritingVisitor(new Dictionary<IAbstractExpr, IAbstractExpr> 
+                    //                                { { varWithValue.Variable, 
+                    //                                    Polynomial.CreateConstant(varWithValue.Value) 
+                    //                                } });
+                    var rewriter = new RewritingVisitorSTEPC(varWithValue.Variable, 
+                                                        Polynomial.CreateConstant(varWithValue.Value));
                     foreach (var varWithBacksub in varsWithBacksubstitutions) {
-                        AbstractExpr rewritten = varWithBacksub.Expr
+                        IAbstractExpr rewritten = varWithBacksub.Expr
                                                                .Accept(rewriter, Ig.nore)
-                                                               .Accept(constantFolder, Ig.nore);
+                                                               .Accept(foldingVisitor, Ig.nore);
                         // If the result, after constant folding, is a constant, we have found a new solution value.
                         // Otherwise, we still have a - maybe smaller - backsubstitution for this variable.
-                        if (rewritten is Constant) {
-                            var result = new VariableWithValue(varWithBacksub.Variable, ((Constant)rewritten).Value);
+                        if (rewritten is IConstant) {
+                            var result = new VariableWithValue(varWithBacksub.Variable, ((IConstant)rewritten).Value);
                             newVarsWithValue.Add(result);
                             _closedVariables[varWithBacksub.Variable] = result;
                         } else {
@@ -188,13 +192,13 @@ namespace Movimentum.SubstitutionSolver3 {
             IEnumerable<SolverNode> open,
             out SolverNode solutionOrNull) {
             return SolverStep(open,
-                              new Dictionary<Variable, VariableWithValue>(),
+                              new Dictionary<IVariable, VariableWithValue>(),
                               out solutionOrNull);
         }
 
         public static IEnumerable<SolverNode> SolverStep(
             IEnumerable<SolverNode> open,
-            IDictionary<Variable, VariableWithValue> previousValues,
+            IDictionary<IVariable, VariableWithValue> previousValues,
             out SolverNode solutionOrNull) {
             double minRank = open.Min(cs => cs.Rank);
             SolverNode selected = open.First(cs => cs.Rank <= minRank);
@@ -215,7 +219,7 @@ namespace Movimentum.SubstitutionSolver3 {
             return newOpen;
         }
 
-        public IEnumerable<SolverNode> Expand( /*IDictionary<Variable, VariableRangeRestriction> previousValues*/) {
+        public IEnumerable<SolverNode> Expand( /*IDictionary<IVariable, VariableRangeRestriction> previousValues*/) {
             foreach (var ra in _ruleActions) {
                 foreach (var c in Constraints.OfType<ScalarConstraint>()) {
                     IEnumerable<SolverNode> resultOrNull = ra.SuccessfulMatch(this, c);
@@ -298,23 +302,26 @@ namespace Movimentum.SubstitutionSolver3 {
             }
         }
 
-        private SolverNode CloseVariable(Variable variable,
-                                         AbstractExpr expression,
+        private SolverNode CloseVariable(IVariable variable,
+                                         IAbstractExpr expression,
                                          AbstractConstraint sourceConstraintToBeRemoved) {
-            expression = expression.Accept(new ConstantFoldingVisitor(), Ig.nore);
+            //var foldingVisitor = new ConstantFoldingVisitor();
+            var foldingVisitor = new PolynomialFoldingVisitor();
+            expression = expression.Accept(foldingVisitor, Ig.nore);
 
             // Rewrite all constraints
-            var rewriter = new RewritingVisitor(
-                new Dictionary<AbstractExpr, AbstractExpr> { { variable, expression } });
+            //var rewriter = new RewritingVisitor(
+            //    new Dictionary<IAbstractExpr, IAbstractExpr> { { variable, expression } });
+            var rewriter = new RewritingVisitorSTEPC(variable, expression);
             IEnumerable<AbstractConstraint> rewrittenConstraints =
                 Constraints.Except(sourceConstraintToBeRemoved)
                     .Select(c => c.Accept(rewriter, Ig.nore));
 
             // Create new variable->value knowledge or new backsubstition.
-            var newBacksubstitutions = new Dictionary<Variable, AbstractClosedVariable>(_closedVariables) {{
-            variable, expression is Constant
+            var newBacksubstitutions = new Dictionary<IVariable, AbstractClosedVariable>(_closedVariables) {{
+            variable, expression is IConstant
                 ? (AbstractClosedVariable)
-                    new VariableWithValue(variable, ((Constant) expression).Value)
+                    new VariableWithValue(variable, ((IConstant) expression).Value)
                 : new VariableWithBacksubstitution(variable, expression)
             }};
 
@@ -322,13 +329,13 @@ namespace Movimentum.SubstitutionSolver3 {
             return new SolverNode(rewrittenConstraints, newBacksubstitutions, this);
         }
 
-        public static SolverNode CreateForTest(IEnumerable<AbstractConstraint> constraints, IDictionary<Variable, AbstractClosedVariable> closedVariables) {
+        public static SolverNode CreateForTest(IEnumerable<AbstractConstraint> constraints, IDictionary<IVariable, AbstractClosedVariable> closedVariables) {
             return new SolverNode(constraints, closedVariables, null);
         }
 
-        public SolverNode CloseVariableAndResolveBacksubstitutionsForTests(Variable variable,
+        public SolverNode CloseVariableAndResolveBacksubstitutionsForTests(IVariable variable,
                                                double value) {
-            var closed = CloseVariable(variable, new Constant(value), null);
+            var closed = CloseVariable(variable, Polynomial.CreateConstant(value), null);
             closed.ResolveBacksubstitutions();
             return closed;
         }
