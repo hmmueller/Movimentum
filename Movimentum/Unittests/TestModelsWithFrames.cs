@@ -237,10 +237,11 @@ namespace Movimentum.Unittests {
 	            WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
             @2";
             Script script = Program.Parse(s);
+            script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "x", 10 } });
 
             string prefix = MkTestDir();
             int frameCount = Program.Interpret(script, prefix);
-            Assert.AreEqual(9, frameCount);
+            Assert.AreEqual(17, frameCount);
         }
 
         [Test, Ignore("Not yet there")]

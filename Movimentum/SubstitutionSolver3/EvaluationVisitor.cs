@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 
 namespace Movimentum.SubstitutionSolver3 {
-    public class EvaluationVisitor : ISolverModelExprVisitor<Ignore, double>
+    public class EvaluationVisitor : ISolverModelConstraintVisitor<Ignore, bool>
+                                 , ISolverModelExprVisitor<Ignore, double>
                                  , ISolverModelUnaryOpVisitor<double, Ignore, double>
                                  , ISolverModelBinaryOpVisitor<double, Ignore, double> {
         private readonly IDictionary<IVariable, double> _variableValues;
@@ -14,6 +15,25 @@ namespace Movimentum.SubstitutionSolver3 {
             : this(new Dictionary<IVariable, double> { { variable, value } }) {
         }
 
+        // STEPL
+        #region Implementation of ISolverModelConstraintVisitor<in Ignore,out bool>
+
+        public bool Visit(EqualsZeroConstraint equalsZero, Ignore p) {
+            double result = equalsZero.Expr.Accept(this, p);
+            return result.Near(0);
+        }
+
+        public bool Visit(MoreThanZeroConstraint moreThanZero, Ignore p) {
+            double result = moreThanZero.Expr.Accept(this, p);
+            return result > 0;
+        }
+
+        public bool Visit(AtLeastZeroConstraint atLeastZero, Ignore p) {
+            double result = atLeastZero.Expr.Accept(this, p);
+            return result.Near(0) | result > 0;
+        }
+
+        #endregion
         #region ISolverModelExprVisitor
 
         public double Visit(IConstant constant, Ignore p) {
@@ -28,10 +48,10 @@ namespace Movimentum.SubstitutionSolver3 {
             return GetValue(anchorVariable);
         }
 
-        private double GetValue(IVariable namedVariable) {
+        private double GetValue(IVariable variable) {
             double result;
-            if (!_variableValues.TryGetValue(namedVariable, out result)) {
-                throw new NotSupportedException("Variable " + namedVariable + " has no value");
+            if (!_variableValues.TryGetValue(variable, out result)) {
+                throw new NotSupportedException("Variable " + variable + " has no value");
             }
             return result;
         }

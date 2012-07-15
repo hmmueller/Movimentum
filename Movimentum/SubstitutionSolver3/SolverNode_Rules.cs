@@ -81,7 +81,8 @@ namespace Movimentum.SubstitutionSolver3 {
                     );
             }
             {
-                // 5. Substitute variable with expression that does not
+                // 5. 0 = V + E(without V)
+                //    Substitute variable with expression that does not
                 //    contain the variable and has no formal square root.
                 var v = new TypeMatchTemplate<IVariable>();
                 var e = new TypeMatchTemplate<AbstractExpr>();
@@ -118,8 +119,95 @@ namespace Movimentum.SubstitutionSolver3 {
                                                    -matcher.Match(e), matchedConstraint)
                 );
             }
+            {
+                // STEPE
+                // 5a. 0 = P[V](of degree 1) + E(without V)
+                //    Substitute variable with expression that does not
+                //    contain the variable and has no formal square root.
+                var p = new TypeMatchTemplate<IPolynomial>();
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                new RuleAction<ScalarConstraintMatcher>("P[V]->E",
+                    constraint => {
+                        // Check for p+e match.
+                        ScalarConstraintMatcher m =
+                            new ScalarConstraintMatcher(
+                                new EqualsZeroConstraintTemplate(p + e))
+                            .TryMatch(constraint);
+                        if (m == null) {
+                            return null;
+                        }
+                        // Check that no formal square root exists.
+                        FindFormalSquarerootVisitor f =
+                            constraint.Expr.Accept(
+                                new FindFormalSquarerootVisitor(), Ig.nore);
+                        if (f.SomeFormalSquareroot != null) {
+                            return null;
+                        }
+                        // Check that p is of degree 1.
+                        IPolynomial poly = m.Match(p);
+                        if (poly.Degree != 1) {
+                            return null;
+                        }
+                        // Check that v is not in e.
+                        Dictionary<IVariable, VariableDegree> degrees =
+                            m.Match(e).Accept(new VariableDegreeVisitor(), Ig.nore);
+                        IVariable variable = poly.Var;
+                        if (degrees.ContainsKey(variable)
+                            && degrees[variable] != VariableDegree.Zero) {
+                            return null;
+                        }
+                        return m;
+                    },
+                    m => m != null,
+                    // 0 = ax + b + E --> x = -(b + E)/a
 
-
+                    (currNode, matcher, matchedConstraint) => {
+                        IPolynomial poly = matcher.Match(p);
+                        IAbstractExpr expr = matcher.Match(e);
+                        IConstant a = Polynomial.CreateConstant(poly.Coefficient(1));
+                        IConstant b = Polynomial.CreateConstant(poly.Coefficient(0));
+                        BinaryExpression replacement = -(b.E + expr) / a;
+                        return currNode.CloseVariable(matcher.Match(p).Var,
+                                               replacement, matchedConstraint);
+                    }
+                );
+            }
+            {
+                // STEPF
+                // 6. 0 = P[V] + sqrt(E)
+                //    rewrite to
+                //    0 = E - P[V]² and 0 <= -P[V]
+                var p = new TypeMatchTemplate<IPolynomial>();
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                var t = p + new UnaryExpressionTemplate(new PositiveSquareroot(), e);
+                new RuleAction<ScalarConstraintMatcher>("0=P[V]+sqrt(E)",
+                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+                    matcher => matcher != null,
+                    (currNode, matcher, matchedConstraint) => {
+                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
+                        ScalarConstraint c2 = new AtLeastZeroConstraint(-matcher.Match(p).E);
+                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
+                                                currNode);
+                    });
+            }
+            {
+                // STEPF
+                // 6a. 0 = P[V] + -sqrt(E)
+                //    rewrite to
+                //    0 = E - P[V]² and 0 <= P[V]
+                var p = new TypeMatchTemplate<IPolynomial>();
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                var t = p + -new UnaryExpressionTemplate(new PositiveSquareroot(), e);
+                new RuleAction<ScalarConstraintMatcher>("0=P[V]-sqrt(E)",
+                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+                    matcher => matcher != null,
+                    (currNode, matcher, matchedConstraint) => {
+                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
+                        ScalarConstraint c2 = new AtLeastZeroConstraint(matcher.Match(p));
+                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
+                                                currNode);
+                    });
+            }
         }
 
         private static IEnumerable<double> FindZeros(IPolynomial polynomial) {
@@ -134,6 +222,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     }
                 case 2: {
                         // 0 = ax² + bx + c --> with D = b² - 4ac, x1/2 = (-b+-sqrt D)/2a
+                        // These formulas are not good from a numerical standpoint! - see Wikipedia ...
                         var a = polynomial.Coefficient(2);
                         var b = polynomial.Coefficient(1);
                         var c = polynomial.Coefficient(0);
@@ -143,7 +232,6 @@ namespace Movimentum.SubstitutionSolver3 {
                 default:
                     throw new NotImplementedException("Cannot find zeros for polynomial of degree " + polynomial.Degree);
             }
-
         }
 
         private static IEnumerable<SolverNode> RewriteFormalSquareroot(SolverNode origin, UnaryExpression someFormalSquareroot) {

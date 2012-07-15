@@ -52,7 +52,10 @@ namespace Movimentum {
                 Graphics drawingPane = Graphics.FromImage(bitmap);
 
                 // Compute locations for each anchor of each thing.
-                IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(range, ref previousState);
+                Dictionary<string, double> debugExpectedResults;
+                script.DebugExpectedResults.TryGetValue(f.FrameNo, out debugExpectedResults);
+                IDictionary<string, IDictionary<string, ConstVector>> anchorLocations =
+                    f.SolveConstraints(range, ref previousState, debugExpectedResults);
                 foreach (var th in script.Things) {
                     th.Draw(drawingPane, anchorLocations[th.Name]);
                 }

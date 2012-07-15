@@ -54,7 +54,7 @@ namespace Movimentum.Unittests {
         #region PolynomialFoldingVisitor tests
 
         private IAbstractExpr Fold(IAbstractExpr expr) {
-            return expr.Accept(new PolynomialFoldingVisitor(), Ig.nore);
+            return expr.Accept(new PolynomialFoldingVisitor(), 0);
         }
 
         // Test -0        -> 0					
@@ -523,11 +523,10 @@ namespace Movimentum.Unittests {
             IAbstractExpr p = P("x", 1, 2, 3);
             Assert.IsNotInstanceOf<IPolynomial>(Fold(Fold(p.E / V("x"))));
         }
-        // Test P[V]/V     -> P[V]
+        // Test P[V]/V     -> P[V] 
         [Test]
         public void Test074() {
             IAbstractExpr p = P("x", 1, 2, 0);
-            IAbstractExpr p_ = P("x", 1, 2);
             IAbstractExpr fold = Fold(p.E / V("x"));
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
@@ -758,6 +757,8 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(expected, P("x", 1, 2, 3, 4).Accept(new EvaluationVisitor(V("x"), 2), Ig.nore), 1e-14);
         }
 
+        #region Rewriting of polynomials
+
         [Test]
         public void TestRewritePolynomialWithPolynomial() {
             IPolynomial p = P("x", 1, 2, 3, 4);
@@ -777,7 +778,7 @@ namespace Movimentum.Unittests {
         [Test]
         public void TestRewritePolynomialWithItself() {
             IPolynomial p = P("x", 1, 2, 3, 4);
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), p), Ig.nore));
+            Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), p), Ig.nore));
             // It works :-)
         }
 
@@ -814,16 +815,42 @@ namespace Movimentum.Unittests {
             IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), -V("x").E), Ig.nore));
             Assert.AreEqual(expected, result);
         }
-        
+
         [Test]
         public void TestRewritePolynomialWithSinX() {
             IPolynomial p = P("x", 1, 2, 3, 4);
             AbstractExpr sinx = new UnaryExpression(V("x"), new Sin()).E;
-            BinaryExpression expected = sinx * (sinx * (sinx * C(1) + C(2)) + C(3)) + C(4);
+            BinaryExpression expected = sinx * (sinx * (C(1).E * sinx + C(2)) + C(3)) + C(4);
 
             IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), sinx), Ig.nore));
-            
+
             Assert.AreEqual(expected, result);
         }
+
+        #endregion Rewriting of polynomials
+
+        #region Normalizing of expressions with polynomials
+
+        [Test]
+        public void TestNormalizeBothSides() {
+            var p = (P("x", 1, 2, 3).E + new UnaryExpression(V("x"), new PositiveSquareroot()).E
+                     + (P("x", 2, 3, 4).E + new UnaryExpression(V("x"), new PositiveSquareroot())));
+            var p_ = P("x", 3, 5, 7).E + (new UnaryExpression(V("x"), new PositiveSquareroot()).E + new UnaryExpression(V("x"), new PositiveSquareroot()));
+            var fold = Fold(p);
+            Assert.AreEqual(p_, fold);
+        }
+
+
+        [Test]
+        public void TestNormalizeRightSides() {
+            var p = C(200).E + -(P("x", 2, 3, 4).E + new UnaryExpression(V("x"), new PositiveSquareroot()));
+
+            var p_ = P("x", -2, -3, 196).E + -(new UnaryExpression(V("x"), new PositiveSquareroot()).E);
+            var fold = Fold(p);
+            Assert.AreEqual(p_, fold);
+        }
+
+        #endregion Normalizing of expressions with polynomials
+
     }
 }

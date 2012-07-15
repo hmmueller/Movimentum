@@ -43,13 +43,24 @@ namespace Movimentum {
             return base.ToString() + "{#=" + _frameNo + " T=" + _absoluteTime + " t=" + _relativeTime + " iv=" + _iv + "}: " + string.Join("; ", _constraints);
         }
 
-        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, ref IDictionary<IVariable, VariableWithValue> result) {
+        public IDictionary<string, IDictionary<string, ConstVector>> SolveConstraints(double range, 
+                    ref IDictionary<IVariable, VariableWithValue> result, 
+                    IDictionary<string, double> debugExpectedResults = null) {
             IEnumerable<Constraint> modelConstraints = Constraints;
 
             var solverConstraints = modelConstraints.SelectMany(c => c.CreateSolverConstraints(_absoluteTime, _iv));
-            result = SolverNode.Solve(solverConstraints, 200 * Constraints.Count(), result, FrameNo);
+            
+            EvaluationVisitor evaluationVisitor = debugExpectedResults == null 
+                ? null 
+                : new EvaluationVisitor(debugExpectedResults.ToDictionary(kvp => CreateVariable(kvp.Key), kvp => kvp.Value));
+
+            result = SolverNode.Solve(solverConstraints, 200 * Constraints.Count(), result, FrameNo, evaluationVisitor);
 
             return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Value));
+        }
+
+        private IVariable CreateVariable(string variableName) {
+            return Polynomial.CreateNamedVariable(variableName);
         }
 
         private static Dictionary<string, IDictionary<string, ConstVector>> ConvertResultToAnchorLocations(IDictionary<IVariable, double> result) {

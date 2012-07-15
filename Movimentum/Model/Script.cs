@@ -4,6 +4,8 @@ using System.Linq;
 namespace Movimentum.Model {
     public partial class Script {
 
+        public IDictionary<int, Dictionary<string, double>> DebugExpectedResults = new Dictionary<int, Dictionary<string, double>>();
+
         #region Rigid body and 2D constraints
 
         private const string ZERO_VARIABLE = "ZERO";
@@ -191,5 +193,9 @@ namespace Movimentum.Model {
         }
 
         #endregion Create frames
+
+        public void DebugAddExpectedResult(int frameNo, Dictionary<string, double> expected) {
+            DebugExpectedResults.Add(frameNo, expected);
+        }
     }
 }

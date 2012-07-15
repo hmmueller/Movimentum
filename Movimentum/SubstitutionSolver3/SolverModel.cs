@@ -210,7 +210,7 @@ namespace Movimentum.SubstitutionSolver3 {
             #endregion
         }
 
-        private abstract class Variable : Polynomial, IVariable {
+        private abstract class Variable : Polynomial, IVariable, IComparable {
             private readonly string _name;
 
             protected Variable(string name) {
@@ -226,11 +226,17 @@ namespace Movimentum.SubstitutionSolver3 {
             }
 
             private bool Equals(Variable obj) {
+                // NamedVariable and AnchorVariable are equal if name is equal.
+                // This eases debugging and testing. I hope it creates no problems.
                 return obj != null && obj.Name == _name;
             }
 
             public override int GetHashCode() {
                 return _name.GetHashCode();
+            }
+
+            public int CompareTo(object obj) {
+                return _name.CompareTo(((Variable) obj).Name);
             }
 
             #region Overrides of Polynomial
