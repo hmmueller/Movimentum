@@ -54,8 +54,8 @@ namespace Movimentum.SubstitutionSolver3 {
             return result;
         }
 
-        public string VisitSTEPB(IGeneralPolynomialSTEPB polynomial, int p) {
-            var result = new StringBuilder("(");
+        public string Visit(IGeneralPolynomial polynomial, int p) {
+            var result = new StringBuilder("((");
             string varName = polynomial.Var.Accept(this, p);
             string firstPlus = "";
             for (int d = polynomial.Degree; d > 1; d--) {
@@ -75,12 +75,13 @@ namespace Movimentum.SubstitutionSolver3 {
             }
             if (!polynomial.Coefficient(0).Near(0)) {
                 var coefficient = polynomial.Coefficient(0);
-                if (coefficient > 0) {
+                if (!(coefficient <= 0)) {
+                    // Also NaN gets a +.
                     result.Append(firstPlus);
                 }
                 result.Append(coefficient.ToString(CultureInfo.InvariantCulture));
             }
-            result.Append(")");
+            result.Append("))");
             return result.ToString();
         }
 
@@ -146,11 +147,11 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public string Visit(FormalSquareroot op, IAbstractExpr inner, int parentPrecedence) {
-            return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "root " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("root (", "root("); ; ;
+            return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "root " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("root (", "root(");
         }
 
         public string Visit(PositiveSquareroot op, IAbstractExpr inner, int parentPrecedence) {
-            return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "sqrt " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("sqrt (", "sqrt("); ;
+            return Parenthesize(parentPrecedence, FUNCTION_PRECEDENCE, "sqrt " + inner.Accept(this, FUNCTION_PRECEDENCE)).Replace("sqrt (", "sqrt(");
         }
 
         private const int FUNCTION_PRECEDENCE = 4;

@@ -123,7 +123,7 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tBelowMinus.CreateMatcher();
                 if (matcher.TryMatch(unaryExpression)) {
                     // -(P + Z) --> -P + (-Z)
-                    BinaryExpression result = -matcher.Match(_poly1) + -matcher.Match(_e1).E;
+                    IAbstractExpr result = (-matcher.Match(_poly1)).C + -matcher.Match(_e1).C;
                     return Simplify(result, depth + 1);
                 }
             }
@@ -138,8 +138,8 @@ namespace Movimentum.SubstitutionSolver3 {
                     Polynomial poly1 = matcher.Match(_poly1);
                     Polynomial poly2 = matcher.Match(_poly2);
                     if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        BinaryExpression result = (poly1 + poly2).E
-                                                  + (matcher.Match(_e1).E + matcher.Match(_e2));
+                        IAbstractExpr result = (poly1 + poly2).C
+                                                  + (matcher.Match(_e1).C + matcher.Match(_e2));
                         return Simplify(result, depth);
                     }
                 }
@@ -151,7 +151,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     Polynomial poly1 = matcher.Match(_poly1);
                     Polynomial poly2 = matcher.Match(_poly2);
                     if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        BinaryExpression result = (poly1 + poly2).E
+                        IAbstractExpr result = (poly1 + poly2).C
                                                   + matcher.Match(_e1);
                         return Simplify(result, depth);
                     }
@@ -161,7 +161,7 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tLeftPlus2.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression)) {
                     // (P + Z) + Z' --> P + (Z + Z')
-                    return matcher.Match(_poly1).E + (matcher.Match(_e1).E + matcher.Match(_e2));
+                    return matcher.Match(_poly1).C + (matcher.Match(_e1).C + matcher.Match(_e2));
                 }
             }
             {
@@ -171,7 +171,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     Polynomial poly1 = matcher.Match(_poly1);
                     Polynomial poly2 = matcher.Match(_poly2);
                     if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        BinaryExpression result = (poly1 + poly2).E
+                        IAbstractExpr result = (poly1 + poly2).C
                                                   + matcher.Match(_e2);
                         return Simplify(result, depth);
                     }
@@ -181,7 +181,7 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tRightPlus2.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression)) {
                     // Z + (P + Z') --> P + (Z + Z')
-                    return matcher.Match(_poly2).E + (matcher.Match(_e1).E + matcher.Match(_e2));
+                    return matcher.Match(_poly2).C + (matcher.Match(_e1).C + matcher.Match(_e2));
                 }
             }
             // STEPG
@@ -191,8 +191,8 @@ namespace Movimentum.SubstitutionSolver3 {
                     // (P + Z) * C --> P' + Z*C, where P'=P*C simplified
                     // TODO: Why not simplify all, i.e., also Z*C??
                     IConstant constant = matcher.Match(_c);
-                    BinaryExpression result = (matcher.Match(_poly1).E * constant).E
-                                            + (matcher.Match(_e1).E * constant);
+                    IAbstractExpr result = (matcher.Match(_poly1).C * constant).C
+                                            + (matcher.Match(_e1).C * constant);
                     return Simplify(result, depth);
                 }
             }
@@ -201,8 +201,8 @@ namespace Movimentum.SubstitutionSolver3 {
                 if (matcher.TryMatch(binaryExpression)) {
                     // (P + Z) / C --> [P' + Z/C] where c'i = ci/C
                     IConstant constant = matcher.Match(_c);
-                    BinaryExpression result = (matcher.Match(_poly1).E / constant).E
-                                                  + (matcher.Match(_e1).E / constant);
+                    IAbstractExpr result = (matcher.Match(_poly1).C / constant).C
+                                                  + (matcher.Match(_e1).C / constant);
                     return Simplify(result, depth);
                 }
             }
@@ -211,7 +211,7 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tRightConstant1.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression)) {
                     // E * C --> C * E
-                    BinaryExpression result = matcher.Match(_c).E * matcher.Match(_e1);
+                    IAbstractExpr result = matcher.Match(_c).C * matcher.Match(_e1);
                     return Simplify(result, depth);
                 }
             }
@@ -219,8 +219,8 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tRightConstant2.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression)) {
                     // E / C --> 1/C * E
-                    BinaryExpression result =
-                        Polynomial.CreateConstant(1 / matcher.Match(_c).Value).E
+                    IAbstractExpr result =
+                        Polynomial.CreateConstant(1 / matcher.Match(_c).Value).C
                         * matcher.Match(_e1);
                     return Simplify(result, depth);
                 }
@@ -271,12 +271,12 @@ namespace Movimentum.SubstitutionSolver3 {
                     if (value.Near(0)) {
                         return Polynomial.CreateConstant(0);
                     } else {
-                        UnaryExpression result =
-                            new UnaryExpression(Polynomial.CreateConstant(square).E
+                        IAbstractExpr result =
+                            new UnaryExpression(Polynomial.CreateConstant(square).C
                                                 * matcher.Match(_ue).Inner,
                                                 new PositiveSquareroot());
                         if (value < 0) {
-                            result = -result;
+                            result = -result.C;
                         }
                         return Simplify(result, depth);
                     }
@@ -286,8 +286,8 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tSqrt2.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression)) {
                     // unop(E) * C --> C * unop(E)
-                    BinaryExpression result =
-                        matcher.Match(_c).E * matcher.Match(_ue);
+                    IAbstractExpr result =
+                        matcher.Match(_c).C * matcher.Match(_ue);
                     return Simplify(result, depth);
                 }
             }
@@ -296,8 +296,8 @@ namespace Movimentum.SubstitutionSolver3 {
                 if (matcher.TryMatch(binaryExpression)) {
                     // unop(E) / C --> 1/C * unop(E)
                     double value = matcher.Match(_c).Value;
-                    BinaryExpression result =
-                        Polynomial.CreateConstant(1/value).E * matcher.Match(_ue);
+                    IAbstractExpr result =
+                        Polynomial.CreateConstant(1 / value).C * matcher.Match(_ue);
                     return Simplify(result, depth);
                 }
             }
@@ -309,8 +309,8 @@ namespace Movimentum.SubstitutionSolver3 {
                     Polynomial poly1 = matcher.Match(_poly1);
                     Polynomial poly2 = matcher.Match(_poly2);
                     if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        BinaryExpression result = (poly1 * poly2).E
-                                                  * (matcher.Match(_e1).E * matcher.Match(_e2));
+                        IAbstractExpr result = (poly1 * poly2).C
+                                                  * (matcher.Match(_e1).C * matcher.Match(_e2));
                         return Simplify(result, depth);
                     }
                 }
@@ -322,7 +322,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     Polynomial poly1 = matcher.Match(_poly1);
                     Polynomial poly2 = matcher.Match(_poly2);
                     if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        BinaryExpression result = (poly1 * poly2).E
+                        IAbstractExpr result = (poly1 * poly2).C
                                                   * matcher.Match(_e1);
                         return Simplify(result, depth);
                     }
@@ -335,7 +335,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     Polynomial poly1 = matcher.Match(_poly1);
                     Polynomial poly2 = matcher.Match(_poly2);
                     if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        BinaryExpression result = (poly1 * poly2).E
+                        IAbstractExpr result = (poly1 * poly2).C
                                                   * matcher.Match(_e2);
                         return Simplify(result, depth);
                     }
@@ -346,8 +346,8 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tPolynomialTimesMinus1.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is UnaryMinus) {
                     // P * -E --> -P * E
-                    BinaryExpression result =
-                        -matcher.Match(_poly1) * matcher.Match(_ue).Inner;
+                    IAbstractExpr result =
+                        (-matcher.Match(_poly1)).C * matcher.Match(_ue).Inner;
                     return Simplify(result, depth);
                 }
             }
@@ -355,8 +355,8 @@ namespace Movimentum.SubstitutionSolver3 {
                 ExpressionMatcher matcher = _tPolynomialTimesMinus2.CreateMatcher();
                 if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is UnaryMinus) {
                     // P * -E --> -P * E
-                    BinaryExpression result =
-                        -matcher.Match(_poly1) * matcher.Match(_ue).Inner;
+                    IAbstractExpr result =
+                        (-matcher.Match(_poly1)).C * matcher.Match(_ue).Inner;
                     return Simplify(result, depth);
                 }
             }
@@ -367,12 +367,12 @@ namespace Movimentum.SubstitutionSolver3 {
             return expr.Accept(this, depth + 1);
         }
 
-        public IAbstractExpr Visit(RangeExpr rangeExpr, int depth) {
-            throw new NotImplementedException();
+        public IAbstractExpr Visit(IGeneralPolynomial polynomial, int depth) {
+            return polynomial;
         }
 
-        public IAbstractExpr VisitSTEPB(IGeneralPolynomialSTEPB polynomial, int depth) {
-            return polynomial;
+        public IAbstractExpr Visit(RangeExpr rangeExpr, int depth) {
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -384,7 +384,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public IAbstractExpr Visit(Square op, IPolynomial inner, int depth) {
-            return (inner.E * inner).Accept(this, depth + 1);
+            return (inner.C * inner).Accept(this, depth + 1);
         }
 
         public IAbstractExpr Visit(FormalSquareroot op, IPolynomial inner, int depth) {

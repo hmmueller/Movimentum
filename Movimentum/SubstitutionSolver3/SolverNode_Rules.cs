@@ -52,7 +52,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     (currNode, matcher, matchedConstraint) =>
                         currNode.CloseVariable(
                             matcher.Match(v),
-                            -matcher.Match(e).E,
+                            -matcher.Match(e).C,
                             matchedConstraint));
             }
             {
@@ -73,7 +73,7 @@ namespace Movimentum.SubstitutionSolver3 {
                 // 4. Match constraints with formal square roots
                 new RuleAction<FindFormalSquarerootVisitor>("root",
                     constraint =>
-                        constraint.Expr.Accept(new FindFormalSquarerootVisitor(), Ig.nore),
+                        constraint.Expr.Accept(new FindFormalSquarerootVisitor()),
                     formalRootFinder =>
                         formalRootFinder.SomeFormalSquareroot != null,
                     (node, formalRootFinder, constraint) =>
@@ -99,13 +99,13 @@ namespace Movimentum.SubstitutionSolver3 {
                         // Check that no formal square root exists.
                         FindFormalSquarerootVisitor f =
                             constraint.Expr.Accept(
-                                new FindFormalSquarerootVisitor(), Ig.nore);
+                                new FindFormalSquarerootVisitor());
                         if (f.SomeFormalSquareroot != null) {
                             return null;
                         }
                         // Check that v is not in e.
                         Dictionary<IVariable, VariableDegree> degrees =
-                            m.Match(e).Accept(new VariableDegreeVisitor(), Ig.nore);
+                            m.Match(e).Accept(new VariableDegreeVisitor());
                         IVariable variable = m.Match(v);
                         if (degrees.ContainsKey(variable)
                             && degrees[variable] != VariableDegree.Zero) {
@@ -139,7 +139,7 @@ namespace Movimentum.SubstitutionSolver3 {
                         // Check that no formal square root exists.
                         FindFormalSquarerootVisitor f =
                             constraint.Expr.Accept(
-                                new FindFormalSquarerootVisitor(), Ig.nore);
+                                new FindFormalSquarerootVisitor());
                         if (f.SomeFormalSquareroot != null) {
                             return null;
                         }
@@ -150,7 +150,7 @@ namespace Movimentum.SubstitutionSolver3 {
                         }
                         // Check that v is not in e.
                         Dictionary<IVariable, VariableDegree> degrees =
-                            m.Match(e).Accept(new VariableDegreeVisitor(), Ig.nore);
+                            m.Match(e).Accept(new VariableDegreeVisitor());
                         IVariable variable = poly.Var;
                         if (degrees.ContainsKey(variable)
                             && degrees[variable] != VariableDegree.Zero) {
@@ -166,7 +166,7 @@ namespace Movimentum.SubstitutionSolver3 {
                         IAbstractExpr expr = matcher.Match(e);
                         IConstant a = Polynomial.CreateConstant(poly.Coefficient(1));
                         IConstant b = Polynomial.CreateConstant(poly.Coefficient(0));
-                        BinaryExpression replacement = -(b.E + expr) / a;
+                        AbstractExpr replacement = -(b.C + expr) / a;
                         return currNode.CloseVariable(matcher.Match(p).Var,
                                                replacement, matchedConstraint);
                     }
@@ -185,7 +185,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     matcher => matcher != null,
                     (currNode, matcher, matchedConstraint) => {
                         ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
-                        ScalarConstraint c2 = new AtLeastZeroConstraint(-matcher.Match(p).E);
+                        ScalarConstraint c2 = new AtLeastZeroConstraint(-matcher.Match(p).C);
                         return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
                                                 currNode);
                     });
@@ -236,7 +236,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
         private static IEnumerable<SolverNode> RewriteFormalSquareroot(SolverNode origin, UnaryExpression someFormalSquareroot) {
             UnaryExpression positiveRoot = new UnaryExpression(someFormalSquareroot.Inner, new PositiveSquareroot());
-            UnaryExpression negativeRoot = -positiveRoot;
+            AbstractExpr negativeRoot = -positiveRoot;
 
             ScalarConstraint argumentIsAtLeastZeroConstraint = new AtLeastZeroConstraint(someFormalSquareroot.Inner);
 
@@ -246,14 +246,13 @@ namespace Movimentum.SubstitutionSolver3 {
         };
         }
 
-        private static SolverNode CreateSolverNodeWithOneFormalSquareRootExpanded(SolverNode origin, UnaryExpression root, ScalarConstraint additionalConstraint, UnaryExpression first) {
+        private static SolverNode CreateSolverNodeWithOneFormalSquareRootExpanded(SolverNode origin, AbstractExpr root, ScalarConstraint additionalConstraint, UnaryExpression first) {
             // TODO: The rewriting here is wrong: Only one formal square root must be rewritten, EVEN IN THE CASE OF DIAMONDS!!!
             // Example: 
             //var rewritingVisitor = new RewritingVisitor(new Dictionary<IAbstractExpr, IAbstractExpr> { { first, root } });
-            var rewritingVisitor = new RewritingVisitorSTEPC(first, root);
+            var rewritingVisitor = new RewritingVisitor(first, root);
             return new SolverNode(
-                origin.Constraints.Select(c =>
-                                          c.Accept(rewritingVisitor, Ig.nore))
+                origin.Constraints.Select(c => c.Accept(rewritingVisitor))
                     .Concat(new[] { additionalConstraint }),
                     origin
                 );

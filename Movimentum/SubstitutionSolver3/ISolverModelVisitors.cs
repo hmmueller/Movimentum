@@ -7,15 +7,15 @@
 
     public interface ISolverModelConstraintVisitor<out TResult> : ISolverModelConstraintVisitor<Ignore, TResult> { }
 
-    public interface ISolverModelExprVisitor<in TParameter, out TResult> {
-        TResult Visit(IConstant constant, TParameter p);
-        TResult Visit(INamedVariable namedVariable, TParameter p);
-        TResult Visit(IAnchorVariable anchorVariable, TParameter p);
-        TResult Visit(UnaryExpression unaryExpression, TParameter p);
-        TResult Visit(BinaryExpression binaryExpression, TParameter p);
-        TResult Visit(RangeExpr rangeExpr, TParameter p);
-        TResult VisitSTEPB(IGeneralPolynomialSTEPB polynomial, TParameter parameter);
-    }
+public interface ISolverModelExprVisitor<in TParameter, out TResult> {
+    TResult Visit(IConstant constant, TParameter p);
+    TResult Visit(INamedVariable namedVariable, TParameter p);
+    TResult Visit(IAnchorVariable anchorVariable, TParameter p);
+    TResult Visit(UnaryExpression unaryExpression, TParameter p);
+    TResult Visit(BinaryExpression binaryExpression, TParameter p);
+    TResult Visit(RangeExpr rangeExpr, TParameter p);
+    TResult Visit(IGeneralPolynomial polynomial, TParameter parameter);
+}
 
     public interface ISolverModelExprVisitor<out TResult> : ISolverModelExprVisitor<Ignore, TResult> { }
 

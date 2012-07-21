@@ -19,17 +19,17 @@ namespace Movimentum.SubstitutionSolver3 {
         #region Implementation of ISolverModelConstraintVisitor<in Ignore,out bool>
 
         public bool Visit(EqualsZeroConstraint equalsZero, Ignore p) {
-            double result = equalsZero.Expr.Accept(this, p);
+            double result = equalsZero.Expr.Accept(this);
             return result.Near(0);
         }
 
         public bool Visit(MoreThanZeroConstraint moreThanZero, Ignore p) {
-            double result = moreThanZero.Expr.Accept(this, p);
+            double result = moreThanZero.Expr.Accept(this);
             return result > 0;
         }
 
         public bool Visit(AtLeastZeroConstraint atLeastZero, Ignore p) {
-            double result = atLeastZero.Expr.Accept(this, p);
+            double result = atLeastZero.Expr.Accept(this);
             return result.Near(0) | result > 0;
         }
 
@@ -57,13 +57,13 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public double Visit(UnaryExpression unaryExpression, Ignore p) {
-            double inner = unaryExpression.Inner.Accept(this, p);
+            double inner = unaryExpression.Inner.Accept(this);
             return unaryExpression.Op.Accept(this, inner, p);
         }
 
         public double Visit(BinaryExpression binaryExpression, Ignore p) {
-            double lhs = binaryExpression.Lhs.Accept(this, p);
-            double rhs = binaryExpression.Rhs.Accept(this, p);
+            double lhs = binaryExpression.Lhs.Accept(this);
+            double rhs = binaryExpression.Rhs.Accept(this);
             return binaryExpression.Op.Accept(this, lhs, rhs, p);
         }
 
@@ -81,9 +81,15 @@ namespace Movimentum.SubstitutionSolver3 {
             //return result;
         }
 
-        public double VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
-            return polynomial.EvaluateAtSTEPC(GetValue(polynomial.Var));
+    public double Visit(IGeneralPolynomial polynomial, Ignore parameter) {
+        // Evaluate by Horner's rule.
+        double value = GetValue(polynomial.Var);
+        double result = polynomial.Coefficient(polynomial.Degree);
+        for (int i = polynomial.Degree - 1; i >= 0; i--) {
+            result = value * result + polynomial.Coefficient(i);
         }
+        return result;
+    }
 
         #endregion ISolverModelExprVisitor
 

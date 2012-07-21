@@ -1,10 +1,11 @@
 ﻿using System;
 
 namespace Movimentum.SubstitutionSolver3 {
-    internal class RewritingVisitorSTEPC : ISolverModelConstraintVisitor<AbstractConstraint>
+    internal class RewritingVisitor : ISolverModelConstraintVisitor<AbstractConstraint>
                                           , ISolverModelExprVisitor<IAbstractExpr> {
-        private readonly IAbstractExpr _from, _to;
-        public RewritingVisitorSTEPC(IAbstractExpr from, IAbstractExpr to) {
+        private readonly IAbstractExpr _from;
+        private readonly IAbstractExpr _to;
+        public RewritingVisitor(IAbstractExpr from, IAbstractExpr to) {
             if (from is IConstant) {
                 throw new ArgumentException("Cannot replace constants - they might already have been folded");
             }
@@ -83,16 +84,22 @@ namespace Movimentum.SubstitutionSolver3 {
             throw new NotImplementedException();
         }
 
-        public IAbstractExpr VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
-            // STEPC
+        public IAbstractExpr Visit(IGeneralPolynomial polynomial, Ignore parameter) {
             if (polynomial.Var.Equals(_from)) {
-                // Evaluate by Horner's rule.
-                IAbstractExpr result = Polynomial.CreateConstant(polynomial.Coefficient(polynomial.Degree));
-                for (int i = polynomial.Degree - 1; i >= 0; i--) {
-                    result = _to.E * result + Polynomial.CreateConstant(polynomial.Coefficient(i));
+                if (_from is IConstant) {
+                    // For efficiency, handle this case by direct evaluation, instead
+                    // of building an expression tree that is later constant-folded.
+                    double from = ((IConstant)_from).Value;
+                    var visitor = new EvaluationVisitor(polynomial.Var, from);
+                    return Polynomial.CreateConstant(polynomial.Accept(visitor, Ig.nore));
+                } else {
+                    // Evaluate by Horner's rule.
+                    IAbstractExpr result = Polynomial.CreateConstant(polynomial.Coefficient(polynomial.Degree));
+                    for (int i = polynomial.Degree - 1; i >= 0; i--) {
+                        result = _to.E*result + Polynomial.CreateConstant(polynomial.Coefficient(i));
+                    }
+                    return result;
                 }
-                // Inefficient if _to is a constant. TODO: Directly compute with doubles in that case.
-                return result;
             } else {
                 return polynomial;
             }

@@ -54,25 +54,25 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public Dictionary<IVariable, VariableDegree> Visit(UnaryExpression unaryExpression, Ignore p) {
-            Dictionary<IVariable, VariableDegree> innerResult = unaryExpression.Inner.Accept(this, Ig.nore);
+            Dictionary<IVariable, VariableDegree> innerResult = unaryExpression.Inner.Accept(this);
             return unaryExpression.Op.Accept(this, innerResult, p);
         }
 
         public Dictionary<IVariable, VariableDegree> Visit(BinaryExpression binaryExpression, Ignore p) {
-            Dictionary<IVariable, VariableDegree> lhsResult = binaryExpression.Lhs.Accept(this, Ig.nore);
-            Dictionary<IVariable, VariableDegree> rhsResult = binaryExpression.Rhs.Accept(this, Ig.nore);
+            Dictionary<IVariable, VariableDegree> lhsResult = binaryExpression.Lhs.Accept(this);
+            Dictionary<IVariable, VariableDegree> rhsResult = binaryExpression.Rhs.Accept(this);
             return binaryExpression.Op.Accept(this, lhsResult, rhsResult, p);
         }
 
         public Dictionary<IVariable, VariableDegree> Visit(RangeExpr rangeExpr, Ignore p) {
             throw new NotImplementedException();
-            //AbstractExpr newExpr = rangeExpr.Expr.Accept(this, Ig.nore);
-            //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this, Ig.nore);
+            //AbstractExpr newExpr = rangeExpr.Expr.Accept(this);
+            //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this);
             //IEnumerable<Tuple<RangeExpr.Pair, RangeExpr.Pair>> newPairs = rangeExpr.Pairs.Select(pair => VisitPair(pair));
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
         }
 
-        public Dictionary<IVariable, VariableDegree> VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
+        public Dictionary<IVariable, VariableDegree> Visit(IGeneralPolynomial polynomial, Ignore parameter) {
             VariableDegree degree;
             switch (polynomial.Degree) {
                 case 0:
@@ -92,8 +92,8 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         //private Tuple<RangeExpr.Pair, RangeExpr.Pair> VisitPair(RangeExpr.Pair pair) {
-        //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this, Ig.nore);
-        //    AbstractExpr newValue = pair.Value.Accept(this, Ig.nore);
+        //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this);
+        //    AbstractExpr newValue = pair.Value.Accept(this);
         //    return pair.MoreThan != newMoreThan || pair.Value != newValue
         //        ? Tuple.Create(pair, new RangeExpr.Pair(newMoreThan, newValue))
         //        : Tuple.Create(pair, pair);

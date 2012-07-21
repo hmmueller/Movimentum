@@ -11,7 +11,7 @@ namespace Movimentum.Unittests {
             // Try to solve:
             //   0 = y + 2
             //   0 = x + y
-            EqualsZeroConstraint e1 = new EqualsZeroConstraint(NV("y").E + Polynomial.CreateConstant(2));
+            EqualsZeroConstraint e1 = new EqualsZeroConstraint(NV("y").C + Polynomial.CreateConstant(2));
             EqualsZeroConstraint e2 = new EqualsZeroConstraint(NV("x") + NV("y"));
             SolverNode current = SolverNode.CreateForTest(new[] { e1, e2 }, new Dictionary<IVariable, AbstractClosedVariable>());
             SolverNode solutionOrNull;
@@ -37,10 +37,10 @@ namespace Movimentum.Unittests {
             //   0 = x + y
             EqualsZeroConstraint e1 =
                 new EqualsZeroConstraint(
-                    NV("y").E + Polynomial.CreateConstant(2));
+                    NV("y").C + Polynomial.CreateConstant(2));
             EqualsZeroConstraint e2 =
                 new EqualsZeroConstraint(
-                    NV("x").E + NV("y"));
+                    NV("x").C + NV("y"));
 
             SolverNode current = SolverNode.CreateForTest(new[] { e1, e2 }, new Dictionary<IVariable, AbstractClosedVariable>());
             SolverNode solutionOrNull;
@@ -74,14 +74,14 @@ namespace Movimentum.Unittests {
         }
 
         private static AbstractExpr NV(string n) {
-            return INV(n).E;
+            return INV(n).C;
         }
 
         private static INamedVariable INV(string n) {
             return Polynomial.CreateNamedVariable(n);
         }
 
-        private UnaryExpression UE<TOp>(AbstractExpr e) where TOp : UnaryOperator, new() {
+        private UnaryExpression UE<TOp>(IAbstractExpr e) where TOp : UnaryOperator, new() {
             return new UnaryExpression(e, new TOp());
         }
 
@@ -120,7 +120,7 @@ namespace Movimentum.Unittests {
             EqualsZeroConstraint ve = new EqualsZeroConstraint(NV("x") + NV("y"));
             // Another constraint that contains x: 0 = y + (3x + y + 6)
             EqualsZeroConstraint other = new EqualsZeroConstraint(
-                NV("y") + (Polynomial.CreateConstant(3).E * NV("x") + NV("y") + Polynomial.CreateConstant(6)));
+                NV("y") + (Polynomial.CreateConstant(3).C * NV("x") + NV("y") + Polynomial.CreateConstant(6)));
 
             SolverNode current = SolverNode.CreateForTest(new[] { other, ve }, new Dictionary<IVariable, AbstractClosedVariable>());
 
@@ -157,12 +157,15 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void Test0VERewritingTwoSteps() {
+            // 0 = z + x + 4
             EqualsZeroConstraint veConstraint1 =
                 new EqualsZeroConstraint(NV("z") + (NV("x") + Polynomial.CreateConstant(4)));
+            // 0 = x + y
             EqualsZeroConstraint veConstraint2 =
                 new EqualsZeroConstraint(NV("x") + NV("y"));
+            // 0 = y + (5x + y + z)
             EqualsZeroConstraint constraint3 = new EqualsZeroConstraint(
-                NV("y") + (Polynomial.CreateConstant(5).E * NV("x") + NV("y") + NV("z")));
+                NV("y") + (Polynomial.CreateConstant(5).C * NV("x") + NV("y") + NV("z")));
 
             SolverNode current = SolverNode.CreateForTest(new[] { veConstraint1, veConstraint2, constraint3 }, new Dictionary<IVariable, AbstractClosedVariable>());
 
@@ -202,6 +205,8 @@ namespace Movimentum.Unittests {
             // correct value for y:
             SolverNode result =
                 expanded2Node.CloseVariableAndResolveBacksubstitutionsForTests(INV("y"), -2);
+            ////SolverNode result =
+            ////    expanded2Node.CloseVariableAndResolveBacksubstitutionsForTests(INV("z"), -6);
 
             // This now should put all solutions into the variable knowledge:
             Assert.AreEqual(-2, result.GetVariableValue(INV("y")));

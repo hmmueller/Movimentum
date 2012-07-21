@@ -27,6 +27,10 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public abstract TResult Accept<TParameter, TResult>(ISolverModelConstraintVisitor<TParameter, TResult> visitor, TParameter p);
+
+        public TResult Accept<TResult>(ISolverModelConstraintVisitor<Ignore, TResult> visitor) {
+            return Accept(visitor, Ig.nore);
+        }
     }
 
     public abstract class ScalarConstraint : AbstractConstraint {
@@ -107,7 +111,8 @@ namespace Movimentum.SubstitutionSolver3 {
 
     public interface IAbstractExpr {
         TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p);
-        AbstractExpr E { get; }
+        TResult Accept<TResult>(ISolverModelExprVisitor<Ignore, TResult> visitor);
+        AbstractExpr C { get; }
     }
     public interface IPolynomial : IAbstractExpr {
         IVariable Var { get; }
@@ -127,29 +132,40 @@ namespace Movimentum.SubstitutionSolver3 {
         Anchor.Coordinate Coordinate { get; }
         Anchor Anchor { get; }
     }
-    public interface IGeneralPolynomialSTEPB : IPolynomial {
-        double EvaluateAtSTEPC(double getValue);
+    public interface IGeneralPolynomial : IPolynomial {
     }
 
     public abstract class AbstractExpr : IAbstractExpr {
         public abstract TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p);
 
+        public TResult Accept<TResult>(ISolverModelExprVisitor<Ignore, TResult> visitor) {
+            return Accept(visitor, Ig.nore);
+        }
+
         public override string ToString() {
             return "{" + GetType().Name + "}" + Accept(new ToStringVisitor(), 0);
         }
-        public AbstractExpr E { get { return this; } }
+        public AbstractExpr C { get { return this; } }
 
-        public static BinaryExpression operator +(AbstractExpr lhs, IAbstractExpr rhs) {
-            return new BinaryExpression(lhs, new Plus(), rhs);
+        public static AbstractExpr operator +(AbstractExpr lhs, IAbstractExpr rhs) {
+            return lhs.Equals(Polynomial.ZERO) ? rhs.C
+                : rhs.Equals(Polynomial.ZERO) ? lhs
+                : new BinaryExpression(lhs, new Plus(), rhs);
         }
-        public static BinaryExpression operator *(AbstractExpr lhs, IAbstractExpr rhs) {
-            return new BinaryExpression(lhs, new Times(), rhs);
+        public static AbstractExpr operator *(AbstractExpr lhs, IAbstractExpr rhs) {
+            return lhs.Equals(Polynomial.ZERO) ? Polynomial.ZERO.C
+                : rhs.Equals(Polynomial.ZERO) ? Polynomial.ZERO.C
+                : new BinaryExpression(lhs, new Times(), rhs);
         }
-        public static BinaryExpression operator /(AbstractExpr lhs, IAbstractExpr rhs) {
-            return new BinaryExpression(lhs, new Divide(), rhs);
+        public static AbstractExpr operator /(AbstractExpr lhs, IAbstractExpr rhs) {
+            return lhs.Equals(Polynomial.ZERO)
+                ? (rhs.Equals(Polynomial.ZERO) ? Polynomial.CreateConstant(double.NaN) : Polynomial.ZERO).C
+                : new BinaryExpression(lhs, new Divide(), rhs);
         }
-        public static UnaryExpression operator -(AbstractExpr inner) {
-            return new UnaryExpression(inner, new UnaryMinus());
+        public static AbstractExpr operator -(AbstractExpr inner) {
+            return inner.Equals(Polynomial.ZERO)
+                ? Polynomial.ZERO.C
+                : new UnaryExpression(inner, new UnaryMinus());
         }
     }
 
@@ -196,7 +212,7 @@ namespace Movimentum.SubstitutionSolver3 {
             }
 
             public override int Degree {
-                get { return 0; } // Also if constant is 0 ... in math, it is -inf then.
+                get { return 0; } // Also if constant is 0 ... in math, it is -infinity then.
             }
 
             public override double Coefficient(int power) {
@@ -236,7 +252,7 @@ namespace Movimentum.SubstitutionSolver3 {
             }
 
             public int CompareTo(object obj) {
-                return _name.CompareTo(((Variable) obj).Name);
+                return _name.CompareTo(((Variable)obj).Name);
             }
 
             #region Overrides of Polynomial
@@ -295,16 +311,17 @@ namespace Movimentum.SubstitutionSolver3 {
             }
         }
 
-        private class GeneralPolynomialSTEPB : Polynomial, IGeneralPolynomialSTEPB {
+        private class GeneralPolynomial : Polynomial, IGeneralPolynomial {
             private readonly IVariable _variable;
-            private readonly double[] _coefficientsInInternalOrder;
-            private readonly double[] _coefficientsInMathOrder;
-            internal GeneralPolynomialSTEPB(IVariable variable, IEnumerable<double> coefficientsInInternalOrder) { // ...
-                _coefficientsInInternalOrder = coefficientsInInternalOrder.ToArray();
-                _coefficientsInMathOrder = coefficientsInInternalOrder.Reverse().ToArray();
-                if (_coefficientsInInternalOrder[_coefficientsInInternalOrder.Length - 1].Near(0)) {
-                    throw new ArgumentException("Top coefficient must not be zero");
+            private readonly double[] _coefficients;
+            private readonly int _degree;
+            internal GeneralPolynomial(IVariable variable,
+                    IEnumerable<double> coefficients) {
+                _coefficients = coefficients.ToArray();
+                if (_coefficients[0].Near(0)) {
+                    throw new ArgumentException("Top coefficient must not be 0");
                 }
+                _degree = _coefficients.Length - 1;
                 _variable = variable;
             }
 
@@ -312,54 +329,52 @@ namespace Movimentum.SubstitutionSolver3 {
                 get { return _variable; }
             }
 
-            // Not zero poly as -inf, but as 0 ...
-            public override int Degree { get { return _coefficientsInInternalOrder.Length - 1; } } // ...
+            public override int Degree { get { return _degree; } }
 
-            public override double Coefficient(int power) { return _coefficientsInInternalOrder[power]; }
-
-            public override bool Equals(object obj) {
-                return Equals(obj as GeneralPolynomialSTEPB);
+            public override double Coefficient(int power) {
+                return _coefficients[_degree - power];
             }
 
-            private bool Equals(GeneralPolynomialSTEPB other) {
+            public override bool Equals(object obj) {
+                return Equals(obj as GeneralPolynomial);
+            }
+
+            private bool Equals(GeneralPolynomial other) {
                 return other != null
                     && _variable.Equals(other._variable)
-                    && _coefficientsInInternalOrder.SequenceEqual(other._coefficientsInInternalOrder);
+                    && _coefficients.SequenceEqual(other._coefficients);
             }
 
             public override int GetHashCode() {
-                return _coefficientsInInternalOrder.Sum(c => c.GetHashCode() / 100).GetHashCode();
-            }
-
-            public double EvaluateAtSTEPC(double value) {
-                // Evaluate by Horner's rule.
-                double result = Coefficient(Degree);
-                for (int i = Degree - 1; i >= 0; i--) {
-                    result = value * result + Coefficient(i);
-                }
-                return result;
+                // Divide coefficient hashcode by degree to avoid overflow.
+                return _coefficients.Sum(c => c.GetHashCode() / (_degree + 1));
             }
 
             public override IEnumerable<double> Coefficients {
-                get { return _coefficientsInMathOrder; }
+                get { return _coefficients; }
             }
 
-            public override TResult Accept<TParameter, TResult>(ISolverModelExprVisitor<TParameter, TResult> visitor, TParameter p) {
-                return visitor.VisitSTEPB(this, p);
+            public override TResult Accept<TParameter, TResult>(
+                    ISolverModelExprVisitor<TParameter, TResult> visitor,
+                    TParameter p) {
+                return visitor.Visit(this, p);
             }
         }
 
-
-        public static IVariable CreateAnchorVariable(Anchor anchor, Anchor.Coordinate coordinate) {
+        public static IVariable CreateAnchorVariable(Anchor anchor,
+                                        Anchor.Coordinate coordinate) {
             return new AnchorVariable(anchor, coordinate);
-        }
-
-        public static IConstant CreateConstant(double value) {
-            return new Constant(value);
         }
 
         public static INamedVariable CreateNamedVariable(string name) {
             return new NamedVariable(name);
+        }
+
+        // We cache ZERO to ease, in the future, many comparisons with it.
+        public static readonly IConstant ZERO = new Constant(0);
+
+        public static IConstant CreateConstant(double value) {
+            return value.Near(0) ? ZERO : new Constant(value);
         }
 
         public abstract IVariable Var { get; }
@@ -371,7 +386,9 @@ namespace Movimentum.SubstitutionSolver3 {
             return CreatePolynomial(variable, (IEnumerable<double>)coefficients);
         }
 
-        public static IPolynomial CreatePolynomial(IVariable variable, IEnumerable<double> coefficients) {
+        public static IPolynomial CreatePolynomial(IVariable variable,
+                                        IEnumerable<double> coefficients) {
+            // Skip all leading zero coefficients
             int zeroPrefixLength = 0;
             foreach (var c in coefficients) {
                 if (!c.Near(0)) {
@@ -379,17 +396,24 @@ namespace Movimentum.SubstitutionSolver3 {
                 }
                 zeroPrefixLength++;
             }
-            double[] normalizedCoefficients = coefficients.Skip(zeroPrefixLength).Reverse().ToArray();
+            double[] normalizedCoefficients =
+                coefficients.Skip(zeroPrefixLength).ToArray();
+
+            // Create intermediate coefficient for zero polynomial.
             if (normalizedCoefficients.Length == 0) {
                 normalizedCoefficients = new[] { 0.0 };
             }
+
+            // Create result based on degree and coefficients.
             var deg = normalizedCoefficients.Length - 1;
             if (deg == 0) {
                 return new Constant(normalizedCoefficients[0]);
-            } else if (deg == 1 && normalizedCoefficients[0].Near(0) && normalizedCoefficients[1].Near(1)) {
+            } else if (deg == 1
+                       && normalizedCoefficients[0].Near(1)
+                       && normalizedCoefficients[1].Near(0)) {
                 return variable;
             } else {
-                return new GeneralPolynomialSTEPB(variable, normalizedCoefficients);
+                return new GeneralPolynomial(variable, normalizedCoefficients);
             }
         }
     }

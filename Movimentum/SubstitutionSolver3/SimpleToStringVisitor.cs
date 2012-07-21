@@ -10,15 +10,15 @@ namespace Movimentum.SubstitutionSolver3 {
         #region Implementation of ISolverModelConstraintVisitor<in int,out string>
 
         public string Visit(EqualsZeroConstraint equalsZero, Ignore p) {
-            return "0 = " + equalsZero.Expr.Accept(this, p);
+            return "0 = " + equalsZero.Expr.Accept(this);
         }
 
         public string Visit(MoreThanZeroConstraint moreThanZero, Ignore p) {
-            return "0 < " + moreThanZero.Expr.Accept(this, p);
+            return "0 < " + moreThanZero.Expr.Accept(this);
         }
 
         public string Visit(AtLeastZeroConstraint atLeastZero, Ignore p) {
-            return "0 <= " + atLeastZero.Expr.Accept(this, p);
+            return "0 <= " + atLeastZero.Expr.Accept(this);
         }
 
         #endregion
@@ -39,29 +39,29 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public string Visit(UnaryExpression unaryExpression, Ignore p) {
             string op = unaryExpression.Op.Accept(this, Ig.nore, Ig.nore);
-            return op + "(" + unaryExpression.Inner.Accept(this, p) + ")";
+            return op + "(" + unaryExpression.Inner.Accept(this) + ")";
         }
 
         public string Visit(BinaryExpression binaryExpression, Ignore p) {
             string op = binaryExpression.Op.Accept(this, Ig.nore, Ig.nore, Ig.nore);
-            string result = binaryExpression.Lhs.Accept(this, p)
+            string result = binaryExpression.Lhs.Accept(this)
                           + op
-                          + binaryExpression.Rhs.Accept(this, p);
+                          + binaryExpression.Rhs.Accept(this);
             return "(" + result + ")";
         }
 
         public string Visit(RangeExpr rangeExpr, Ignore p) {
-            string result = rangeExpr.Expr.Accept(this, p);
-            result += " : " + rangeExpr.Value0.Accept(this, p);
+            string result = rangeExpr.Expr.Accept(this);
+            result += " : " + rangeExpr.Value0.Accept(this);
             foreach (var pair in rangeExpr.Pairs) {
                 result += " > " + VisitRangeExprPair(pair);
             }
             return result;
         }
 
-        public string VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore p) {
+        public string Visit(IGeneralPolynomial polynomial, Ignore p) {
             var result = new StringBuilder("[");
-            string varName = polynomial.Var.Accept(this, p);
+            string varName = polynomial.Var.Accept(this);
             for (int d = polynomial.Degree; d > 1; d--) {
                 double coefficient = polynomial.Coefficient(d);
                 if (!coefficient.Near(0)) {
@@ -83,7 +83,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         private string VisitRangeExprPair(RangeExpr.Pair pair) {
-            return pair.MoreThan.Accept(this, Ig.nore) + " : " + pair.Value.Accept(this, Ig.nore);
+            return pair.MoreThan.Accept(this) + " : " + pair.Value.Accept(this);
         }
 
         #endregion Implementation of ISolverModelExprVisitor<int, string>

@@ -201,11 +201,11 @@ namespace Movimentum.SubstitutionSolver3 {
                     //                                { { varWithValue.Variable, 
                     //                                    Polynomial.CreateConstant(varWithValue.Value) 
                     //                                } });
-                    var rewriter = new RewritingVisitorSTEPC(varWithValue.Variable,
+                    var rewriter = new RewritingVisitor(varWithValue.Variable,
                                                         Polynomial.CreateConstant(varWithValue.Value));
                     foreach (var varWithBacksub in varsWithBacksubstitutions) {
                         IAbstractExpr rewritten = varWithBacksub.Expr
-                                                               .Accept(rewriter, Ig.nore)
+                                                               .Accept(rewriter)
                                                                .Accept(foldingVisitor, 0);
                         // If the result, after constant folding, is a constant, we have found a new solution value.
                         // Otherwise, we still have a - maybe smaller - backsubstitution for this variable.
@@ -305,6 +305,10 @@ namespace Movimentum.SubstitutionSolver3 {
             }
 
             public abstract IEnumerable<SolverNode> SuccessfulMatch(SolverNode current, ScalarConstraint constraint);
+
+            public override string ToString() {
+                return "{" + GetType().Name + "}" + Name;
+            }
         }
 
         private class RuleAction<TMatchResult> : RuleAction where TMatchResult : class {
@@ -354,18 +358,18 @@ namespace Movimentum.SubstitutionSolver3 {
             // Rewrite all constraints
             //var rewriter = new RewritingVisitor(
             //    new Dictionary<IAbstractExpr, IAbstractExpr> { { variable, expression } });
-            var rewriter = new RewritingVisitorSTEPC(variable, expression);
+            var rewriter = new RewritingVisitor(variable, expression);
             IEnumerable<AbstractConstraint> rewrittenConstraints =
                 Constraints.Except(sourceConstraintToBeRemoved)
                     .Select(c => c.Accept(rewriter, Ig.nore));
 
             // Create new variable->value knowledge or new backsubstition.
             var newBacksubstitutions = new Dictionary<IVariable, AbstractClosedVariable>(ClosedVariables) {{
-            variable, expression is IConstant
-                ? (AbstractClosedVariable)
-                    new VariableWithValue(variable, ((IConstant) expression).Value)
-                : new VariableWithBacksubstitution(variable, expression)
-            }};
+                variable, expression is IConstant
+                    ? (AbstractClosedVariable)
+                        new VariableWithValue(variable, ((IConstant) expression).Value)
+                    : new VariableWithBacksubstitution(variable, expression)
+                }};
 
             // Create new node.
             return new SolverNode(rewrittenConstraints, newBacksubstitutions, this);

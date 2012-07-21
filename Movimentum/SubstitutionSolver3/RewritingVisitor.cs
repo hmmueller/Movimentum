@@ -1,28 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Movimentum.SubstitutionSolver3 {
     internal class RewritingVisitor : ISolverModelConstraintVisitor<AbstractConstraint>
-                                          , ISolverModelExprVisitor<IAbstractExpr> {
-        private readonly IDictionary<IAbstractExpr, IAbstractExpr> _rewrites;
-        public RewritingVisitor(IDictionary<IAbstractExpr, IAbstractExpr> rewrites) {
-            _rewrites = rewrites;
+                                    , ISolverModelExprVisitor<IAbstractExpr> {
+        private readonly IAbstractExpr _from;
+        private readonly IAbstractExpr _to;
+        public RewritingVisitor(IAbstractExpr from, IAbstractExpr to) {
+            if (from is IConstant) {
+                throw new ArgumentException("Cannot replace constants - they might already have been folded");
+            }
+            _from = from;
+            _to = to;
         }
 
         #region Implementation of ISolverModelConstraintVisitor<in Ignore,out ScalarConstraint>
 
         public AbstractConstraint Visit(EqualsZeroConstraint equalsZero, Ignore p) {
-            IAbstractExpr result = equalsZero.Expr.Accept(this, Ig.nore);
+            IAbstractExpr result = equalsZero.Expr.Accept(this);
             return result != equalsZero.Expr ? new EqualsZeroConstraint(result) : equalsZero;
         }
 
         public AbstractConstraint Visit(MoreThanZeroConstraint moreThanZero, Ignore p) {
-            IAbstractExpr result = moreThanZero.Expr.Accept(this, Ig.nore);
+            IAbstractExpr result = moreThanZero.Expr.Accept(this);
             return result != moreThanZero.Expr ? new MoreThanZeroConstraint(result) : moreThanZero;
         }
 
         public AbstractConstraint Visit(AtLeastZeroConstraint atLeastZero, Ignore p) {
-            IAbstractExpr result = atLeastZero.Expr.Accept(this, Ig.nore);
+            IAbstractExpr result = atLeastZero.Expr.Accept(this);
             return result != atLeastZero.Expr ? new AtLeastZeroConstraint(result) : atLeastZero;
         }
 
@@ -31,8 +35,7 @@ namespace Movimentum.SubstitutionSolver3 {
         #region Implementation of ISolverModelExprVisitor<in Ignore,out AbstractExpr>
 
         private IAbstractExpr Rewrite(IAbstractExpr expr) {
-            IAbstractExpr result;
-            return _rewrites.TryGetValue(expr, out result) ? result : expr;
+            return expr.Equals(_from) ? _to : expr;
         }
 
         public IAbstractExpr Visit(IConstant constant, Ignore p) {
@@ -48,12 +51,11 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public IAbstractExpr Visit(UnaryExpression unaryExpression, Ignore p) {
-            IAbstractExpr result;
-            if (_rewrites.TryGetValue(unaryExpression, out result)) {
-                return result;
+            if (unaryExpression.Equals(_from)) {
+                return _to;
             } else {
                 IAbstractExpr oldInner = unaryExpression.Inner;
-                IAbstractExpr newInner = oldInner.Accept(this, Ig.nore);
+                IAbstractExpr newInner = oldInner.Accept(this);
                 if (newInner != oldInner) {
                     return new UnaryExpression(newInner, unaryExpression.Op);
                 } else {
@@ -63,14 +65,13 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public IAbstractExpr Visit(BinaryExpression binaryExpression, Ignore p) {
-            IAbstractExpr result;
-            if (_rewrites.TryGetValue(binaryExpression, out result)) {
-                return result;
+            if (binaryExpression.Equals(_from)) {
+                return _to;
             } else {
                 IAbstractExpr oldLhs = binaryExpression.Lhs;
                 IAbstractExpr oldRhs = binaryExpression.Rhs;
-                IAbstractExpr newLhs = oldLhs.Accept(this, Ig.nore);
-                IAbstractExpr newRhs = oldRhs.Accept(this, Ig.nore);
+                IAbstractExpr newLhs = oldLhs.Accept(this);
+                IAbstractExpr newRhs = oldRhs.Accept(this);
                 if (newLhs != oldLhs | newRhs != oldRhs) {
                     return new BinaryExpression(newLhs, binaryExpression.Op, newRhs);
                 } else {
@@ -83,18 +84,26 @@ namespace Movimentum.SubstitutionSolver3 {
             throw new NotImplementedException();
         }
 
-        public IAbstractExpr VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
-            // STEPC --> RewritingVIsitorSTEPC
-            throw new NotImplementedException();
+        public IAbstractExpr Visit(IGeneralPolynomial polynomial, Ignore parameter) {
+            if (polynomial.Var.Equals(_from)) {
+                if (_from is IConstant) {
+                    // For efficiency, handle this case by direct evaluation, instead
+                    // of building an expression tree that is later constant-folded.
+                    double from = ((IConstant)_from).Value;
+                    var visitor = new EvaluationVisitor(polynomial.Var, from);
+                    return Polynomial.CreateConstant(polynomial.Accept(visitor));
+                } else {
+                    // Evaluate by Horner's rule.
+                    IAbstractExpr result = Polynomial.CreateConstant(polynomial.Coefficient(polynomial.Degree));
+                    for (int i = polynomial.Degree - 1; i >= 0; i--) {
+                        result = _to.C * result + Polynomial.CreateConstant(polynomial.Coefficient(i));
+                    }
+                    return result;
+                }
+            } else {
+                return polynomial;
+            }
         }
-
-        ////public AbstractExpr Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
-        ////    // if we rewrite a -> b + c, we get a general expression!
-        ////    var variableRewrite = Rewrite(singleVariablePolynomial.Var);
-        ////    return variableRewrite == singleVariablePolynomial.Var
-        ////        ? singleVariablePolynomial
-        ////        : singleVariablePolynomial.EvaluateAt(variableRewrite);
-        ////}
 
         #endregion
     }

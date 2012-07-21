@@ -26,8 +26,8 @@ namespace Movimentum.Unittests {
         public void TestDoMatchAssignment() {
             // Set up expression a + 1 * 2
             var v = Polynomial.CreateNamedVariable("a");
-            var e = Polynomial.CreateConstant(1).E * Polynomial.CreateConstant(2);
-            AbstractExpr input = v.E + e;
+            var e = Polynomial.CreateConstant(1).C * Polynomial.CreateConstant(2);
+            AbstractExpr input = v.C + e;
 
             // Set up template vt + et
             var vt = new TypeMatchTemplate<IVariable>();
@@ -50,7 +50,7 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestDontMatchAssignment() {
-            AbstractExpr input = Polynomial.CreateConstant(-1).E + Polynomial.CreateConstant(1).E * Polynomial.CreateConstant(2);
+            AbstractExpr input = Polynomial.CreateConstant(-1).C + Polynomial.CreateConstant(1).C * Polynomial.CreateConstant(2);
 
             BinaryExpressionTemplate template = new TypeMatchTemplate<IVariable>() + new TypeMatchTemplate<AbstractExpr>();
 
@@ -61,7 +61,7 @@ namespace Movimentum.Unittests {
         [Test]
         public void TestDoMatchTwice() {
             var three = Polynomial.CreateConstant(3);
-            AbstractExpr input = three.E + three;
+            AbstractExpr input = three.C + three;
 
             var ct = new TypeMatchTemplate<IConstant>();
             BinaryExpressionTemplate template = ct + ct;
@@ -73,7 +73,7 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestDoMatchTwice2() {
-            AbstractExpr input = Polynomial.CreateConstant(3).E + Polynomial.CreateConstant(3);
+            AbstractExpr input = Polynomial.CreateConstant(3).C + Polynomial.CreateConstant(3);
 
             var ct = new TypeMatchTemplate<IConstant>();
             BinaryExpressionTemplate template = ct + ct;
@@ -85,7 +85,7 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestDontMatchTwice() {
-            AbstractExpr input = Polynomial.CreateConstant(3).E + Polynomial.CreateConstant(2);
+            AbstractExpr input = Polynomial.CreateConstant(3).C + Polynomial.CreateConstant(2);
 
             var ct = new TypeMatchTemplate<IConstant>();
             BinaryExpressionTemplate template = ct + ct;

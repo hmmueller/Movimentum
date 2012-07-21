@@ -8,17 +8,17 @@ namespace Movimentum.SubstitutionSolver3 {
         #region Implementation of ISolverModelConstraintVisitor<in Ignore,out ScalarConstraint>
 
         public AbstractConstraint Visit(EqualsZeroConstraint equalsZero, Ignore p) {
-            IAbstractExpr result = equalsZero.Expr.Accept(this, Ig.nore);
+            IAbstractExpr result = equalsZero.Expr.Accept(this);
             return result != equalsZero.Expr ? new EqualsZeroConstraint(result) : equalsZero;
         }
 
         public AbstractConstraint Visit(MoreThanZeroConstraint moreThanZero, Ignore p) {
-            IAbstractExpr result = moreThanZero.Expr.Accept(this, Ig.nore);
+            IAbstractExpr result = moreThanZero.Expr.Accept(this);
             return result != moreThanZero.Expr ? new MoreThanZeroConstraint(result) : moreThanZero;
         }
 
         public AbstractConstraint Visit(AtLeastZeroConstraint atLeastZero, Ignore p) {
-            IAbstractExpr result = atLeastZero.Expr.Accept(this, Ig.nore);
+            IAbstractExpr result = atLeastZero.Expr.Accept(this);
             return result != atLeastZero.Expr ? new AtLeastZeroConstraint(result) : atLeastZero;
         }
 
@@ -40,7 +40,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public IAbstractExpr Visit(UnaryExpression unaryExpression, Ignore p) {
             IAbstractExpr oldInner = unaryExpression.Inner;
-            IAbstractExpr newInner = oldInner.Accept(this, Ig.nore);
+            IAbstractExpr newInner = oldInner.Accept(this);
             if (newInner is IConstant && !(unaryExpression.Op is FormalSquareroot)) {
                 return Polynomial.CreateConstant(unaryExpression.Op.Accept(this, (IConstant)newInner, Ig.nore));
             } else if (newInner != oldInner) {
@@ -53,8 +53,8 @@ namespace Movimentum.SubstitutionSolver3 {
         public IAbstractExpr Visit(BinaryExpression binaryExpression, Ignore p) {
             IAbstractExpr oldLhs = binaryExpression.Lhs;
             IAbstractExpr oldRhs = binaryExpression.Rhs;
-            IAbstractExpr newLhs = oldLhs.Accept(this, Ig.nore);
-            IAbstractExpr newRhs = oldRhs.Accept(this, Ig.nore);
+            IAbstractExpr newLhs = oldLhs.Accept(this);
+            IAbstractExpr newRhs = oldRhs.Accept(this);
             if (newLhs is IConstant & newRhs is IConstant) {
                 return Polynomial.CreateConstant(binaryExpression.Op.Accept(this, (IConstant)newLhs, (IConstant)newRhs, Ig.nore));
             } else if (newLhs != oldLhs | newRhs != oldRhs) {
@@ -66,23 +66,21 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public IAbstractExpr Visit(RangeExpr rangeExpr, Ignore p) {
             throw new NotImplementedException();
-            //AbstractExpr newExpr = rangeExpr.Expr.Accept(this, Ig.nore);
-            //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this, Ig.nore);
+            //AbstractExpr newExpr = rangeExpr.Expr.Accept(this);
+            //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this);
             //IEnumerable<Tuple<RangeExpr.Pair, RangeExpr.Pair>> newPairs = rangeExpr.Pairs.Select(pair => VisitPair(pair));
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
         }
 
-
-
-        public IAbstractExpr VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore p) {
+        public IAbstractExpr Visit(IGeneralPolynomial polynomial, Ignore p) {
             // We decree that polynomials are always "constant folded:" There is never a general polynomial
             // with degree 0 around - this must be made sure by the Polynomial.Create... methods.
             return polynomial;
         }
 
         //private Tuple<RangeExpr.Pair, RangeExpr.Pair> VisitPair(RangeExpr.Pair pair) {
-        //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this, Ig.nore);
-        //    AbstractExpr newValue = pair.Value.Accept(this, Ig.nore);
+        //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this);
+        //    AbstractExpr newValue = pair.Value.Accept(this);
         //    return pair.MoreThan != newMoreThan || pair.Value != newValue
         //        ? Tuple.Create(pair, new RangeExpr.Pair(newMoreThan, newValue))
         //        : Tuple.Create(pair, pair);

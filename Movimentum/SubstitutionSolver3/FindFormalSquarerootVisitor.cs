@@ -26,36 +26,36 @@ namespace Movimentum.SubstitutionSolver3 {
             if (unaryExpression.Op is FormalSquareroot) {
                 _someFormalSquareRoot = unaryExpression;
             } else {
-                unaryExpression.Inner.Accept(this, Ig.nore);
+                unaryExpression.Inner.Accept(this);
             }
             return this;
         }
 
         public FindFormalSquarerootVisitor Visit(BinaryExpression binaryExpression, Ignore p) {
-            binaryExpression.Lhs.Accept(this, Ig.nore);
-            binaryExpression.Rhs.Accept(this, Ig.nore);
+            binaryExpression.Lhs.Accept(this);
+            binaryExpression.Rhs.Accept(this);
             return this;
         }
 
         public FindFormalSquarerootVisitor Visit(RangeExpr rangeExpr, Ignore p) {
             throw new NotImplementedException();
-            //AbstractExpr newExpr = rangeExpr.Expr.Accept(this, Ig.nore);
-            //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this, Ig.nore);
+            //AbstractExpr newExpr = rangeExpr.Expr.Accept(this);
+            //AbstractExpr newValue0 = rangeExpr.Value0.Accept(this);
             //IEnumerable<Tuple<RangeExpr.Pair, RangeExpr.Pair>> newPairs = rangeExpr.Pairs.Select(pair => VisitPair(pair));
             //return MaybeCreateConstant(new RangeExpr(newExpr, newValue0, newPairs.Select(tuple => tuple.Item2)));
         }
 
-        public FindFormalSquarerootVisitor VisitSTEPB(IGeneralPolynomialSTEPB polynomial, Ignore parameter) {
-            return this;
-        }
+    public FindFormalSquarerootVisitor Visit(IGeneralPolynomial polynomial, Ignore parameter) {
+        return this;
+    }
 
         ////public FindFormalSquarerootVisitor Visit(SingleVariablePolynomial singleVariablePolynomial, Ignore p) {
         ////    return this;
         ////}
 
         //private Tuple<RangeExpr.Pair, RangeExpr.Pair> VisitPair(RangeExpr.Pair pair) {
-        //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this, Ig.nore);
-        //    AbstractExpr newValue = pair.Value.Accept(this, Ig.nore);
+        //    AbstractExpr newMoreThan = pair.MoreThan.Accept(this);
+        //    AbstractExpr newValue = pair.Value.Accept(this);
         //    return pair.MoreThan != newMoreThan || pair.Value != newValue
         //        ? Tuple.Create(pair, new RangeExpr.Pair(newMoreThan, newValue))
         //        : Tuple.Create(pair, pair);

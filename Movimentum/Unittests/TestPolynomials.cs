@@ -1,4 +1,6 @@
-﻿using Movimentum.SubstitutionSolver3;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Movimentum.SubstitutionSolver3;
 using NUnit.Framework;
 
 namespace Movimentum.Unittests {
@@ -25,19 +27,19 @@ namespace Movimentum.Unittests {
         }
 
         private object Snip(string s) {
-            return s.Substring(typeof(IGeneralPolynomialSTEPB).Name.Length + 1);
+            return s.Substring(typeof(IGeneralPolynomial).Name.Length + 1);
         }
 
         [Test]
         public void TestToString() {
-            Assert.AreEqual("(x^2+x+1)", Snip(P("x", 1, 1, 1).ToString()));
-            Assert.AreEqual("(x^2+x-1)", Snip(P("x", 1, 1, -1).ToString()));
-            Assert.AreEqual("(x^2-x+1)", Snip(P("x", 1, -1, 1).ToString()));
-            Assert.AreEqual("(-x^2+x+1)", Snip(P("x", -1, 1, 1).ToString()));
-            Assert.AreEqual("(2.1*x^2+2.2*x+2.3)", Snip(P("x", 2.1, 2.2, 2.3).ToString()));
-            Assert.AreEqual("(2*x^2+2*x-2)", Snip(P("x", 2, 2, -2).ToString()));
-            Assert.AreEqual("(2*x^2-2*x+2)", Snip(P("x", 2, -2, 2).ToString()));
-            Assert.AreEqual("(-2*x^2+2*x+2)", Snip(P("x", -2, 2, 2).ToString()));
+            Assert.AreEqual("((x^2+x+1))", Snip(P("x", 1, 1, 1).ToString()));
+            Assert.AreEqual("((x^2+x-1))", Snip(P("x", 1, 1, -1).ToString()));
+            Assert.AreEqual("((x^2-x+1))", Snip(P("x", 1, -1, 1).ToString()));
+            Assert.AreEqual("((-x^2+x+1))", Snip(P("x", -1, 1, 1).ToString()));
+            Assert.AreEqual("((2.1*x^2+2.2*x+2.3))", Snip(P("x", 2.1, 2.2, 2.3).ToString()));
+            Assert.AreEqual("((2*x^2+2*x-2))", Snip(P("x", 2, 2, -2).ToString()));
+            Assert.AreEqual("((2*x^2-2*x+2))", Snip(P("x", 2, -2, 2).ToString()));
+            Assert.AreEqual("((-2*x^2+2*x+2))", Snip(P("x", -2, 2, 2).ToString()));
         }
 
         [Test]
@@ -54,30 +56,31 @@ namespace Movimentum.Unittests {
         #region PolynomialFoldingVisitor tests
 
         private IAbstractExpr Fold(IAbstractExpr expr) {
+            //return expr.Accept(new PolynomialFoldingVisitor(), Ig.nore);
             return expr.Accept(new PolynomialFoldingVisitor(), 0);
         }
 
         // Test -0        -> 0					
         [Test]
         public void Test001() {
-            Assert.AreEqual(C(0), Fold(-C(0).E));
+            Assert.AreEqual(C(0), Fold(-C(0).C));
         }
         // Test -1        -> C
         [Test]
         public void Test002() {
-            Assert.AreEqual(C(-1), Fold(-C(1).E));
+            Assert.AreEqual(C(-1), Fold(-C(1).C));
         }
         // Test -C        -> C'
         [Test]
         public void Test003() {
-            Assert.AreEqual(C(-3), Fold(-C(3).E));
+            Assert.AreEqual(C(-3), Fold(-C(3).C));
         }
         // Test -P[V]     -> P'[V]
         [Test]
         public void Test004() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", -1, -2, -3);
-            Assert.AreEqual(p_, Fold(-p.E));
+            Assert.AreEqual(p_, Fold(-p.C));
         }
         // Test P[V]²    -> P'[V]
         [Test]
@@ -96,70 +99,70 @@ namespace Movimentum.Unittests {
         public void Test006() {
             IVariable v = V("x");
             IAbstractExpr p = P("x", -1, 0);
-            Assert.AreEqual(p, Fold(-v.E));
+            Assert.AreEqual(p, Fold(-v.C));
         }
         // Test 0*0    -> 0
         [Test]
         public void Test007() {
-            Assert.AreEqual(C(0), Fold(C(0).E * C(0)));
+            Assert.AreEqual(C(0), Fold(C(0).C * C(0)));
         }
         // Test 0*1    -> 0
         [Test]
         public void Test008() {
-            Assert.AreEqual(C(0), Fold(C(0).E * C(1)));
+            Assert.AreEqual(C(0), Fold(C(0).C * C(1)));
         }
         // Test 0*C    -> 0
         [Test]
         public void Test009() {
-            Assert.AreEqual(C(0), Fold(C(0).E * C(2)));
+            Assert.AreEqual(C(0), Fold(C(0).C * C(2)));
         }
         // Test 0*P[V] -> 0
         [Test]
         public void Test010() {
-            IAbstractExpr fold = Fold(C(0).E * P("x", 1, 2, 3));
+            IAbstractExpr fold = Fold(C(0).C * P("x", 1, 2, 3));
             Assert.AreEqual(C(0), fold);
         }
 
         // Test 0*V    -> 0
         [Test]
         public void Test011() {
-            IAbstractExpr fold = Fold(C(0).E * V("x"));
+            IAbstractExpr fold = Fold(C(0).C * V("x"));
             Assert.AreEqual(C(0), fold);
         }
 
         // Test 0+0    -> 0
         [Test]
         public void Test012() {
-            Assert.AreEqual(C(0), Fold(C(0).E + C(0)));
+            Assert.AreEqual(C(0), Fold(C(0).C + C(0)));
         }
         // Test 0+1    -> 1
         [Test]
         public void Test013() {
-            Assert.AreEqual(C(1), Fold(C(0).E + C(1)));
+            Assert.AreEqual(C(1), Fold(C(0).C + C(1)));
         }
         // Test 0+C    -> C
         [Test]
         public void Test014() {
-            Assert.AreEqual(C(2), Fold(C(0).E + C(2)));
+            Assert.AreEqual(C(2), Fold(C(0).C + C(2)));
         }
         // Test 0+P[V] -> P[V]
         [Test]
         public void Test015() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            IAbstractExpr fold = Fold(C(0).E + p);
+            IAbstractExpr fold = Fold(C(0).C + p);
             Assert.AreEqual(p, fold);
         }
         // Test 0+V    -> V
         [Test]
         public void Test016() {
             IAbstractExpr v = V("x");
-            IAbstractExpr fold = Fold(C(0).E + v);
+            IAbstractExpr fold = Fold(C(0).C + v);
             Assert.AreEqual(v, fold);
         }
         // Test 0/0    -> NaN
         [Test]
         public void Test017() {
-            IConstant fold = Fold(C(0).E / C(0)) as IConstant;
+            IConstant fold = Fold(C(0).C / C(0)) as IConstant;
             Assert.IsNotNull(fold);
             Assert.IsTrue(double.IsNaN(fold.Value));
         }
@@ -167,24 +170,26 @@ namespace Movimentum.Unittests {
         // Test 0/1    -> 0
         [Test]
         public void Test018() {
-            Assert.AreEqual(C(0), Fold(C(0).E / C(1)));
+            Assert.AreEqual(C(0), Fold(C(0).C / C(1)));
         }
         // Test 0/C    -> 0
         [Test]
         public void Test019() {
-            Assert.AreEqual(C(0), Fold(C(0).E / C(2)));
+            Assert.AreEqual(C(0), Fold(C(0).C / C(2)));
         }
         // Test 0/P[V] -> 0
         [Test]
         public void Test020() {
-            IAbstractExpr fold = Fold(C(0).E / P("x", 1, 2, 3));
-            Assert.IsInstanceOf<BinaryExpression>(fold);
+            IAbstractExpr fold = Fold(C(0).C / P("x", 1, 2, 3));
+            //Assert.IsInstanceOf<BinaryExpression>(fold);
+            Assert.IsInstanceOf<IConstant>(fold);
         }
         // Test 0/V    -> 0
         [Test]
         public void Test021() {
-            IAbstractExpr fold = Fold(C(0).E / V("x"));
-            Assert.IsInstanceOf<BinaryExpression>(fold);
+            IAbstractExpr fold = Fold(C(0).C / V("x"));
+            //Assert.IsInstanceOf<BinaryExpression>(fold);
+            Assert.IsInstanceOf<IConstant>(fold);
         }
         // Test 0²        -> 0
         [Test]
@@ -194,87 +199,88 @@ namespace Movimentum.Unittests {
         // Test 1*0    -> 0
         [Test]
         public void Test023() {
-            Assert.AreEqual(C(0), Fold(C(1).E * C(0)));
+            Assert.AreEqual(C(0), Fold(C(1).C * C(0)));
         }
         // Test 1*1    -> 1
         [Test]
         public void Test024() {
-            Assert.AreEqual(C(1), Fold(C(1).E * C(1)));
+            Assert.AreEqual(C(1), Fold(C(1).C * C(1)));
         }
         // Test 1*C    -> C
         [Test]
         public void Test025() {
-            Assert.AreEqual(C(2), Fold(C(1).E * C(2)));
+            Assert.AreEqual(C(2), Fold(C(1).C * C(2)));
         }
         // Test 1*P[V] -> P[V]
         [Test]
         public void Test026() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            IAbstractExpr fold = Fold(C(1).E * p);
+            IAbstractExpr fold = Fold(C(1).C * p);
             Assert.AreEqual(p, fold);
         }
         // Test 1*V    -> V
         [Test]
         public void Test027() {
             IAbstractExpr v = V("x");
-            IAbstractExpr fold = Fold(C(1).E * v);
+            IAbstractExpr fold = Fold(C(1).C * v);
             Assert.AreEqual(v, fold);
         }
         // Test 1+0    -> 1
         [Test]
         public void Test028() {
-            Assert.AreEqual(C(1), Fold(C(1).E + C(0)));
+            Assert.AreEqual(C(1), Fold(C(1).C + C(0)));
         }
         // Test 1+1    -> C
         [Test]
         public void Test029() {
-            Assert.AreEqual(C(2), Fold(C(1).E + C(1)));
+            Assert.AreEqual(C(2), Fold(C(1).C + C(1)));
         }
         // Test 1+C    -> C'
         [Test]
         public void Test030() {
-            Assert.AreEqual(C(5), Fold(C(1).E + C(4)));
+            Assert.AreEqual(C(5), Fold(C(1).C + C(4)));
         }
         // Test 1+P[V] -> P'[V]
         [Test]
         public void Test031() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 1, 2, 4);
-            Assert.AreEqual(p_, Fold(C(1).E + p));
+            Assert.AreEqual(p_, Fold(C(1).C + p));
         }
         // Test 1+V    -> P[V]
         [Test]
         public void Test032() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 1, 1);
-            Assert.AreEqual(p, Fold(C(1).E + v));
+            Assert.AreEqual(p, Fold(C(1).C + v));
         }
         // Test 1/0    -> PositiveInfinity
         [Test]
         public void Test033() {
-            Assert.AreEqual(C(double.PositiveInfinity), Fold(C(1).E / C(0)));
+            Fold(C(1).C / C(0));
+            // No assertion - I do not really care for the result.
         }
         // Test 1/1    -> 1
         [Test]
         public void Test034() {
-            Assert.AreEqual(C(1), Fold(C(1).E / C(1)));
+            Assert.AreEqual(C(1), Fold(C(1).C / C(1)));
         }
         // Test 1/C    -> C'
         [Test]
         public void Test035() {
-            Assert.AreEqual(C(-0.5), Fold(C(1).E / C(-2)));
+            Assert.AreEqual(C(-0.5), Fold(C(1).C / C(-2)));
         }
         // Test 1/P[V] -> E
         [Test]
         public void Test036() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(C(1).E / p));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(C(1).C / p));
         }
         // Test 1/V    -> E
         [Test]
         public void Test037() {
             IAbstractExpr v = V("x");
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(C(1).E / v));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(C(1).C / v));
         }
         // Test 1²        -> 1
         [Test]
@@ -284,24 +290,24 @@ namespace Movimentum.Unittests {
         // Test C*0    -> 0
         [Test]
         public void Test039() {
-            Assert.AreEqual(C(0), Fold(C(2).E * C(0)));
+            Assert.AreEqual(C(0), Fold(C(2).C * C(0)));
         }
         // Test C*1    -> C
         [Test]
         public void Test040() {
-            Assert.AreEqual(C(-7), Fold(C(-7).E * C(1)));
+            Assert.AreEqual(C(-7), Fold(C(-7).C * C(1)));
         }
         // Test C*C'   -> C"
         [Test]
         public void Test041() {
-            Assert.AreEqual(C(42), Fold(C(-7).E * C(-6)));
+            Assert.AreEqual(C(42), Fold(C(-7).C * C(-6)));
         }
         // Test C*P[V] -> P'[V]
         [Test]
         public void Test042() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 2, 4, 6);
-            IAbstractExpr fold = Fold(C(2).E * p);
+            IAbstractExpr fold = Fold(C(2).C * p);
             Assert.AreEqual(p_, fold);
         }
         // Test C*V    -> P[V]
@@ -309,64 +315,65 @@ namespace Movimentum.Unittests {
         public void Test043() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 5, 0);
-            IAbstractExpr fold = Fold(C(5).E * v);
+            IAbstractExpr fold = Fold(C(5).C * v);
             Assert.AreEqual(p, fold);
         }
         // Test C+0    -> C
         [Test]
         public void Test044() {
-            Assert.AreEqual(C(-7), Fold(C(-7).E + C(0)));
+            Assert.AreEqual(C(-7), Fold(C(-7).C + C(0)));
         }
         // Test C+1    -> C'
         [Test]
         public void Test045() {
-            Assert.AreEqual(C(-6), Fold(C(-7).E + C(1)));
+            Assert.AreEqual(C(-6), Fold(C(-7).C + C(1)));
         }
         // Test C+C'   -> C"
         [Test]
         public void Test046() {
-            Assert.AreEqual(C(0), Fold(C(-7).E + C(7)));
-            Assert.AreEqual(C(23), Fold(C(-7).E + C(6).E * C(5)));
-            Assert.AreEqual(C(-37), Fold(C(-7).E * C(6) + C(5)));
+            Assert.AreEqual(C(0), Fold(C(-7).C + C(7)));
+            Assert.AreEqual(C(23), Fold(C(-7).C + C(6).C * C(5)));
+            Assert.AreEqual(C(-37), Fold(C(-7).C * C(6) + C(5)));
         }
         // Test C+P[V] -> P'[V]
         [Test]
         public void Test047() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 1, 2, -4);
-            Assert.AreEqual(p_, Fold(C(-7).E + p));
+            Assert.AreEqual(p_, Fold(C(-7).C + p));
         }
         // Test C+V    -> P[V]
         [Test]
         public void Test048() {
             IAbstractExpr p = P("x", 1, -3);
-            Assert.AreEqual(p, Fold(C(-3).E + V("x")));
+            Assert.AreEqual(p, Fold(C(-3).C + V("x")));
         }
         // Test C/0    -> PositiveInfinity
         [Test]
         public void Test049() {
-            Assert.AreEqual(C(double.PositiveInfinity), Fold(C(1).E / C(0)));
+            Fold(C(1).C / C(0));
+            // No assertion - I do not really care for the result.
         }
         // Test C/1    -> C
         [Test]
         public void Test050() {
-            Assert.AreEqual(C(9), Fold(C(9).E / C(1)));
+            Assert.AreEqual(C(9), Fold(C(9).C / C(1)));
         }
         // Test C/C'   -> C"
         [Test]
         public void Test051() {
-            Assert.AreEqual(C(3), Fold(C(12).E / C(4)));
+            Assert.AreEqual(C(3), Fold(C(12).C / C(4)));
         }
         // Test C/P[V] -> E
         [Test]
         public void Test052() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(C(-3).E / p));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(C(-3).C / p));
         }
         // Test C/V    -> E
         [Test]
         public void Test053() {
-            IAbstractExpr fold = Fold(C(-3).E / V("x"));
+            IAbstractExpr fold = Fold(C(-3).C / V("x"));
             Assert.IsNotInstanceOf<IPolynomial>(fold);
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
@@ -379,14 +386,14 @@ namespace Movimentum.Unittests {
         [Test]
         public void Test055() {
             IAbstractExpr p = P("x", 1, -3);
-            IAbstractExpr fold = Fold(p.E * C(0));
+            IAbstractExpr fold = Fold(p.C * C(0));
             Assert.AreEqual(C(0), fold);
         }
         // Test P[V]*1     -> P[V]
         [Test]
         public void Test056() {
             IAbstractExpr p = P("x", 1, -3);
-            IAbstractExpr fold = Fold(p.E * C(1));
+            IAbstractExpr fold = Fold(p.C * C(1));
             Assert.AreEqual(p, fold);
         }
         // Test P[V]*C     -> P'[V]
@@ -394,7 +401,7 @@ namespace Movimentum.Unittests {
         public void Test057() {
             IAbstractExpr p = P("x", 1, 6, -3);
             IAbstractExpr p_ = P("x", -2, -12, 6);
-            IAbstractExpr fold = Fold(p.E * C(-2));
+            IAbstractExpr fold = Fold(p.C * C(-2));
             Assert.AreEqual(p_, fold);
         }
         // Test P[V]*P[V'] -> E
@@ -402,7 +409,7 @@ namespace Movimentum.Unittests {
         public void Test058() {
             IAbstractExpr p = P("x", 1, 2);
             IAbstractExpr p_ = P("y", 2, 1);
-            IAbstractExpr fold = Fold(p.E * p_);
+            IAbstractExpr fold = Fold(p.C * p_);
             Assert.IsNotInstanceOf<IPolynomial>(fold);
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
@@ -417,41 +424,41 @@ namespace Movimentum.Unittests {
             // -------------
             // 2  7 16 17 12
             IAbstractExpr p__ = P("x", 2, 7, 16, 17, 12);
-            Assert.AreEqual(p__, Fold(p.E * p_));
-            Assert.AreEqual(p__, Fold(p_.E * p));
+            Assert.AreEqual(p__, Fold(p.C * p_));
+            Assert.AreEqual(p__, Fold(p_.C * p));
         }
         // Test P[V]*V     -> P'[V]
         [Test]
         public void Test060() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 1, 2, 3, 0);
-            Assert.AreEqual(p_, Fold(p.E * V("x")));
+            Assert.AreEqual(p_, Fold(p.C * V("x")));
         }
         // Test P[V]*V'    -> E
         [Test]
         public void Test061() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.E * V("y")));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.C * V("y")));
         }
         // Test P[V]+0     -> P[V]
         [Test]
         public void Test062() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.AreEqual(p, Fold(p.E + C(0)));
+            Assert.AreEqual(p, Fold(p.C + C(0)));
         }
         // Test P[V]+1     -> P'[V]
         [Test]
         public void Test063() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 1, 2, 4);
-            Assert.AreEqual(p_, Fold(p.E + C(1)));
+            Assert.AreEqual(p_, Fold(p.C + C(1)));
         }
         // Test P[V]+C     -> P'[V]
         [Test]
         public void Test064() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 1, 2, 103);
-            Assert.AreEqual(p_, Fold(p.E + C(100)));
+            Assert.AreEqual(p_, Fold(p.C + C(100)));
         }
         // Test P[V]+P'[V] -> P"[V]
         [Test]
@@ -459,61 +466,60 @@ namespace Movimentum.Unittests {
             IAbstractExpr p = P("x", 0, 1, 2, 3);
             IAbstractExpr p_ = P("x", 1, 2, 3, 0);
             IAbstractExpr p__ = P("x", 1, 3, 5, 3);
-            Assert.AreEqual(p__, Fold(p.E + p_));
+            Assert.AreEqual(p__, Fold(p.C + p_));
         }
         // Test P[V]+P[V'] -> E
         [Test]
         public void Test066() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("y", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.E + p_));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.C + p_));
         }
         // Test P[V]+V     -> P'[V]
         [Test]
         public void Test067() {
             IAbstractExpr p = P("x", 1, 2, 4);
             IAbstractExpr p_ = P("x", 1, 3, 4);
-            Assert.AreEqual(p_, Fold(p.E + V("x")));
+            Assert.AreEqual(p_, Fold(p.C + V("x")));
         }
         // Test P[V]+V'    -> E
         [Test]
         public void Test068() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.E + V("y")));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.C + V("y")));
         }
         // Test P[V]/0     -> P'[V]
         [Test]
         public void Test069() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            IAbstractExpr p_ = P("x", double.PositiveInfinity, double.PositiveInfinity, double.PositiveInfinity);
-            IAbstractExpr fold = Fold(p.E / C(0));
-            Assert.AreEqual(p_, fold);
+            Fold(p.C / C(0));
+            // No assertion - I do not really care for the result.
         }
         // Test P[V]/1     -> P[V]
         [Test]
         public void Test070() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.AreEqual(p, Fold(p.E / C(1)));
+            Assert.AreEqual(p, Fold(p.C / C(1)));
         }
         // Test P[V]/C     -> P'[V]
         [Test]
         public void Test071() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 0.5, 1, 1.5);
-            Assert.AreEqual(p_, Fold(p.E / C(2)));
+            Assert.AreEqual(p_, Fold(p.C / C(2)));
         }
         // Test P[V]/P'[V] -> E
         [Test]
         public void Test072() {
             IAbstractExpr p = P("x", 1, 2, 3);
             IAbstractExpr p_ = P("x", 2, 3, 4);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.E / p_));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.C / p_));
         }
         // Test P[V]/V     -> V
         [Test]
         public void Test073a() {
             IAbstractExpr p = P("x", 1, 0, 0);
-            IAbstractExpr fold = Fold(p.E / V("x"));
+            IAbstractExpr fold = Fold(p.C / V("x"));
             Assert.IsNotInstanceOf<IVariable>(fold);
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
@@ -521,20 +527,20 @@ namespace Movimentum.Unittests {
         [Test]
         public void Test073b() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(Fold(p.E / V("x"))));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(Fold(p.C / V("x"))));
         }
         // Test P[V]/V     -> P[V] 
         [Test]
         public void Test074() {
             IAbstractExpr p = P("x", 1, 2, 0);
-            IAbstractExpr fold = Fold(p.E / V("x"));
+            IAbstractExpr fold = Fold(p.C / V("x"));
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
         // Test P[V]/V'    -> E
         [Test]
         public void Test075() {
             IAbstractExpr p = P("x", 1, 2, 3);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.E / V("y")));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(p.C / V("y")));
         }
         // Test P[V]² see Test005
 
@@ -542,14 +548,14 @@ namespace Movimentum.Unittests {
         [Test]
         public void Test076() {
             IAbstractExpr v = V("x");
-            IAbstractExpr fold = Fold(v.E * C(0));
+            IAbstractExpr fold = Fold(v.C * C(0));
             Assert.AreEqual(C(0), fold);
         }
         // Test V*1     -> V
         [Test]
         public void Test077() {
             IAbstractExpr v = V("x");
-            IAbstractExpr fold = Fold(v.E * C(1));
+            IAbstractExpr fold = Fold(v.C * C(1));
             Assert.AreEqual(v, fold);
         }
         // Test V*C     -> P
@@ -557,7 +563,7 @@ namespace Movimentum.Unittests {
         public void Test078() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 3, 0);
-            IAbstractExpr fold = Fold(v.E * C(3));
+            IAbstractExpr fold = Fold(v.C * C(3));
             Assert.AreEqual(p, fold);
         }
         // Test V*P[V'] -> E
@@ -565,7 +571,7 @@ namespace Movimentum.Unittests {
         public void Test079() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("y", 3, 0);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.E * p));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.C * p));
         }
         // Test V*P[V]  -> P'[V]
         [Test]
@@ -573,47 +579,47 @@ namespace Movimentum.Unittests {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 3, 0);
             IAbstractExpr p_ = P("x", 3, 0, 0);
-            Assert.AreEqual(p_, Fold(v.E * p));
+            Assert.AreEqual(p_, Fold(v.C * p));
         }
         // Test V*V     -> P[V]
         [Test]
         public void Test081() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 1, 0, 0);
-            Assert.AreEqual(p, Fold(v.E * v));
+            Assert.AreEqual(p, Fold(v.C * v));
         }
         // Test V*V'    -> E
         [Test]
         public void Test082() {
             IAbstractExpr v = V("x");
             IAbstractExpr v_ = V("y");
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.E * v_));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.C * v_));
         }
         // Test V+0     -> V
         [Test]
         public void Test083() {
-            Assert.AreEqual(V("x"), Fold(V("x").E + C(0)));
+            Assert.AreEqual(V("x"), Fold(V("x").C + C(0)));
         }
         // Test V+1     -> P[V]
         [Test]
         public void Test084() {
             IAbstractExpr p = P("x", 1, 1);
             IAbstractExpr v = V("x");
-            Assert.AreEqual(p, Fold(v.E + C(1)));
+            Assert.AreEqual(p, Fold(v.C + C(1)));
         }
         // Test V+C     -> P[V]
         [Test]
         public void Test085() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 1, -13);
-            Assert.AreEqual(p, Fold(v.E + C(-13)));
+            Assert.AreEqual(p, Fold(v.C + C(-13)));
         }
         // Test V+P[V'] -> E
         [Test]
         public void Test086() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("y", 3, 0);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.E + p));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.C + p));
         }
         // Test V+P[V]  -> P[V]
         [Test]
@@ -621,63 +627,61 @@ namespace Movimentum.Unittests {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 2, 3, 0);
             IAbstractExpr p_ = P("x", 2, 4, 0);
-            Assert.AreEqual(p_, Fold(v.E + p));
+            Assert.AreEqual(p_, Fold(v.C + p));
         }
         // Test V+V     -> P[V]
         [Test]
         public void Test088() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 2, 0);
-            Assert.AreEqual(p, Fold(v.E + v));
+            Assert.AreEqual(p, Fold(v.C + v));
         }
         // Test V+V'    -> E
         [Test]
         public void Test089() {
             IAbstractExpr v = V("x");
             IAbstractExpr v_ = V("y");
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.E + v_));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.C + v_));
         }
         // Test V/0     -> P
         [Test]
         public void Test090() {
-            IAbstractExpr v = V("x");
-            IAbstractExpr fold = Fold(v.E / C(0));
-            var p = P("x", double.PositiveInfinity, double.NaN);
-            Assert.AreEqual(p, fold);
+            Fold(V("x").C / C(0));
+            // No assertion - I do not really care for the result.
         }
         // Test V/1     -> V
         [Test]
         public void Test091() {
             IAbstractExpr v = V("x");
-            Assert.AreEqual(v, Fold(v.E / C(1)));
+            Assert.AreEqual(v, Fold(v.C / C(1)));
         }
         // Test V/C     -> P[V]
         [Test]
         public void Test092() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 0.25, 0);
-            Assert.AreEqual(p, Fold(v.E / C(4)));
+            Assert.AreEqual(p, Fold(v.C / C(4)));
         }
         // Test V/P[V]  -> E
         [Test]
         public void Test093() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 2, 1);
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.E / p));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.C / p));
         }
         // Test V/P[V]  -> C
         [Test]
         public void Test093b() {
             IAbstractExpr v = V("x");
             IAbstractExpr p = P("x", 2, 0);
-            IAbstractExpr fold = Fold(v.E / p);
+            IAbstractExpr fold = Fold(v.C / p);
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
         // Test V/V     -> 1
         [Test]
         public void Test094() {
             IAbstractExpr v = V("x");
-            IAbstractExpr fold = Fold(v.E / v);
+            IAbstractExpr fold = Fold(v.C / v);
             Assert.IsInstanceOf<BinaryExpression>(fold);
         }
         // Test V/V'    -> E
@@ -685,7 +689,7 @@ namespace Movimentum.Unittests {
         public void Test095() {
             IAbstractExpr v = V("x");
             IAbstractExpr v_ = V("y");
-            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.E / v_));
+            Assert.IsNotInstanceOf<IPolynomial>(Fold(v.C / v_));
         }
         // Test V²        -> P[V]
         [Test]
@@ -749,6 +753,31 @@ namespace Movimentum.Unittests {
             Assert.IsNotInstanceOf<IPolynomial>(Fold(new UnaryExpression(p, new PositiveSquareroot())));
         }
 
+        [Test]
+        public void TestManyMinuses() {
+            UnaryExpression a = new UnaryExpression(Polynomial.CreateNamedVariable("x"), new Sin());
+            AbstractExpr b = a.C * a; //new UnaryExpression(a, new Square());
+            IAbstractExpr[] exprs = new IAbstractExpr[] {
+                a,
+                b,
+                new UnaryExpression(Polynomial.CreateNamedVariable("x"), new FormalSquareroot()),
+                new UnaryExpression(Polynomial.CreateNamedVariable("x"), new PositiveSquareroot()),
+                -a,
+                a + b,
+                a * b,
+                a / b
+            };
+            IAbstractExpr[] exprs2 = exprs;
+            var foldingVisitor = new PolynomialFoldingVisitor();
+            for (int i = 0; i < 4; i++) {
+                exprs2 = exprs2.Select(e => -(-e.C).C).ToArray();
+                for (int j = 0; j < exprs.Length; j++) {
+                    //Assert.AreEqual(exprs[j], exprs2[j].Accept(foldingVisitor, Ig.nore));
+                    Assert.AreEqual(exprs[j], exprs2[j].Accept(foldingVisitor, 0));
+                }
+            }
+        }
+
         #endregion PolynomialFoldingVisitor tests
 
         [Test]
@@ -757,13 +786,69 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(expected, P("x", 1, 2, 3, 4).Accept(new EvaluationVisitor(V("x"), 2), Ig.nore), 1e-14);
         }
 
+        [Test]
+        public void TestSquare() {
+            AbstractExpr p = new UnaryExpression(V("c").C + C(-1) + C(-1) + C(-0.5), new Square());
+            // (c-2.5)² = c²-5c+6.25
+            IPolynomial p_ = Polynomial.CreatePolynomial(V("c"), 1, -5, 6.25);
+            IAbstractExpr fold = Fold(p);
+            Assert.AreEqual(fold, p_);
+        }
+
+        [Test]
+        public void TestSquare2() {
+            AbstractExpr p = new UnaryExpression(C(-0.5).C + V("a") + V("b") + V("c"), new Square());
+            // (a-0.5+b+c)² 
+            // = a²-0.5a+ab+ac + -0.5a+0.25-0.5b-0.5c + ab-0.5b+b²+bc + ac-0.5c+bc+c²
+            // = a²-0.5a-0.5a+0.25 - 0.5b-0.5b+b² -0.5c-0.5c+c² + ab+ac+ab+bc+ac+bc
+            // = a²-a+0.25 + b²-b + c²-c + ab+ac+ab+bc+ac+bc
+            IPolynomial pa = Polynomial.CreatePolynomial(V("a"), 1, -1, 0.25);
+            IPolynomial pb = Polynomial.CreatePolynomial(V("b"), 1, -1, 0);
+            IPolynomial pc = Polynomial.CreatePolynomial(V("c"), 1, -1, 0);
+            AbstractExpr e = V("a").C * V("b") + V("a").C * V("c") + V("b").C * V("a") + V("b").C * V("c") + V("c").C * V("a") + V("c").C * V("b");
+            AbstractExpr expected = pa.C + (pb.C + (pc.C + e));
+            IAbstractExpr fold = Fold(p);
+            for (double a = -3.5; a < 4; a++) {
+                for (double b = -3.5; b < 4; b++) {
+                    for (double c = -3.5; c < 4; c++) {
+                        var visitor = new EvaluationVisitor(new Dictionary<IVariable, double>() { { V("a"), a }, { V("b"), b }, { V("c"), c } });
+                        double f = fold.Accept(visitor);
+                        double exp = expected.Accept(visitor);
+                        Assert.AreEqual(exp, f, 1e-5);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void TestSquare3() {
+            AbstractExpr p = new UnaryExpression(C(1).C + V("a") + V("b"), new Square());
+            // (a+b+1)² 
+            // = a²+ab+a + ab+b²+b + a+b+1
+            // = a²+2a+1 + b²+2b + ab+ab
+            IPolynomial pa = Polynomial.CreatePolynomial(V("a"), 1, 2, 1);
+            IPolynomial pb = Polynomial.CreatePolynomial(V("b"), 1, 2, 0);
+            AbstractExpr e = V("a").C * V("b") + V("a").C * V("b");
+            var expected = pa.C + (pb.C + e);
+            IAbstractExpr fold = Fold(p);
+            for (double a = -3.5; a < 4; a++) {
+                for (double b = -3.5; b < 4; b++) {
+                    var visitor = new EvaluationVisitor(new Dictionary<IVariable, double>() { { V("a"), a }, { V("b"), b } });
+                    double f = fold.Accept(visitor);
+                    double exp = expected.Accept(visitor);
+                    Assert.AreEqual(exp, f, 1e-5);
+                }
+            }
+        }
+
+
         #region Rewriting of polynomials
 
         [Test]
         public void TestRewritePolynomialWithPolynomial() {
             IPolynomial p = P("x", 1, 2, 3, 4);
             IPolynomial expected = P("y", 1, 0, 2, 0, 3, 0, 4);
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), V("y").E * V("y")), Ig.nore));
+            IAbstractExpr result = Fold(p.Accept(new RewritingVisitor(V("x"), V("y").C * V("y")), Ig.nore));
             Assert.AreEqual(expected, result);
         }
 
@@ -771,14 +856,14 @@ namespace Movimentum.Unittests {
         public void TestRewritePolynomialWithSquareY() {
             IPolynomial p = P("x", 1, 2, 3, 4);
             IPolynomial expected = P("y", 1, 0, 2, 0, 3, 0, 4);
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), new UnaryExpression(V("y"), new Square())), Ig.nore));
+            IAbstractExpr result = Fold(p.Accept(new RewritingVisitor(V("x"), new UnaryExpression(V("y"), new Square())), Ig.nore));
             Assert.AreEqual(expected, result);
         }
 
         [Test]
         public void TestRewritePolynomialWithItself() {
             IPolynomial p = P("x", 1, 2, 3, 4);
-            Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), p), Ig.nore));
+            Fold(p.Accept(new RewritingVisitor(V("x"), p), Ig.nore));
             // It works :-)
         }
 
@@ -791,7 +876,7 @@ namespace Movimentum.Unittests {
             // x^3 + 5x^2 + 10x + 10
 
             IPolynomial expected = P("x", 1, 5, 10, 10);
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), V("x").E + C(1)), Ig.nore));
+            IAbstractExpr result = Fold(p.Accept(new RewritingVisitor(V("x"), V("x").C + C(1)), Ig.nore));
             Assert.AreEqual(expected, result);
         }
 
@@ -804,7 +889,7 @@ namespace Movimentum.Unittests {
             // 8x^3 + 20x^2 + 20x + 10
 
             IPolynomial expected = P("x", 8, 20, 20, 10);
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), (V("x").E * C(2)).E + C(1)), Ig.nore));
+            IAbstractExpr result = Fold(p.Accept(new RewritingVisitor(V("x"), (V("x").C * C(2)).C + C(1)), Ig.nore));
             Assert.AreEqual(expected, result);
         }
 
@@ -812,19 +897,21 @@ namespace Movimentum.Unittests {
         public void TestRewritePolynomialWithMinusX() {
             IPolynomial p = P("x", 1, 2, 3, 4);
             IPolynomial expected = P("x", -1, 2, -3, 4);
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), -V("x").E), Ig.nore));
+            IAbstractExpr result = Fold(p.Accept(new RewritingVisitor(V("x"), -V("x").C), Ig.nore));
             Assert.AreEqual(expected, result);
         }
 
         [Test]
         public void TestRewritePolynomialWithSinX() {
             IPolynomial p = P("x", 1, 2, 3, 4);
-            AbstractExpr sinx = new UnaryExpression(V("x"), new Sin()).E;
-            BinaryExpression expected = sinx * (sinx * (C(1).E * sinx + C(2)) + C(3)) + C(4);
+            AbstractExpr sinx = new UnaryExpression(V("x"), new Sin()).C;
+            AbstractExpr expected = sinx * (sinx * (sinx + C(2)) + C(3)) + C(4);
+            for (double x = -4; x < 5; x++) {
+                IAbstractExpr result = Fold(p.Accept(new RewritingVisitor(V("x"), sinx), Ig.nore));
+                var eval = new EvaluationVisitor(V("x"), x);
+                Assert.AreEqual(expected.Accept(eval), result.Accept(eval), 1e-5);
+            }
 
-            IAbstractExpr result = Fold(p.Accept(new RewritingVisitorSTEPC(V("x"), sinx), Ig.nore));
-
-            Assert.AreEqual(expected, result);
         }
 
         #endregion Rewriting of polynomials
@@ -833,9 +920,9 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestNormalizeBothSides() {
-            var p = (P("x", 1, 2, 3).E + new UnaryExpression(V("x"), new PositiveSquareroot()).E
-                     + (P("x", 2, 3, 4).E + new UnaryExpression(V("x"), new PositiveSquareroot())));
-            var p_ = P("x", 3, 5, 7).E + (new UnaryExpression(V("x"), new PositiveSquareroot()).E + new UnaryExpression(V("x"), new PositiveSquareroot()));
+            var p = (P("x", 1, 2, 3).C + new UnaryExpression(V("x"), new PositiveSquareroot()).C
+                     + (P("x", 2, 3, 4).C + new UnaryExpression(V("x"), new PositiveSquareroot())));
+            var p_ = P("x", 3, 5, 7).C + (new UnaryExpression(V("x"), new PositiveSquareroot()).C + new UnaryExpression(V("x"), new PositiveSquareroot()));
             var fold = Fold(p);
             Assert.AreEqual(p_, fold);
         }
@@ -843,14 +930,13 @@ namespace Movimentum.Unittests {
 
         [Test]
         public void TestNormalizeRightSides() {
-            var p = C(200).E + -(P("x", 2, 3, 4).E + new UnaryExpression(V("x"), new PositiveSquareroot()));
+            var p = C(200).C + -(P("x", 2, 3, 4).C + new UnaryExpression(V("x"), new PositiveSquareroot()));
 
-            var p_ = P("x", -2, -3, 196).E + -(new UnaryExpression(V("x"), new PositiveSquareroot()).E);
-            var fold = Fold(p);
+            AbstractExpr p_ = P("x", -2, -3, 196).C + -(new UnaryExpression(V("x"), new PositiveSquareroot()).C);
+            IAbstractExpr fold = Fold(p);
             Assert.AreEqual(p_, fold);
         }
 
         #endregion Normalizing of expressions with polynomials
-
     }
 }
