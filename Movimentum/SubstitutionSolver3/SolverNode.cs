@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -90,7 +91,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
             //var foldingVisitor = new ConstantFoldingVisitor();
             var foldingVisitor = new PolynomialFoldingVisitor();
-            _constraints = constraints.Select(c => c.Accept(foldingVisitor, Ig.nore));
+            _constraints = constraints.Select(c => c.Accept(foldingVisitor, Ig.nore)).ToArray(); // !!!TOARRAY
             foreach (var c in _constraints) {
                 c.SetDebugCreatingNodeIdIfMissing(DebugId);
             }
@@ -113,30 +114,22 @@ namespace Movimentum.SubstitutionSolver3 {
             SolverNode solutionOrNull;
             do {
                 if (!open.Any()) {
-                    var promisingNodes = DebugDeadNodes.Where(n => !n.DefinitelyDead);
-                    Debug.WriteLine("---- " + promisingNodes.Count() + " Promising dead nodes ----");
-                    foreach (var deadNode in promisingNodes) {
-                        Debug.WriteLine(deadNode);
-                    }
-                    var definitelyDeadNodes = DebugDeadNodes.Where(n => n.DefinitelyDead);
-                    Debug.WriteLine("---- " + definitelyDeadNodes.Count() + " Definitely dead nodes ----");
-                    foreach (var deadNode in definitelyDeadNodes) {
-                        Debug.WriteLine(deadNode);
-                    }
+                    DebugWriteDeadNodes();
                     throw new Exception("No solution found for frame " + frameNo + " - no more open nodes. Look into DebugDeadNodes to see nodes that did not mathc a rule.");
                 }
 
-                open = SolverStep(open, previousValues, out solutionOrNull);
+                open = SolverStep(open, previousValues, out solutionOrNull, debugExpectedResults);
 
-                if (debugExpectedResults != null) {
-                    foreach (var o in open.Except(DebugWrittenNodes)) {
-                        string debugOutifDead = o.DebugToStringIfDead(debugExpectedResults);
-                        Debug.WriteLine(debugOutifDead);
-                    }
-                    DebugWrittenNodes.UnionWith(open);
-                }
+                //if (debugExpectedResults != null) {
+                //    foreach (var node in open.Except(DebugWrittenNodes)) {
+                //        string debugOutifDead = node.DebugToString(debugExpectedResults);
+                //        Debug.WriteLine(debugOutifDead);
+                //    }
+                //    DebugWrittenNodes.UnionWith(open);
+                //}
 
                 if (--loopLimit < 0) {
+                    DebugWriteDeadNodes();
                     throw new Exception("Cannot find solution for frame " + frameNo + " - loop limit exhausted");
                 }
             } while (solutionOrNull == null);
@@ -151,26 +144,40 @@ namespace Movimentum.SubstitutionSolver3 {
                 .ToDictionary(kvp => kvp.Key, kvp => (VariableWithValue)kvp.Value);
         }
 
-        private string DebugToStringIfDead(EvaluationVisitor debugExpectedResults) {
+        private static void DebugWriteDeadNodes() {
+            var promisingNodes = DebugDeadNodes.Where(n => !n.DefinitelyDead);
+            Debug.WriteLine("---- " + promisingNodes.Count() + " Promising dead nodes ----");
+            foreach (var deadNode in promisingNodes) {
+                Debug.WriteLine(deadNode);
+            }
+            var definitelyDeadNodes = DebugDeadNodes.Where(n => n.DefinitelyDead);
+            Debug.WriteLine("---- " + definitelyDeadNodes.Count() + " Definitely dead nodes ----");
+            foreach (var deadNode in definitelyDeadNodes) {
+                Debug.WriteLine(deadNode);
+            }
+        }
+
+        private string DebugToString(EvaluationVisitor debugExpectedResults) {
             var sb = new StringBuilder();
             bool allTrue = true;
             sb.AppendLine("SolverNode " + DebugOriginChain(4));
-            foreach (var c in Constraints) {
+            foreach (ScalarConstraint c in Constraints) {
                 string result;
                 try {
                     bool isTrue = c.Accept(debugExpectedResults, Ig.nore);
-                    result = isTrue ? "  Y " : "  N ";
+                    result = isTrue ? "  Y " : "  N [" + c.Expr.Accept(debugExpectedResults, Ig.nore).ToString(CultureInfo.InvariantCulture) + "]";
                     allTrue &= isTrue;
                 } catch (NotSupportedException) {
                     result = "  ? ";
                 }
                 sb.Append(result);
-                sb.AppendLine(c.ToString());
+                sb.AppendLine(c.ToString().WithParDepth(3));
             }
             foreach (var c in ClosedVariables.Values) {
                 sb.Append("  ");
                 sb.AppendLine(c.ToString());
             }
+            sb.AppendLine(debugExpectedResults.DebugVariableValuesAsString());
             return (allTrue ? "+" : "-") + sb;
         }
 
@@ -206,7 +213,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     foreach (var varWithBacksub in varsWithBacksubstitutions) {
                         IAbstractExpr rewritten = varWithBacksub.Expr
                                                                .Accept(rewriter)
-                                                               .Accept(foldingVisitor, 0);
+                                                               .Accept(foldingVisitor);
                         // If the result, after constant folding, is a constant, we have found a new solution value.
                         // Otherwise, we still have a - maybe smaller - backsubstitution for this variable.
                         if (rewritten is IConstant) {
@@ -225,35 +232,57 @@ namespace Movimentum.SubstitutionSolver3 {
             }
         }
 
-        public static IEnumerable<SolverNode> SolverStep(
-                IEnumerable<SolverNode> open,
-                out SolverNode solutionOrNull) {
-            return SolverStep(open,
-                              new Dictionary<IVariable, VariableWithValue>(),
-                              out solutionOrNull);
-        }
-
-        public static IEnumerable<SolverNode> SolverStep(
-                IEnumerable<SolverNode> open,
-                IDictionary<IVariable, VariableWithValue> previousValues,
-                out SolverNode solutionOrNull) {
+        public static IEnumerable<SolverNode> SolverStep(IEnumerable<SolverNode> open, 
+                IDictionary<IVariable, VariableWithValue> previousValues, 
+                out SolverNode solutionOrNull, 
+                EvaluationVisitor debugExpectedResults = null) {
             double minRank = open.Min(cs => cs.Rank);
-            SolverNode selected = open.First(cs => cs.Rank <= minRank);
-            IEnumerable<SolverNode> expandedSets = selected.Expand( /*previousValues*/).ToArray();
+            SolverNode selected;
+            if (debugExpectedResults == null) {
+                selected = open.First(cs => cs.Rank <= minRank);
+            } else {
+                // The debugExpectedResults are intended to steer the solver only on
+                // nodes that match the expected result!
+                selected = open.FirstOrDefault(cs =>
+                    cs.Constraints.All(c => DebugIsTrueOrUnknown(c, debugExpectedResults))
+                );
+                if (selected == null) {
+                    Debug.WriteLine("---- All open nodes do not match expected results:");
+                    foreach (var node in open) {
+                        Debug.WriteLine(node.DebugToString(debugExpectedResults));
+                    }
 
-            if (!expandedSets.Any()) {
+                    throw new InvalidOperationException("No node matches expected results");
+                }
+            }
+            IEnumerable<SolverNode> expanded = selected.Expand( /*previousValues*/).ToArray();
+
+            if (!expanded.Any()) {
                 // Dead node - register in dead nodes.
                 DebugDeadNodes.Add(selected);
+
+                // ????
+                if (debugExpectedResults != null) {
+                    Debug.WriteLine(".... Constraint state " + selected.DebugToString(debugExpectedResults));
+                }
             }
 
             //IEnumerable<SolverNode> newOpen = open.Except(selected).Concat(expandedSets);
-            IEnumerable<SolverNode> newOpen = expandedSets.Concat(open.Except(selected));
+            IEnumerable<SolverNode> newOpen = expanded.Concat(open.Except(selected)).ToArray();
 
             // Not really correct: We should also check whether all anchor variables have
             // a single value. For the moment, in our tests, we live with this rough check.
-            solutionOrNull = expandedSets.FirstOrDefault(cs => cs.IsSolved());
+            solutionOrNull = expanded.FirstOrDefault(cs => cs.IsSolved());
 
             return newOpen;
+        }
+
+        private static bool DebugIsTrueOrUnknown(AbstractConstraint c, EvaluationVisitor debugExpectedResults) {
+            try {
+                return c.Accept(debugExpectedResults, Ig.nore);
+            } catch (NotSupportedException) {
+                return true;
+            }
         }
 
         public IEnumerable<SolverNode> Expand( /*IDictionary<IVariable, VariableRangeRestriction> previousValues*/) {
@@ -269,6 +298,7 @@ namespace Movimentum.SubstitutionSolver3 {
                     }
                 }
             }
+            Debug.WriteLine("No RuleAction matches " + this);
             return Enumerable.Empty<SolverNode>();
         }
 
@@ -353,7 +383,7 @@ namespace Movimentum.SubstitutionSolver3 {
                                          AbstractConstraint sourceConstraintToBeRemoved) {
             //var foldingVisitor = new ConstantFoldingVisitor();
             var foldingVisitor = new PolynomialFoldingVisitor();
-            expression = expression.Accept(foldingVisitor, 0);
+            expression = expression.Accept(foldingVisitor);
 
             // Rewrite all constraints
             //var rewriter = new RewritingVisitor(

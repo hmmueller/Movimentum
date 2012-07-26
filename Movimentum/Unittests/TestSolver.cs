@@ -127,7 +127,7 @@ namespace Movimentum.Unittests {
             // Do a step
             SolverNode solutionOrNull;
             IEnumerable<SolverNode> result =
-                SolverNode.SolverStep(new[] { current }, out solutionOrNull);
+                SolverNode.SolverStep(new[] { current }, new Dictionary<IVariable, VariableWithValue>(), out solutionOrNull);
 
             // Afterwards, we have a new node, but not yet a solution.
             Assert.AreEqual(1, result.Count());
@@ -172,7 +172,7 @@ namespace Movimentum.Unittests {
             // Do two steps that rewrite ve1 and ve2.
             SolverNode solutionOrNull;
             IEnumerable<SolverNode> expanded1 =
-                SolverNode.SolverStep(new[] { current }, out solutionOrNull);
+                SolverNode.SolverStep(new[] { current }, new Dictionary<IVariable, VariableWithValue>(), out solutionOrNull);
             Assert.AreEqual(1, expanded1.Count());
             Assert.IsNull(solutionOrNull);
 
@@ -182,7 +182,7 @@ namespace Movimentum.Unittests {
             //   0 = x + y
             //   0 = y + (5x + y + -(x+4))
             IEnumerable<SolverNode> expanded2 =
-                SolverNode.SolverStep(new[] { expanded1.First() }, out solutionOrNull);
+                SolverNode.SolverStep(new[] { expanded1.First() }, new Dictionary<IVariable, VariableWithValue>(), out solutionOrNull);
             Assert.AreEqual(1, expanded2.Count());
             Assert.IsNull(solutionOrNull);
 

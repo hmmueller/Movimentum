@@ -45,23 +45,23 @@ namespace Movimentum.SubstitutionSolver3 {
             return EMPTY;
         }
 
-        public Dictionary<IVariable, VariableDegree> Visit(INamedVariable namedVariable, Ignore p) {
-            return new Dictionary<IVariable, VariableDegree> { { namedVariable, VariableDegree.One } };
+        public Dictionary<IVariable, VariableDegree> Visit(INamedVariable namedVar, Ignore p) {
+            return new Dictionary<IVariable, VariableDegree> { { namedVar, VariableDegree.One } };
         }
 
-        public Dictionary<IVariable, VariableDegree> Visit(IAnchorVariable anchorVariable, Ignore p) {
-            return new Dictionary<IVariable, VariableDegree> { { anchorVariable, VariableDegree.One } };
+        public Dictionary<IVariable, VariableDegree> Visit(IAnchorVariable anchorVar, Ignore p) {
+            return new Dictionary<IVariable, VariableDegree> { { anchorVar, VariableDegree.One } };
         }
 
-        public Dictionary<IVariable, VariableDegree> Visit(UnaryExpression unaryExpression, Ignore p) {
-            Dictionary<IVariable, VariableDegree> innerResult = unaryExpression.Inner.Accept(this);
-            return unaryExpression.Op.Accept(this, innerResult, p);
+        public Dictionary<IVariable, VariableDegree> Visit(UnaryExpression unaryExpr, Ignore p) {
+            Dictionary<IVariable, VariableDegree> innerResult = unaryExpr.Inner.Accept(this);
+            return unaryExpr.Op.Accept(this, innerResult, p);
         }
 
-        public Dictionary<IVariable, VariableDegree> Visit(BinaryExpression binaryExpression, Ignore p) {
-            Dictionary<IVariable, VariableDegree> lhsResult = binaryExpression.Lhs.Accept(this);
-            Dictionary<IVariable, VariableDegree> rhsResult = binaryExpression.Rhs.Accept(this);
-            return binaryExpression.Op.Accept(this, lhsResult, rhsResult, p);
+        public Dictionary<IVariable, VariableDegree> Visit(BinaryExpression binaryExpr, Ignore p) {
+            Dictionary<IVariable, VariableDegree> lhsResult = binaryExpr.Lhs.Accept(this);
+            Dictionary<IVariable, VariableDegree> rhsResult = binaryExpr.Rhs.Accept(this);
+            return binaryExpr.Op.Accept(this, lhsResult, rhsResult, p);
         }
 
         public Dictionary<IVariable, VariableDegree> Visit(RangeExpr rangeExpr, Ignore p) {

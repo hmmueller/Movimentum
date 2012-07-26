@@ -42,40 +42,40 @@ namespace Movimentum.SubstitutionSolver3 {
             return Rewrite(constant);
         }
 
-        public IAbstractExpr Visit(INamedVariable namedVariable, Ignore p) {
-            return Rewrite(namedVariable);
+        public IAbstractExpr Visit(INamedVariable namedVar, Ignore p) {
+            return Rewrite(namedVar);
         }
 
-        public IAbstractExpr Visit(IAnchorVariable anchorVariable, Ignore p) {
-            return Rewrite(anchorVariable);
+        public IAbstractExpr Visit(IAnchorVariable anchorVar, Ignore p) {
+            return Rewrite(anchorVar);
         }
 
-        public IAbstractExpr Visit(UnaryExpression unaryExpression, Ignore p) {
-            if (unaryExpression.Equals(_from)) {
+        public IAbstractExpr Visit(UnaryExpression unaryExpr, Ignore p) {
+            if (unaryExpr.Equals(_from)) {
                 return _to;
             } else {
-                IAbstractExpr oldInner = unaryExpression.Inner;
+                IAbstractExpr oldInner = unaryExpr.Inner;
                 IAbstractExpr newInner = oldInner.Accept(this);
                 if (newInner != oldInner) {
-                    return new UnaryExpression(newInner, unaryExpression.Op);
+                    return new UnaryExpression(newInner, unaryExpr.Op);
                 } else {
-                    return unaryExpression;
+                    return unaryExpr;
                 }
             }
         }
 
-        public IAbstractExpr Visit(BinaryExpression binaryExpression, Ignore p) {
-            if (binaryExpression.Equals(_from)) {
+        public IAbstractExpr Visit(BinaryExpression binaryExpr, Ignore p) {
+            if (binaryExpr.Equals(_from)) {
                 return _to;
             } else {
-                IAbstractExpr oldLhs = binaryExpression.Lhs;
-                IAbstractExpr oldRhs = binaryExpression.Rhs;
+                IAbstractExpr oldLhs = binaryExpr.Lhs;
+                IAbstractExpr oldRhs = binaryExpr.Rhs;
                 IAbstractExpr newLhs = oldLhs.Accept(this);
                 IAbstractExpr newRhs = oldRhs.Accept(this);
                 if (newLhs != oldLhs | newRhs != oldRhs) {
-                    return new BinaryExpression(newLhs, binaryExpression.Op, newRhs);
+                    return new BinaryExpression(newLhs, binaryExpr.Op, newRhs);
                 } else {
-                    return binaryExpression;
+                    return binaryExpr;
                 }
             }
         }

@@ -1,377 +1,58 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace Movimentum.SubstitutionSolver3 {
     class PolynomialFoldingVisitor : ISolverModelConstraintVisitor<AbstractConstraint>
-                                          , ISolverModelExprVisitor<int, IAbstractExpr>
-                                          , ISolverModelUnaryOpVisitor<IPolynomial, int, IAbstractExpr>
-                                          , ISolverModelBinaryOpVisitor<IPolynomial, int, IAbstractExpr> {
+                                          , ISolverModelExprVisitor<Ignore, IAbstractExpr>
+                                          , ISolverModelUnaryOpVisitor<IAbstractExpr, Ignore, IAbstractExpr>
+                                          , ISolverModelBinaryOpVisitor<IAbstractExpr, Ignore, IAbstractExpr> {
         #region Implementation of ISolverModelConstraintVisitor<in Ignore,out ScalarConstraint>
 
         public AbstractConstraint Visit(EqualsZeroConstraint equalsZero, Ignore p) {
-            IAbstractExpr result = equalsZero.Expr.Accept(this, 0);
-            return result != equalsZero.Expr ? new EqualsZeroConstraint(result) : equalsZero;
+            return new EqualsZeroConstraint(equalsZero.Expr.Accept(this, p));
         }
 
         public AbstractConstraint Visit(MoreThanZeroConstraint moreThanZero, Ignore p) {
-            IAbstractExpr result = moreThanZero.Expr.Accept(this, 0);
-            return result != moreThanZero.Expr ? new MoreThanZeroConstraint(result) : moreThanZero;
+            return new MoreThanZeroConstraint(moreThanZero.Expr.Accept(this, p));
         }
 
         public AbstractConstraint Visit(AtLeastZeroConstraint atLeastZero, Ignore p) {
-            IAbstractExpr result = atLeastZero.Expr.Accept(this, 0);
-            return result != atLeastZero.Expr ? new AtLeastZeroConstraint(result) : atLeastZero;
+            return new AtLeastZeroConstraint(atLeastZero.Expr.Accept(this, p));
         }
 
         #endregion
 
         #region Implementation of ISolverModelExprVisitor<in Ignore,out AbstractExpr>
 
-        public IAbstractExpr Visit(IConstant constant, int depth) {
+        public IAbstractExpr Visit(IConstant constant, Ignore p) {
             return constant;
         }
 
-        public IAbstractExpr Visit(INamedVariable namedVariable, int depth) {
-            return namedVariable;
+        public IAbstractExpr Visit(INamedVariable namedVar, Ignore p) {
+            return namedVar;
         }
 
-        public IAbstractExpr Visit(IAnchorVariable anchorVariable, int depth) {
-            return anchorVariable;
+        public IAbstractExpr Visit(IAnchorVariable anchorVar, Ignore p) {
+            return anchorVar;
         }
 
-        public IAbstractExpr Visit(UnaryExpression unaryExpression, int depth) {
-            DebugCheckDepth(unaryExpression, depth);
-            IAbstractExpr oldInner = unaryExpression.Inner;
-            IAbstractExpr newInner = oldInner.Accept(this, depth + 1);
-            if (newInner is IPolynomial && !(unaryExpression.Op is FormalSquareroot)) {
-                return unaryExpression.Op.Accept(this, (IPolynomial)newInner, depth + 1);
-            } else if (newInner != oldInner) {
-                return NormalizeStepD(new UnaryExpression(newInner, unaryExpression.Op), depth);
-            } else {
-                return NormalizeStepD(unaryExpression, depth);
-            }
+        public IAbstractExpr Visit(UnaryExpression unaryExpr, Ignore p) {
+            IAbstractExpr newInner = unaryExpr.Inner.Accept(this, p);
+            return unaryExpr.Op.Accept(this, newInner, p);
         }
 
-        public IAbstractExpr Visit(BinaryExpression binaryExpression, int depth) {
-            DebugCheckDepth(binaryExpression, depth);
-            IAbstractExpr oldLhs = binaryExpression.Lhs;
-            IAbstractExpr oldRhs = binaryExpression.Rhs;
-            IAbstractExpr newLhs = oldLhs.Accept(this, depth + 1);
-            IAbstractExpr newRhs = oldRhs.Accept(this, depth + 1);
-            if (newLhs is IPolynomial & newRhs is IPolynomial) {
-                return binaryExpression.Op.Accept(this, (IPolynomial)newLhs, (IPolynomial)newRhs, depth + 1);
-            } else if (newLhs != oldLhs | newRhs != oldRhs) {
-                return NormalizeStepD(new BinaryExpression(newLhs, binaryExpression.Op, newRhs), depth);
-            } else {
-                return NormalizeStepD(binaryExpression, depth);
-            }
+        public IAbstractExpr Visit(BinaryExpression binaryExpr, Ignore p) {
+            IAbstractExpr newLhs = binaryExpr.Lhs.Accept(this, p);
+            IAbstractExpr newRhs = binaryExpr.Rhs.Accept(this, p);
+
+            return binaryExpr.Op.Accept(this, newLhs, newRhs, p);
         }
 
-        private static void DebugCheckDepth(IAbstractExpr expr, int depth) {
-            if (depth > 200) {
-                Debug.WriteLine("Polynomial folding reached depth 2000 with " + expr);
-            }
-        }
-
-        private static readonly TypeMatchTemplate<Polynomial> _poly1 = new TypeMatchTemplate<Polynomial>();
-        private static readonly TypeMatchTemplate<Polynomial> _poly2 = new TypeMatchTemplate<Polynomial>();
-        private static readonly TypeMatchTemplate<IAbstractExpr> _e1 = new TypeMatchTemplate<IAbstractExpr>();
-        private static readonly TypeMatchTemplate<IAbstractExpr> _e2 = new TypeMatchTemplate<IAbstractExpr>();
-        private static readonly TypeMatchTemplate<IConstant> _c = new TypeMatchTemplate<IConstant>();
-        private static readonly TypeMatchTemplate<UnaryExpression> _ue = new TypeMatchTemplate<UnaryExpression>();
-        private static readonly BinaryExpressionTemplate _tBothPlus = (_poly1 + _e1) + (_poly2 + _e2);
-        private static readonly BinaryExpressionTemplate _tLeftPlus = (_poly1 + _e1) + _poly2;
-        private static readonly BinaryExpressionTemplate _tLeftPlus2 = (_poly1 + _e1) + _e2;
-        private static readonly BinaryExpressionTemplate _tRightPlus = _poly1 + (_poly2 + _e2);
-        private static readonly BinaryExpressionTemplate _tRightPlus2 = _e1 + (_poly2 + _e2);
-        private static readonly UnaryExpressionTemplate _tBelowMinus = -(_poly1 + _e1);
-        // STEPF
-        private static readonly UnaryExpressionTemplate _tMinusMinus = -(-_e1);
-        // STEPG
-        private static readonly BinaryExpressionTemplate _tDevourConstant1 = (_poly1 + _e1) * _c;
-        private static readonly BinaryExpressionTemplate _tDevourConstant2 = (_poly1 + _e1) / _c;
-        // STEPH
-        private static readonly BinaryExpressionTemplate _tRightConstant1 = _e1 * _c;
-        private static readonly BinaryExpressionTemplate _tRightConstant2 = _e1 / _c;
-        // STEPI
-        //private static readonly BinaryExpressionTemplate _tSqrt1 = _poly1 * _ue;
-        //private static readonly BinaryExpressionTemplate _tSqrt2 = _ue * _poly1;
-        //private static readonly BinaryExpressionTemplate _tSqrt3 = _ue / _poly1;
-        private static readonly BinaryExpressionTemplate _tSqrt1 = _c * _ue;
-        private static readonly BinaryExpressionTemplate _tSqrt2 = _ue * _c;
-        private static readonly BinaryExpressionTemplate _tSqrt3 = _ue / _c;
-        // STEPJ
-        private static readonly BinaryExpressionTemplate _tBothTimes = (_poly1 * _e1) * (_poly2 * _e2);
-        private static readonly BinaryExpressionTemplate _tRightTimes = _poly1 * (_poly2 * _e2);
-        private static readonly BinaryExpressionTemplate _tLeftTimes = (_poly1 * _e1) * _poly2;
-        // STEPK
-        private static readonly BinaryExpressionTemplate _tPolynomialTimesMinus1 = _poly1 * _ue;
-        private static readonly BinaryExpressionTemplate _tPolynomialTimesMinus2 = _ue * _poly1;
-
-        private IAbstractExpr NormalizeStepD(UnaryExpression unaryExpression, int depth) {
-            {
-                ExpressionMatcher matcher = _tMinusMinus.CreateMatcher();
-                if (matcher.TryMatch(unaryExpression)) {
-                    // --Z --> Z
-                    IAbstractExpr result = matcher.Match(_e1);
-                    return Simplify(result, depth + 1);
-                }
-            }
-            {
-                // STEPF
-                ExpressionMatcher matcher = _tBelowMinus.CreateMatcher();
-                if (matcher.TryMatch(unaryExpression)) {
-                    // -(P + Z) --> -P + (-Z)
-                    IAbstractExpr result = (-matcher.Match(_poly1)).C + -matcher.Match(_e1).C;
-                    return Simplify(result, depth + 1);
-                }
-            }
-            return unaryExpression;
-        }
-
-        private IAbstractExpr NormalizeStepD(BinaryExpression binaryExpression, int depth) {
-            {
-                ExpressionMatcher matcher = _tBothPlus.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P[V] + Z) + (P'[V] + Z') --> P" + (Z + Z')
-                    Polynomial poly1 = matcher.Match(_poly1);
-                    Polynomial poly2 = matcher.Match(_poly2);
-                    if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        IAbstractExpr result = (poly1 + poly2).C
-                                                  + (matcher.Match(_e1).C + matcher.Match(_e2));
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tLeftPlus.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P[V] + Z) + P'[V] --> P"[V] + Z, where P" = P+P' simplified
-                    Polynomial poly1 = matcher.Match(_poly1);
-                    Polynomial poly2 = matcher.Match(_poly2);
-                    if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        IAbstractExpr result = (poly1 + poly2).C
-                                                  + matcher.Match(_e1);
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tLeftPlus2.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P + Z) + Z' --> P + (Z + Z')
-                    return matcher.Match(_poly1).C + (matcher.Match(_e1).C + matcher.Match(_e2));
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tRightPlus.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // P[V] + (P'[V] + Z') --> P"[V] + Z', where P" = P+P'
-                    Polynomial poly1 = matcher.Match(_poly1);
-                    Polynomial poly2 = matcher.Match(_poly2);
-                    if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        IAbstractExpr result = (poly1 + poly2).C
-                                                  + matcher.Match(_e2);
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tRightPlus2.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // Z + (P + Z') --> P + (Z + Z')
-                    return matcher.Match(_poly2).C + (matcher.Match(_e1).C + matcher.Match(_e2));
-                }
-            }
-            // STEPG
-            {
-                ExpressionMatcher matcher = _tDevourConstant1.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P + Z) * C --> P' + Z*C, where P'=P*C simplified
-                    // TODO: Why not simplify all, i.e., also Z*C??
-                    IConstant constant = matcher.Match(_c);
-                    IAbstractExpr result = (matcher.Match(_poly1).C * constant).C
-                                            + (matcher.Match(_e1).C * constant);
-                    return Simplify(result, depth);
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tDevourConstant2.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P + Z) / C --> [P' + Z/C] where c'i = ci/C
-                    IConstant constant = matcher.Match(_c);
-                    IAbstractExpr result = (matcher.Match(_poly1).C / constant).C
-                                                  + (matcher.Match(_e1).C / constant);
-                    return Simplify(result, depth);
-                }
-            }
-            // STEPH
-            {
-                ExpressionMatcher matcher = _tRightConstant1.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // E * C --> C * E
-                    IAbstractExpr result = matcher.Match(_c).C * matcher.Match(_e1);
-                    return Simplify(result, depth);
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tRightConstant2.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // E / C --> 1/C * E
-                    IAbstractExpr result =
-                        Polynomial.CreateConstant(1 / matcher.Match(_c).Value).C
-                        * matcher.Match(_e1);
-                    return Simplify(result, depth);
-                }
-            }
-            // STEPI
-            //{
-            //    ExpressionMatcher matcher = _tSqrt1.CreateMatcher();
-            //    if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is PositiveSquareroot) {
-            //        // P * sqrt(E) --> sqrt(P * P * E)
-            //        UnaryExpression result =
-            //            new UnaryExpression(
-            //                matcher.Match(_poly1).E * matcher.Match(_poly1) * matcher.Match(_ue).Inner,
-            //                new PositiveSquareroot());
-            //        return Simplify(result, depth);
-            //    }
-            //}
-            //{
-            //    ExpressionMatcher matcher = _tSqrt2.CreateMatcher();
-            //    if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is PositiveSquareroot) {
-            //        // sqrt(E) * P --> sqrt(P * P * E)
-            //        UnaryExpression result =
-            //            new UnaryExpression(
-            //                matcher.Match(_poly1).E * matcher.Match(_poly1) * matcher.Match(_ue).Inner,
-            //                new PositiveSquareroot());
-            //        return Simplify(result, depth);
-            //    }
-            //}
-            //{
-            //    ExpressionMatcher matcher = _tSqrt3.CreateMatcher();
-            //    if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is PositiveSquareroot) {
-            //        // sqrt(E) / P --> sqrt(E / (P * P))
-            //        UnaryExpression result =
-            //            new UnaryExpression(
-            //                matcher.Match(_ue).Inner.E / (matcher.Match(_poly1).E * matcher.Match(_poly1)),
-            //                new PositiveSquareroot());
-            //        return Simplify(result, depth);
-            //    }
-            //}
-
-            {
-                ExpressionMatcher matcher = _tSqrt1.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is PositiveSquareroot) {
-                    // C * sqrt(E) --> sqrt(C * C * E)      if C > 0
-                    // C * sqrt(E) --> 0                    if C = 0
-                    // C * sqrt(E) --> -sqrt(C * C * E)     if C < 0
-                    double value = matcher.Match(_c).Value;
-                    Double square = value * value;
-                    if (value.Near(0)) {
-                        return Polynomial.CreateConstant(0);
-                    } else {
-                        IAbstractExpr result =
-                            new UnaryExpression(Polynomial.CreateConstant(square).C
-                                                * matcher.Match(_ue).Inner,
-                                                new PositiveSquareroot());
-                        if (value < 0) {
-                            result = -result.C;
-                        }
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tSqrt2.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // unop(E) * C --> C * unop(E)
-                    IAbstractExpr result =
-                        matcher.Match(_c).C * matcher.Match(_ue);
-                    return Simplify(result, depth);
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tSqrt3.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // unop(E) / C --> 1/C * unop(E)
-                    double value = matcher.Match(_c).Value;
-                    IAbstractExpr result =
-                        Polynomial.CreateConstant(1 / value).C * matcher.Match(_ue);
-                    return Simplify(result, depth);
-                }
-            }
-            //STEPJ
-            {
-                ExpressionMatcher matcher = _tBothTimes.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P[V] * Z) * (P'[V] * Z') --> P" * (Z * Z')
-                    Polynomial poly1 = matcher.Match(_poly1);
-                    Polynomial poly2 = matcher.Match(_poly2);
-                    if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        IAbstractExpr result = (poly1 * poly2).C
-                                                  * (matcher.Match(_e1).C * matcher.Match(_e2));
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tLeftTimes.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // (P[V] * Z) * P'[V] --> P"[V] * Z, where P" = P*P' simplified
-                    Polynomial poly1 = matcher.Match(_poly1);
-                    Polynomial poly2 = matcher.Match(_poly2);
-                    if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        IAbstractExpr result = (poly1 * poly2).C
-                                                  * matcher.Match(_e1);
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tRightTimes.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression)) {
-                    // P[V] * (P'[V] * Z') --> P"[V] * Z', where P" = P*P'
-                    Polynomial poly1 = matcher.Match(_poly1);
-                    Polynomial poly2 = matcher.Match(_poly2);
-                    if (poly1.Var.Equals(poly2.Var) | poly1 is IConstant | poly2 is IConstant) {
-                        IAbstractExpr result = (poly1 * poly2).C
-                                                  * matcher.Match(_e2);
-                        return Simplify(result, depth);
-                    }
-                }
-            }
-            // STEPK
-            {
-                ExpressionMatcher matcher = _tPolynomialTimesMinus1.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is UnaryMinus) {
-                    // P * -E --> -P * E
-                    IAbstractExpr result =
-                        (-matcher.Match(_poly1)).C * matcher.Match(_ue).Inner;
-                    return Simplify(result, depth);
-                }
-            }
-            {
-                ExpressionMatcher matcher = _tPolynomialTimesMinus2.CreateMatcher();
-                if (matcher.TryMatch(binaryExpression) && matcher.Match(_ue).Op is UnaryMinus) {
-                    // P * -E --> -P * E
-                    IAbstractExpr result =
-                        (-matcher.Match(_poly1)).C * matcher.Match(_ue).Inner;
-                    return Simplify(result, depth);
-                }
-            }
-            return binaryExpression;
-        }
-
-        private IAbstractExpr Simplify(IAbstractExpr expr, int depth) {
-            return expr.Accept(this, depth + 1);
-        }
-
-        public IAbstractExpr Visit(IGeneralPolynomial polynomial, int depth) {
+        public IAbstractExpr Visit(IGeneralPolynomial polynomial, Ignore p) {
             return polynomial;
         }
 
-        public IAbstractExpr Visit(RangeExpr rangeExpr, int depth) {
+        public IAbstractExpr Visit(RangeExpr rangeExpr, Ignore p) {
             throw new NotImplementedException();
         }
 
@@ -379,84 +60,364 @@ namespace Movimentum.SubstitutionSolver3 {
 
         #region Implementation of ISolverModelUnaryOpVisitor<in IPolynomial,in Ignore,out AbstractExpr>
 
-        public IAbstractExpr Visit(UnaryMinus op, IPolynomial inner, int depth) {
-            return Polynomial.CreatePolynomial(inner.Var, inner.Coefficients.Select(c => -c));
-        }
-
-        public IAbstractExpr Visit(Square op, IPolynomial inner, int depth) {
-            return (inner.C * inner).Accept(this, depth + 1);
-        }
-
-        public IAbstractExpr Visit(FormalSquareroot op, IPolynomial inner, int depth) {
+        public IAbstractExpr Visit(FormalSquareroot op, IAbstractExpr inner, Ignore p) {
             return new UnaryExpression(inner, new FormalSquareroot());
         }
 
-        private static IAbstractExpr Fold(UnaryOperator op, IPolynomial inner, Func<double, double> value, IConstant innerAsConstant) {
-            return innerAsConstant == null
-                       ? (IAbstractExpr)new UnaryExpression(inner, op)
-                       : Polynomial.CreateConstant(value(innerAsConstant.Value));
+        public IAbstractExpr Visit(PositiveSquareroot op, IAbstractExpr inner, Ignore p) {
+            return FoldIfConstant(op, inner, x => x.Near(0) ? 0 : Math.Sqrt(x));
         }
 
-        public IAbstractExpr Visit(PositiveSquareroot op, IPolynomial inner, int depth) {
-            return Fold(op, inner, x => Math.Sqrt(x), inner as IConstant);
+        public IAbstractExpr Visit(Sin op, IAbstractExpr inner, Ignore p) {
+            return FoldIfConstant(op, inner, x => Math.Sin(x / 180 * Math.PI));
         }
 
-        public IAbstractExpr Visit(Sin op, IPolynomial inner, int depth) {
-            return Fold(op, inner, x => Math.Sin(x / 180 * Math.PI), inner as IConstant);
+        public IAbstractExpr Visit(Cos op, IAbstractExpr inner, Ignore p) {
+            return FoldIfConstant(op, inner, x => Math.Cos(x / 180 * Math.PI));
         }
 
-        public IAbstractExpr Visit(Cos op, IPolynomial inner, int depth) {
-            return Fold(op, inner, x => Math.Cos(x / 180 * Math.PI), inner as IConstant);
+        private static IAbstractExpr FoldIfConstant(UnaryOperator op,
+                IAbstractExpr inner, Func<double, double> eval) {
+            IConstant innerAsConst = inner as IConstant;
+            return innerAsConst == null
+                        ? (IAbstractExpr)new UnaryExpression(inner, op)
+                        : Polynomial.CreateConstant(eval(innerAsConst.Value));
+        }
+
+        public IAbstractExpr Visit(UnaryMinus op, IAbstractExpr inner, Ignore p) {
+            return Rewrite(inner, "Cannot handle unary minus", _unaryMinusRewrites);
+        }
+
+        public IAbstractExpr Visit(Square op, IAbstractExpr inner, Ignore p) {
+            return Rewrite(inner, "Cannot handle square", _squareRewrites);
         }
 
         #endregion Implementation of ISolverModelUnaryOpVisitor<in IPolynomial,in Ignore,out AbstractExpr>
 
-        #region Implementation of ISolverModelBinaryOpVisitor<in IPolynomial,in IPolynomial,in Ignore,out AbstractExpr>
+        #region Implementation of ISolverModelBinaryOpVisitor<in IAbstractExpr,in Ignore,out IAbstractExpr>
 
-        public IAbstractExpr Visit(Plus op, IPolynomial lhs, IPolynomial rhs, int depth) {
-            if (lhs.Var.Equals(rhs.Var)
-                | lhs is IConstant     // constants have a funny variable in them that does not compare well.
-                | rhs is IConstant) {
-                var deg = Math.Max(lhs.Degree, rhs.Degree);
-                double[] lhsCoeff = new double[deg - lhs.Degree].Concat(lhs.Coefficients).ToArray();
-                double[] rhsCoeff = new double[deg - rhs.Degree].Concat(rhs.Coefficients).ToArray();
-                var coeffs = new double[deg + 1];
-                for (int i = 0; i <= deg; i++) {
-                    coeffs[i] = lhsCoeff[i] + rhsCoeff[i];
+        public IAbstractExpr Visit(Plus op, IAbstractExpr lhs,
+                                   IAbstractExpr rhs, Ignore p) {
+            return Rewrite(new BinaryExpression(lhs, op, rhs),
+                           "Cannot handle " + op,
+                           _plusRewrites);
+        }
+
+        public IAbstractExpr Visit(Times op, IAbstractExpr lhs, IAbstractExpr rhs, Ignore p) {
+            return Rewrite(new BinaryExpression(lhs, op, rhs), "Cannot handle " + op, _timesRewrites);
+        }
+
+        public IAbstractExpr Visit(Divide op, IAbstractExpr lhs, IAbstractExpr rhs, Ignore p) {
+            return Rewrite(new BinaryExpression(lhs, op, rhs), "Cannot handle " + op, _divideRewrites);
+        }
+
+        #endregion
+
+        private static readonly List<ExpressionRewrite> _unaryMinusRewrites = new List<ExpressionRewrite>();
+        private static readonly List<ExpressionRewrite> _squareRewrites = new List<ExpressionRewrite>();
+
+        private static readonly List<ExpressionRewrite> _plusRewrites = new List<ExpressionRewrite>();
+        private static readonly List<ExpressionRewrite> _timesRewrites = new List<ExpressionRewrite>();
+        private static readonly List<ExpressionRewrite> _divideRewrites = new List<ExpressionRewrite>();
+
+        static PolynomialFoldingVisitor() {
+            var c = new TypeMatchTemplate<IConstant>();
+            var e = new TypeMatchTemplate<IAbstractExpr>();
+            var f = new TypeMatchTemplate<IAbstractExpr>();
+            var p = new TypeMatchTemplate<IPolynomial>();
+            var q = new TypeMatchTemplate<IPolynomial>();
+            var sqrtE = new UnaryExpressionTemplate(new PositiveSquareroot(), e);
+            var sqrtF = new UnaryExpressionTemplate(new PositiveSquareroot(), f);
+            var sqrtP = new UnaryExpressionTemplate(new PositiveSquareroot(), p);
+            var sqrtQ = new UnaryExpressionTemplate(new PositiveSquareroot(), q);
+
+            #region Rewrites for UnaryMinus
+
+            new StandardExpressionRewrite("P+-E", _unaryMinusRewrites,
+                p + -e, m => -(m & p) + (m & e));
+            new StandardExpressionRewrite("P+E", _unaryMinusRewrites,
+                p + e, m => -(m & p) + -(m & e));
+            // -P should not happen; must have been rewritten to a P with inverted coefficients!
+            new StandardExpressionRewrite("P", _unaryMinusRewrites,
+                p, m => -(m & p));
+            new StandardExpressionRewrite("-E", _unaryMinusRewrites,
+                -e, m => m & e);
+            new StandardExpressionRewrite("E", _unaryMinusRewrites,
+                e, m => -(m & e));
+
+            #endregion Rewrites for UnaryMinus
+
+            #region Rewrites for Square
+
+            {
+                // -P should not happen; must have been rewritten to a P with inverted coefficients!
+                new StandardExpressionRewrite("P", _squareRewrites,
+                    p,
+                    m => (m & p) * (m & p));
+
+                new StandardExpressionRewrite("sqrt(E)", _squareRewrites,
+                    sqrtE,
+                    m => m & e);
+                new StandardExpressionRewrite("-sqrt(E)", _squareRewrites,
+                    -sqrtE,
+                    m => m & e);
+                new StandardExpressionRewrite("-E", _squareRewrites,
+                    -e,
+                    m => new UnaryExpression(m & e, new Square()));
+
+                new StandardExpressionRewrite("P[V]+-sqrt(Q[V])", _squareRewrites,
+                    p + -sqrtQ, HaveSameVar(p, q),
+                    m => ((m & p) * (m & p) + (m & q)) + -2 * (m & p) * (m & sqrtQ));
+                new StandardExpressionRewrite("P[V]+sqrt(Q[V])", _squareRewrites,
+                    p + sqrtQ, HaveSameVar(p, q),
+                    m => ((m & p) * (m & p) + (m & q)) + 2 * (m & p) * (m & sqrtQ));
+                new StandardExpressionRewrite("P+-sqrt(E)", _squareRewrites,
+                    p + -sqrtE,
+                    m => ((m & p) * (m & p)) + (-2 * (m & p) * (m & sqrtE) + (m & e)));
+                new StandardExpressionRewrite("P+sqrt(E)", _squareRewrites,
+                    p + sqrtE,
+                    m => ((m & p) * (m & p)) + (2 * (m & p) * (m & sqrtE) + (m & e)));
+                new StandardExpressionRewrite("P+-E", _squareRewrites,
+                    p + -e,
+                    m => ((m & p) * (m & p)) + (-2 * (m & p) * (m & e) + new UnaryExpression(m & e, new Square())));
+                new StandardExpressionRewrite("P+E", _squareRewrites,
+                    p + e,
+                    m => ((m & p) * (m & p)) + (2 * (m & p) * (m & e) + new UnaryExpression(m & e, new Square())));
+
+                new StandardExpressionRewrite("E", _squareRewrites,
+                    e,
+                    m => new UnaryExpression(m & e, new Square()));
+            }
+
+            #endregion Rewrites for Square
+
+            #region Rewrites for Plus
+            //        | Q[V]+F              Q[V]            F
+            // -------+------------------------------------------------
+            // P[V]+E | {P[V]+Q[V]}+(E+F)   {P[V]+Q[V]}+E   P[V]+(E+F)
+            //        |
+            // P[V]   | {P[V]+Q[V]}+F       {P[V]+Q[V]}     P[V]+E
+            //        |
+            // E      | Q[V]+(E+F)          Q[V]+E          E+F
+
+
+            {
+                new StandardExpressionRewrite("(P+E)+(Q+F)", _plusRewrites,
+                    (p + e) + (q + f),
+                    HaveSameVar(p, q),
+                    m => ((m & p) + (m & q)) + ((m & e) + (m & f)));
+                //                PO         AE         AE
+
+                new StandardExpressionRewrite("(P+E)+Q", _plusRewrites,
+                    (p + e) + q,
+                    HaveSameVar(p, q),
+                    m => ((m & p) + (m & q)) + (m & e));
+
+                new StandardExpressionRewrite("(P+E)+F", _plusRewrites,
+                    (p + e) + f,
+                    m => (m & p) + ((m & e) + (m & f)));
+            }
+            {
+                new StandardExpressionRewrite("P+(Q+F)", _plusRewrites,
+                    p + (q + f),
+                    HaveSameVar(p, q),
+                    m => ((m & p) + (m & q)) + (m & f));
+                new StandardExpressionRewrite("P+Q", _plusRewrites,
+                    p + q,
+                    HaveSameVar(p, q),
+                    m => ((m & p) + (m & q)));
+                new StandardExpressionRewrite("P+F", _plusRewrites,
+                    p + f,
+                    m => (m & p) + (m & f));
+            }
+            {
+                new StandardExpressionRewrite("E+(Q+F)", _plusRewrites,
+                    e + (q + f),
+                    m => (m & q) + ((m & e) + (m & f)));
+                new StandardExpressionRewrite("E+Q", _plusRewrites,
+                    e + q,
+                    m => (m & q) + (m & e));
+                new StandardExpressionRewrite("E+F", _plusRewrites,
+                    e + f,
+                    m => (m & e) + (m & f));
+            }
+            #endregion Rewrites for Plus
+
+            #region Rewrites for Times
+            // First attempt: All of P+√R, P+-√R, P+√E, P+-√E, P+E, P+-E, P, C, -E, E multiplied with each other; 
+            // and additionally, expression under square root is equal or not equal to expression under other square root.
+            // This gives us 10*14 = 140 rewrite rules. Panic.
+
+            // Second attempt: Stage-wise processing -> 4+4+25.
+
+            // Step I: Distribute.
+            //
+            //          Q+F                 F
+            //
+            //  P+E     {PQ}+Q*E+P*F+E*F    P*F+E*F
+            //
+            //  E       Q*E+E*F             =
+            //
+            {
+                new StandardExpressionRewrite("(P+E)*(Q+F)", _timesRewrites,
+                    (p + e) * (q + f),
+                    HaveSameVar(p, q),
+                    m => RecursivelyFold((m & p) * (m & q)
+                                        + (m & q) * (m & e)
+                                        + (m & p) * (m & f)
+                                        + (m & e) * (m & f)));
+                new StandardExpressionRewrite("(P+E)*F", _timesRewrites,
+                    (p + e) * f,
+                    m => RecursivelyFold((m & p) * (m & f)
+                                        + (m & e) * (m & f)));
+                new StandardExpressionRewrite("E*(Q+F)", _timesRewrites,
+                    e * (q + f),
+                    m => RecursivelyFold((m & q) * (m & e)
+                                        + (m & e) * (m & f)));
+            }
+            // Step II: Lift unary minus to top.
+            //
+            //          -E       E
+            //
+            //  -F      E*F      -(E*F)
+            //
+            //  F       -(E*F)   =
+            //
+            {
+                new StandardExpressionRewrite("-E*-F", _timesRewrites,
+                    -e * -f,
+                    m => RecursivelyFold((m & e) * (m & f)));
+                new StandardExpressionRewrite("-E*F", _timesRewrites,
+                    -e * f,
+                    m => -(RecursivelyFold((m & e) * (m & f)).C));
+                new StandardExpressionRewrite("E*-F", _timesRewrites,
+                    e * -f,
+                    m => -(RecursivelyFold((m & e) * (m & f)).C));
+            }
+
+            // Step III: Handle square roots.
+            //
+            //          √Q          √F              Q           F
+            //
+            //  √P      P=Q:  P     √(P*F)          √{PQ²}      =
+            //          else: √{PQ}
+            //
+            //  √E      √(Q*E)      E=F:  E         √({Q²}*E)   =
+            //                      else: √(E*F)
+            //
+            //  P       √({P²Q}     √({P²}*F)       {P*Q}       =  
+            //
+            //  E       =             =               =         =
+            //
+            {
+                // 1st line
+                new StandardExpressionRewrite("√P*√P", _timesRewrites,
+                    sqrtP * sqrtP,
+                    m => RecursivelyFold(m & p));
+                new StandardExpressionRewrite("√P*√Q", _timesRewrites,
+                    sqrtP * sqrtQ,
+                    HaveSameVar(p, q),
+                    m => PosSqrtAndRecursivelyFold((m & p) * (m & q)));
+                new StandardExpressionRewrite("√P*√F", _timesRewrites,
+                    sqrtP * sqrtF,
+                    m => PosSqrtAndRecursivelyFold((m & p) * (m & f)));
+                new StandardExpressionRewrite("√P*Q", _timesRewrites,
+                    sqrtP * q,
+                    HaveSameVar(p, q),
+                    m => PosSqrtAndRecursivelyFold((m & q) * (m & q) * (m & p)));
+
+                // 2nd line
+                new StandardExpressionRewrite("√E*√Q", _timesRewrites,
+                    sqrtE * sqrtQ,
+                    m => PosSqrtAndRecursivelyFold((m & q) * (m & e)));
+                new StandardExpressionRewrite("√E*√E", _timesRewrites,
+                    sqrtE * sqrtE,
+                    m => m & e);
+                new StandardExpressionRewrite("√E*√F", _timesRewrites,
+                    sqrtE * sqrtF,
+                    m => PosSqrtAndRecursivelyFold((m & e) * (m & f)));
+                new StandardExpressionRewrite("√E*D", _timesRewrites,
+                    sqrtE * q,
+                    m => PosSqrtAndRecursivelyFold((m & q) * (m & q) * (m & e)));
+
+                // 3rd line
+                new StandardExpressionRewrite("P*√Q", _timesRewrites,
+                    p * sqrtQ,
+                    HaveSameVar(p, q),
+                    m => PosSqrtAndRecursivelyFold((m & p) * (m & p) * (m & q)));
+                new StandardExpressionRewrite("P*√F", _timesRewrites,
+                    p * sqrtF,
+                    m => PosSqrtAndRecursivelyFold((m & p) * (m & p) * (m & f)));
+                new StandardExpressionRewrite("P*Q", _timesRewrites,
+                    p * q,
+                    HaveSameVar(p, q),
+                    m => (m & p) * (m & q));
+
+                // 4th line
+                new StandardExpressionRewrite("E", _timesRewrites,
+                    e,
+                    m => m & e);
+            }
+            #endregion Rewrites for Times
+
+            #region Rewrites for Divide
+            //          C               F
+            //
+            //  E       E*{1/C}         =
+            new StandardExpressionRewrite("E/C", _divideRewrites,
+                e / c,
+                m => RecursivelyFold(
+                      (m & e) * Polynomial.CreateConstant(1 / (m & c).Value)
+                    )
+            );
+            new StandardExpressionRewrite("E", _divideRewrites,
+                e,
+                m => m & e);
+
+            #endregion Rewrites for Divide
+        }
+
+        private static IAbstractExpr PosSqrtAndRecursivelyFold(AbstractExpr expr) {
+            return new UnaryExpression(RecursivelyFold(expr), new PositiveSquareroot());
+        }
+
+        //private static int _debugDepth;
+
+        //private static IAbstractExpr RecursivelyFoldX(AbstractExpr expr) {
+        //    try {
+        //        if (++_debugDepth > 10) {
+        //            Debug.WriteLine("Endless recursion?");
+        //            throw new InvalidOperationException();
+        //        }
+        //        return expr.Accept(_recursiveFolder);
+        //    } finally {
+        //        --_debugDepth;
+        //    }
+        //}
+
+        private static readonly PolynomialFoldingVisitor
+            _recursiveFolder = new PolynomialFoldingVisitor();
+
+        private static IAbstractExpr RecursivelyFold(AbstractExpr expr) {
+            return expr.Accept(_recursiveFolder);
+        }
+
+        private static Func<ExpressionMatcher, bool> HaveSameVar(TypeMatchTemplate<IPolynomial> q, TypeMatchTemplate<IPolynomial> p) {
+            return m => {
+                Polynomial p1 = m & p;
+                Polynomial q1 = m & q;
+                return p1 is IConstant || q1 is IConstant || p1.Var.Equals(q1.Var);
+            };
+        }
+
+        private static IAbstractExpr Rewrite(IAbstractExpr e, string cannotHandleMessage, IEnumerable<ExpressionRewrite> rewrites) {
+            foreach (var r in rewrites) {
+                var result = r.SuccessfulMatch(e);
+                if (result != null) {
+                    return result;
                 }
-                IVariable newVar = lhs is IConstant ? rhs.Var : lhs.Var;
-                return Polynomial.CreatePolynomial(newVar, coeffs);
-            } else {
-                return new BinaryExpression((AbstractExpr)lhs, new Plus(), (AbstractExpr)rhs);
             }
+            throw new InvalidOperationException(cannotHandleMessage);
         }
-
-        public IAbstractExpr Visit(Times op, IPolynomial lhs, IPolynomial rhs, int depth) {
-            if (lhs.Var.Equals(rhs.Var) | lhs is IConstant | rhs is IConstant) {
-                var deg = lhs.Degree + rhs.Degree;
-                var coeffs = new double[deg + 1];
-                for (int ld = 0; ld <= lhs.Degree; ld++) {
-                    for (int rd = 0; rd <= rhs.Degree; rd++) {
-                        coeffs[ld + rd] += lhs.Coefficients.ElementAt(ld) * rhs.Coefficients.ElementAt(rd);
-                    }
-                }
-                IVariable newVar = lhs is IConstant ? rhs.Var : lhs.Var;
-                return Polynomial.CreatePolynomial(newVar, coeffs);
-            } else {
-                return new BinaryExpression((AbstractExpr)lhs, new Times(), (AbstractExpr)rhs);
-            }
-        }
-
-        public IAbstractExpr Visit(Divide op, IPolynomial lhs, IPolynomial rhs, int depth) { // ......
-            // TODO: Alternative - try polynomial division. Create polynomial; or polynomial + remainder/rhs.
-            var rConst = rhs as IConstant;
-            if (rConst != null) {
-                return Polynomial.CreatePolynomial(lhs.Var, lhs.Coefficients.Select(c => c / rConst.Value)).Accept(this, depth + 1);
-            } else {
-                return (AbstractExpr)lhs / (AbstractExpr)rhs;
-            }
-        }
-
-        #endregion Implementation of ISolverModelBinaryOpVisitor<in IPolynomial,in IPolynomial,in Ignore,out AbstractExpr>
     }
 }

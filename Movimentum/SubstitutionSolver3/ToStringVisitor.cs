@@ -29,20 +29,20 @@ namespace Movimentum.SubstitutionSolver3 {
             return constant.Value.ToString(CultureInfo.InvariantCulture);
         }
 
-        public string Visit(INamedVariable namedVariable, int parentPrecedence) {
-            return namedVariable.Name;
+        public string Visit(INamedVariable namedVar, int parentPrecedence) {
+            return namedVar.Name;
         }
 
-        public string Visit(IAnchorVariable anchorVariable, int parentPrecedence) {
-            return anchorVariable.Name;
+        public string Visit(IAnchorVariable anchorVar, int parentPrecedence) {
+            return anchorVar.Name;
         }
 
-        public string Visit(UnaryExpression unaryExpression, int parentPrecedence) {
-            return unaryExpression.Op.Accept(this, unaryExpression.Inner, parentPrecedence);
+        public string Visit(UnaryExpression unaryExpr, int parentPrecedence) {
+            return unaryExpr.Op.Accept(this, unaryExpr.Inner, parentPrecedence);
         }
 
-        public string Visit(BinaryExpression binaryExpression, int parentPrecedence) {
-            return binaryExpression.Op.Accept(this, binaryExpression.Lhs, binaryExpression.Rhs, parentPrecedence);
+        public string Visit(BinaryExpression binaryExpr, int parentPrecedence) {
+            return binaryExpr.Op.Accept(this, binaryExpr.Lhs, binaryExpr.Rhs, parentPrecedence);
         }
 
         public string Visit(RangeExpr rangeExpr, int parentPrecedence) {

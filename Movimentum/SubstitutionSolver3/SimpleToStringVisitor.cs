@@ -29,24 +29,24 @@ namespace Movimentum.SubstitutionSolver3 {
             return constant.Value.ToString(CultureInfo.InvariantCulture);
         }
 
-        public string Visit(INamedVariable namedVariable, Ignore p) {
-            return namedVariable.Name;
+        public string Visit(INamedVariable namedVar, Ignore p) {
+            return namedVar.Name;
         }
 
-        public string Visit(IAnchorVariable anchorVariable, Ignore p) {
-            return anchorVariable.Name;
+        public string Visit(IAnchorVariable anchorVar, Ignore p) {
+            return anchorVar.Name;
         }
 
-        public string Visit(UnaryExpression unaryExpression, Ignore p) {
-            string op = unaryExpression.Op.Accept(this, Ig.nore, Ig.nore);
-            return op + "(" + unaryExpression.Inner.Accept(this) + ")";
+        public string Visit(UnaryExpression unaryExpr, Ignore p) {
+            string op = unaryExpr.Op.Accept(this, Ig.nore, Ig.nore);
+            return op + "(" + unaryExpr.Inner.Accept(this) + ")";
         }
 
-        public string Visit(BinaryExpression binaryExpression, Ignore p) {
-            string op = binaryExpression.Op.Accept(this, Ig.nore, Ig.nore, Ig.nore);
-            string result = binaryExpression.Lhs.Accept(this)
+        public string Visit(BinaryExpression binaryExpr, Ignore p) {
+            string op = binaryExpr.Op.Accept(this, Ig.nore, Ig.nore, Ig.nore);
+            string result = binaryExpr.Lhs.Accept(this)
                           + op
-                          + binaryExpression.Rhs.Accept(this);
+                          + binaryExpr.Rhs.Accept(this);
             return "(" + result + ")";
         }
 

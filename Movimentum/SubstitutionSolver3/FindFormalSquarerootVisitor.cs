@@ -14,26 +14,26 @@ namespace Movimentum.SubstitutionSolver3 {
             return this;
         }
 
-        public FindFormalSquarerootVisitor Visit(INamedVariable namedVariable, Ignore p) {
+        public FindFormalSquarerootVisitor Visit(INamedVariable namedVar, Ignore p) {
             return this;
         }
 
-        public FindFormalSquarerootVisitor Visit(IAnchorVariable anchorVariable, Ignore p) {
+        public FindFormalSquarerootVisitor Visit(IAnchorVariable anchorVar, Ignore p) {
             return this;
         }
 
-        public FindFormalSquarerootVisitor Visit(UnaryExpression unaryExpression, Ignore p) {
-            if (unaryExpression.Op is FormalSquareroot) {
-                _someFormalSquareRoot = unaryExpression;
+        public FindFormalSquarerootVisitor Visit(UnaryExpression unaryExpr, Ignore p) {
+            if (unaryExpr.Op is FormalSquareroot) {
+                _someFormalSquareRoot = unaryExpr;
             } else {
-                unaryExpression.Inner.Accept(this);
+                unaryExpr.Inner.Accept(this);
             }
             return this;
         }
 
-        public FindFormalSquarerootVisitor Visit(BinaryExpression binaryExpression, Ignore p) {
-            binaryExpression.Lhs.Accept(this);
-            binaryExpression.Rhs.Accept(this);
+        public FindFormalSquarerootVisitor Visit(BinaryExpression binaryExpr, Ignore p) {
+            binaryExpr.Lhs.Accept(this);
+            binaryExpr.Rhs.Accept(this);
             return this;
         }
 

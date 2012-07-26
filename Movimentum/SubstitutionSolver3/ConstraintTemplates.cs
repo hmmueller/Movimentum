@@ -68,7 +68,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public ScalarConstraintMatcher TryMatch(ScalarConstraint constraint) {
             bool isMatch = _template.TypeMatches(constraint)
-                           && _expressionMatcher.TryMatch(constraint.Expr);
+                           && _expressionMatcher.TryMatch(constraint.Expr) != null;
             return isMatch ? this : null;
         }
 

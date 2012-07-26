@@ -119,6 +119,7 @@ namespace Movimentum.SubstitutionSolver3 {
         int Degree { get; }
         double Coefficient(int power);
         IEnumerable<double> Coefficients { get; }
+        Polynomial P { get; }
     }
     public interface IConstant : IPolynomial {
         double Value { get; }
@@ -381,6 +382,65 @@ namespace Movimentum.SubstitutionSolver3 {
         public abstract int Degree { get; }
         public abstract double Coefficient(int power);
         public abstract IEnumerable<double> Coefficients { get; }
+        public Polynomial P { get { return this; } }
+
+        private static IVariable SameVarOrNull(IPolynomial lhs, IPolynomial rhs) {
+            return lhs.Var.Equals(rhs.Var) ? lhs.Var
+                : lhs is IConstant ? rhs.Var
+                : rhs is IConstant ? lhs.Var
+                : null;
+        }
+
+        public static Polynomial operator +(Polynomial p, IPolynomial q) {
+            IVariable commonVar = SameVarOrNull(p, q);
+            if (commonVar == null) {
+                throw new ArgumentException("operator+ works only for polynomials with same variable, not " + p.Var + " and " + q.Var);
+            }
+            int resultDegree = Math.Max(p.Degree, q.Degree);
+            var resultCoefficients = new double[resultDegree + 1];
+            // d               2 1 0
+            //                 v v v
+            // powers: 6 5 4 3 2 1 0, i.e., resultDeg = 6
+            // [i]:    0 1 2 3 4 5 6
+            // =>
+            //    6 - d
+            for (int d = 0; d <= p.Degree; d++) {
+                resultCoefficients[resultDegree - d] = p.Coefficient(d);
+            }
+            for (int d = 0; d <= q.Degree; d++) {
+                resultCoefficients[resultDegree - d] += q.Coefficient(d);
+            }
+            return CreatePolynomial(commonVar, resultCoefficients).P;
+        }
+
+        public static Polynomial operator *(Polynomial lhs, IPolynomial rhs) {
+            IVariable commonVar = SameVarOrNull(lhs, rhs);
+            if (commonVar == null) {
+                throw new ArgumentException("operator+ works only for polynomials with same variable, not " + lhs.Var + " and " + rhs.Var);
+            }
+
+            int deg = lhs.Degree + rhs.Degree;
+            var resultCoefficients = new double[deg + 1];
+            for (int ld = 0; ld <= lhs.Degree; ld++) {
+                for (int rd = 0; rd <= rhs.Degree; rd++) {
+                    resultCoefficients[ld + rd] += lhs.Coefficients.ElementAt(ld) * rhs.Coefficients.ElementAt(rd);
+                }
+            }
+
+            return CreatePolynomial(commonVar, resultCoefficients).P;
+        }
+
+        public static Polynomial operator *(Polynomial p, double d) {
+            return CreatePolynomial(p.Var, p.Coefficients.Select(c => c * d)).P;
+        }
+
+        public static Polynomial operator *(double d, Polynomial p) {
+            return p * d;
+        }
+
+    public static Polynomial operator -(Polynomial p) {
+        return CreatePolynomial(p.Var, p.Coefficients.Select(c => -c)).P;
+    }
 
         public static IPolynomial CreatePolynomial(IVariable variable, params double[] coefficients) {
             return CreatePolynomial(variable, (IEnumerable<double>)coefficients);

@@ -30,37 +30,37 @@ namespace Movimentum.SubstitutionSolver3 {
             return constant;
         }
 
-        public IAbstractExpr Visit(INamedVariable namedVariable, Ignore p) {
-            return namedVariable;
+        public IAbstractExpr Visit(INamedVariable namedVar, Ignore p) {
+            return namedVar;
         }
 
-        public IAbstractExpr Visit(IAnchorVariable anchorVariable, Ignore p) {
-            return anchorVariable;
+        public IAbstractExpr Visit(IAnchorVariable anchorVar, Ignore p) {
+            return anchorVar;
         }
 
-        public IAbstractExpr Visit(UnaryExpression unaryExpression, Ignore p) {
-            IAbstractExpr oldInner = unaryExpression.Inner;
+        public IAbstractExpr Visit(UnaryExpression unaryExpr, Ignore p) {
+            IAbstractExpr oldInner = unaryExpr.Inner;
             IAbstractExpr newInner = oldInner.Accept(this);
-            if (newInner is IConstant && !(unaryExpression.Op is FormalSquareroot)) {
-                return Polynomial.CreateConstant(unaryExpression.Op.Accept(this, (IConstant)newInner, Ig.nore));
+            if (newInner is IConstant && !(unaryExpr.Op is FormalSquareroot)) {
+                return Polynomial.CreateConstant(unaryExpr.Op.Accept(this, (IConstant)newInner, Ig.nore));
             } else if (newInner != oldInner) {
-                return new UnaryExpression(newInner, unaryExpression.Op);
+                return new UnaryExpression(newInner, unaryExpr.Op);
             } else {
-                return unaryExpression;
+                return unaryExpr;
             }
         }
 
-        public IAbstractExpr Visit(BinaryExpression binaryExpression, Ignore p) {
-            IAbstractExpr oldLhs = binaryExpression.Lhs;
-            IAbstractExpr oldRhs = binaryExpression.Rhs;
+        public IAbstractExpr Visit(BinaryExpression binaryExpr, Ignore p) {
+            IAbstractExpr oldLhs = binaryExpr.Lhs;
+            IAbstractExpr oldRhs = binaryExpr.Rhs;
             IAbstractExpr newLhs = oldLhs.Accept(this);
             IAbstractExpr newRhs = oldRhs.Accept(this);
             if (newLhs is IConstant & newRhs is IConstant) {
-                return Polynomial.CreateConstant(binaryExpression.Op.Accept(this, (IConstant)newLhs, (IConstant)newRhs, Ig.nore));
+                return Polynomial.CreateConstant(binaryExpr.Op.Accept(this, (IConstant)newLhs, (IConstant)newRhs, Ig.nore));
             } else if (newLhs != oldLhs | newRhs != oldRhs) {
-                return new BinaryExpression(newLhs, binaryExpression.Op, newRhs);
+                return new BinaryExpression(newLhs, binaryExpr.Op, newRhs);
             } else {
-                return binaryExpression;
+                return binaryExpr;
             }
         }
 

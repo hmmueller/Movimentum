@@ -54,7 +54,7 @@ namespace Movimentum {
                 ? null 
                 : new EvaluationVisitor(debugExpectedResults.ToDictionary(kvp => CreateVariable(kvp.Key), kvp => kvp.Value));
 
-            result = SolverNode.Solve(solverConstraints, 200 * Constraints.Count(), result, FrameNo, evaluationVisitor);
+            result = SolverNode.Solve(solverConstraints, 1000 * Constraints.Count(), result, FrameNo, evaluationVisitor);
 
             return ConvertResultToAnchorLocations(result.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Value));
         }

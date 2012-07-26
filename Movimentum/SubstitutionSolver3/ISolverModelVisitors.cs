@@ -9,10 +9,10 @@
 
 public interface ISolverModelExprVisitor<in TParameter, out TResult> {
     TResult Visit(IConstant constant, TParameter p);
-    TResult Visit(INamedVariable namedVariable, TParameter p);
-    TResult Visit(IAnchorVariable anchorVariable, TParameter p);
-    TResult Visit(UnaryExpression unaryExpression, TParameter p);
-    TResult Visit(BinaryExpression binaryExpression, TParameter p);
+    TResult Visit(INamedVariable namedVar, TParameter p);
+    TResult Visit(IAnchorVariable anchorVar, TParameter p);
+    TResult Visit(UnaryExpression unaryExpr, TParameter p);
+    TResult Visit(BinaryExpression binaryExpr, TParameter p);
     TResult Visit(RangeExpr rangeExpr, TParameter p);
     TResult Visit(IGeneralPolynomial polynomial, TParameter parameter);
 }

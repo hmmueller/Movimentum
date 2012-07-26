@@ -126,9 +126,9 @@ namespace Movimentum.SubstitutionSolver3 {
             _template = template;
         }
 
-        public bool TryMatch(IAbstractExpr e) {
+        public ExpressionMatcher TryMatch(IAbstractExpr e) {
             _matches = _template.TryMatch(e);
-            return _matches != null;
+            return _matches == null ? null : this;
         }
 
         private IAbstractExpr GetMatch(AbstractExpressionTemplate t) {
@@ -141,16 +141,38 @@ namespace Movimentum.SubstitutionSolver3 {
             return GetMatch(t);
         }
 
+        public static IAbstractExpr operator&(ExpressionMatcher m, FixedExpressionTemplate t) {
+            return m.Match(t);
+        }
+
         public BinaryExpression Match(BinaryExpressionTemplate t) {
             return GetMatch(t) as BinaryExpression;
+        }
+
+        public static BinaryExpression operator &(ExpressionMatcher m, BinaryExpressionTemplate t) {
+            return m.Match(t);
         }
 
         public UnaryExpression Match(UnaryExpressionTemplate t) {
             return GetMatch(t) as UnaryExpression;
         }
 
+        public static UnaryExpression operator &(ExpressionMatcher m, UnaryExpressionTemplate t) {
+            return m.Match(t);
+        }
+
         public T Match<T>(TypeMatchTemplate<T> t) where T : class, IAbstractExpr {
             return GetMatch(t) as T;
+        }
+
+        public static AbstractExpr operator &(ExpressionMatcher m, TypeMatchTemplate<IAbstractExpr> t) {
+            return m.Match(t).C;
+        }
+        public static Polynomial operator &(ExpressionMatcher m, TypeMatchTemplate<IPolynomial> t) {
+            return m.Match(t).P;
+        }
+        public static IConstant operator &(ExpressionMatcher m, TypeMatchTemplate<IConstant> t) {
+            return m.Match(t);
         }
     }
 }

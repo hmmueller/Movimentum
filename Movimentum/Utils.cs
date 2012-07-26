@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Movimentum {
     public static class DictionaryUtils {
@@ -26,6 +27,73 @@ namespace Movimentum {
     public static class DoubleUtils {
         public static bool Near(this double d1, double d2) {
             return Math.Abs(d1 - d2) < 1e-8; // ????
+        }
+    }
+
+    public static class StringUtils {
+        public static string WithParDepth(this string s, int limit = int.MaxValue) {
+            var sb = new StringBuilder(s.Length);
+            int d = 0;
+            foreach (var c in s) {
+                if (c == '(') {
+                    if (d < limit) {
+                        sb.Append(c);
+                        if (d < limit - 2) {
+                            sb.Append(d);
+                            sb.Append('#');
+                        }
+                    } else {
+                        sb.Append('.');
+                    }
+                    d++;
+                } else if (c == ')') {
+                    --d;
+                    if (d < limit) {
+                        if (d < limit - 2) {
+                            sb.Append('#');
+                            sb.Append(d);
+                        }
+                        sb.Append(c);
+                    } else {
+                        sb.Append('.');
+                    }
+                } else {
+                    if (d < limit) {
+                        sb.Append(c);
+                    } else {
+                        sb.Append('.');
+                    }
+                }
+            }
+            return sb.ToString();
+        }
+
+        public static string WithParIndent(this string s, string indent = "  ") {
+            var sb = new StringBuilder(s.Length);
+            int d = 0;
+            foreach (var c in s) {
+                if (c == '(') {
+                    if (d++ > 2) {
+                        sb.AppendLine("" + c);
+                        indent += "  ";
+                        sb.Append(indent);
+                    } else {
+                        sb.Append(c);
+                    }
+                } else if (c == ')') {
+                    if (--d > 2) {
+                        indent = indent.Substring(2);
+                        sb.AppendLine();
+                        sb.Append(indent);
+                        sb.Append(c);
+                    } else {
+                        sb.Append(c);
+                    }
+                } else {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
         }
     }
 }

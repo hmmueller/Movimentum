@@ -208,6 +208,38 @@ namespace Movimentum.SubstitutionSolver3 {
                                                 currNode);
                     });
             }
+            {
+                // STEPM
+                // 7. 0 = sqrt(E)
+                //    rewrite to
+                //    0 = E
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                var t = new UnaryExpressionTemplate(new PositiveSquareroot(), e);
+                new RuleAction<ScalarConstraintMatcher>("0=sqrt(E)",
+                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+                    matcher => matcher != null,
+                    (currNode, matcher, matchedConstraint) => {
+                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e));
+                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1 }), currNode.ClosedVariables,
+                                                currNode);
+                    });
+            }
+            {
+                // STEPM
+                // 7. 0 = -E
+                //    rewrite to
+                //    0 = E
+                var e = new TypeMatchTemplate<AbstractExpr>();
+                var t = -e;
+                new RuleAction<ScalarConstraintMatcher>("0=-E",
+                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+                    matcher => matcher != null,
+                    (currNode, matcher, matchedConstraint) => {
+                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e));
+                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1 }), currNode.ClosedVariables,
+                                                currNode);
+                    });
+            }
         }
 
         private static IEnumerable<double> FindZeros(IPolynomial polynomial) {

@@ -56,8 +56,8 @@ namespace Movimentum.Unittests {
         #region PolynomialFoldingVisitor tests
 
         private IAbstractExpr Fold(IAbstractExpr expr) {
-            //return expr.Accept(new PolynomialFoldingVisitor(), Ig.nore);
-            return expr.Accept(new PolynomialFoldingVisitor(), 0);
+            return expr.Accept(new PolynomialFoldingVisitor(), Ig.nore);
+            //return expr.Accept(new PolynomialFoldingVisitor(), 0);
         }
 
         // Test -0        -> 0					
@@ -772,9 +772,35 @@ namespace Movimentum.Unittests {
             for (int i = 0; i < 4; i++) {
                 exprs2 = exprs2.Select(e => -(-e.C).C).ToArray();
                 for (int j = 0; j < exprs.Length; j++) {
-                    //Assert.AreEqual(exprs[j], exprs2[j].Accept(foldingVisitor, Ig.nore));
-                    Assert.AreEqual(exprs[j], exprs2[j].Accept(foldingVisitor, 0));
+                    Assert.AreEqual(exprs[j], exprs2[j].Accept(foldingVisitor, Ig.nore));
+                    //Assert.AreEqual(exprs[j], exprs2[j].Accept(foldingVisitor, 0));
                 }
+            }
+        }
+
+        [Test]
+        public void TestManyMinuses1() {
+            IAbstractExpr a = P("x", 1, 2);
+            IAbstractExpr b = a;
+            var foldingVisitor = new PolynomialFoldingVisitor();
+            for (int i = 0; i < 4; i++) {
+                // Apply double unary minus
+                b = -(-b.C);
+                Assert.AreEqual(a, b.Accept(foldingVisitor, Ig.nore));
+            }
+        }
+
+        [Test]
+        public void TestManyMinuses2() {
+            TestManyMinuses(-new UnaryExpression(V("x"), new Sin()));
+        }
+
+        private static void TestManyMinuses(IAbstractExpr a) {
+            IAbstractExpr b = a;
+            var foldingVisitor = new PolynomialFoldingVisitor();
+            for (int i = 0; i < 4; i++) {
+                b = -(-b.C);
+                Assert.AreEqual(a, b.Accept(foldingVisitor, Ig.nore));
             }
         }
 
@@ -808,10 +834,13 @@ namespace Movimentum.Unittests {
             AbstractExpr e = V("a").C * V("b") + V("a").C * V("c") + V("b").C * V("a") + V("b").C * V("c") + V("c").C * V("a") + V("c").C * V("b");
             AbstractExpr expected = pa.C + (pb.C + (pc.C + e));
             IAbstractExpr fold = Fold(p);
+
+            // We check by comparing values at a few places, as we do not know the exact 
+            // order of the pairs in e.
             for (double a = -3.5; a < 4; a++) {
                 for (double b = -3.5; b < 4; b++) {
                     for (double c = -3.5; c < 4; c++) {
-                        var visitor = new EvaluationVisitor(new Dictionary<IVariable, double>() { { V("a"), a }, { V("b"), b }, { V("c"), c } });
+                        var visitor = new EvaluationVisitor(new Dictionary<IVariable, double> { { V("a"), a }, { V("b"), b }, { V("c"), c } });
                         double f = fold.Accept(visitor);
                         double exp = expected.Accept(visitor);
                         Assert.AreEqual(exp, f, 1e-5);
@@ -831,14 +860,52 @@ namespace Movimentum.Unittests {
             AbstractExpr e = V("a").C * V("b") + V("a").C * V("b");
             var expected = pa.C + (pb.C + e);
             IAbstractExpr fold = Fold(p);
+            // We check by comparing values at a few places, as we do not know the exact 
+            // order of the pairs in e.
             for (double a = -3.5; a < 4; a++) {
                 for (double b = -3.5; b < 4; b++) {
-                    var visitor = new EvaluationVisitor(new Dictionary<IVariable, double>() { { V("a"), a }, { V("b"), b } });
+                    var visitor = new EvaluationVisitor(new Dictionary<IVariable, double> { { V("a"), a }, { V("b"), b } });
                     double f = fold.Accept(visitor);
                     double exp = expected.Accept(visitor);
                     Assert.AreEqual(exp, f, 1e-5);
                 }
             }
+        }
+
+        [Test]
+        public void TestSquare4() {
+            UnaryExpression p = new UnaryExpression(V("x").C + new UnaryExpression(V("x"), new PositiveSquareroot()), new Square());
+            AbstractExpr expected = Polynomial.CreatePolynomial(V("x"), 1, 1, 0).C
+                                  + Polynomial.CreatePolynomial(V("x"), 2, 0).C * new UnaryExpression(V("x"), new PositiveSquareroot());
+            IAbstractExpr fold = Fold(p);
+            Assert.AreEqual(expected, fold);
+        }
+
+        [Test]
+        public void TestSquare5() {
+            // (-sqrt(x))^2 = x
+            UnaryExpression p = new UnaryExpression(-new UnaryExpression(V("x"), new PositiveSquareroot()), new Square());
+            IAbstractExpr expected = V("x");
+            IAbstractExpr fold = Fold(p);
+            Assert.AreEqual(expected, fold);
+        }
+
+        [Test]
+        public void TestSquare6() {
+            // (-3)^2 = 9
+            UnaryExpression p = new UnaryExpression(C(-3), new Square());
+            IAbstractExpr expected = C(9);
+            IAbstractExpr fold = Fold(p);
+            Assert.AreEqual(expected, fold);
+        }
+
+        [Test]
+        public void TestSquare7() {
+            // (-3)^2 = 9
+            UnaryExpression p = new UnaryExpression(-C(3).C, new Square());
+            IAbstractExpr expected = C(9);
+            IAbstractExpr fold = Fold(p);
+            Assert.AreEqual(expected, fold);
         }
 
 

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace Movimentum.SubstitutionSolver3 {
     public class EvaluationVisitor : ISolverModelConstraintVisitor<Ignore, bool>
@@ -13,6 +15,14 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public EvaluationVisitor(IVariable variable, double value)
             : this(new Dictionary<IVariable, double> { { variable, value } }) {
+        }
+
+        public string DebugVariableValuesAsString() {
+            var sb = new StringBuilder();
+            foreach (var kvp in _variableValues) {
+                sb.AppendLine("  // " + kvp.Key + " =! " + kvp.Value.ToString(CultureInfo.InvariantCulture));
+            }
+            return sb.ToString();
         }
 
         // STEPL
@@ -40,12 +50,12 @@ namespace Movimentum.SubstitutionSolver3 {
             return constant.Value;
         }
 
-        public double Visit(INamedVariable namedVariable, Ignore p) {
-            return GetValue(namedVariable);
+        public double Visit(INamedVariable namedVar, Ignore p) {
+            return GetValue(namedVar);
         }
 
-        public double Visit(IAnchorVariable anchorVariable, Ignore p) {
-            return GetValue(anchorVariable);
+        public double Visit(IAnchorVariable anchorVar, Ignore p) {
+            return GetValue(anchorVar);
         }
 
         private double GetValue(IVariable variable) {
@@ -56,15 +66,15 @@ namespace Movimentum.SubstitutionSolver3 {
             return result;
         }
 
-        public double Visit(UnaryExpression unaryExpression, Ignore p) {
-            double inner = unaryExpression.Inner.Accept(this);
-            return unaryExpression.Op.Accept(this, inner, p);
+        public double Visit(UnaryExpression unaryExpr, Ignore p) {
+            double inner = unaryExpr.Inner.Accept(this);
+            return unaryExpr.Op.Accept(this, inner, p);
         }
 
-        public double Visit(BinaryExpression binaryExpression, Ignore p) {
-            double lhs = binaryExpression.Lhs.Accept(this);
-            double rhs = binaryExpression.Rhs.Accept(this);
-            return binaryExpression.Op.Accept(this, lhs, rhs, p);
+        public double Visit(BinaryExpression binaryExpr, Ignore p) {
+            double lhs = binaryExpr.Lhs.Accept(this);
+            double rhs = binaryExpr.Rhs.Accept(this);
+            return binaryExpr.Op.Accept(this, lhs, rhs, p);
         }
 
         public double Visit(RangeExpr rangeExpr, Ignore p) {
@@ -108,7 +118,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public double Visit(PositiveSquareroot op, double inner, Ignore p) {
-            return Math.Sqrt(inner);
+            return inner.Near(0) ? 0 : Math.Sqrt(inner);
         }
 
         public double Visit(Square op, double inner, Ignore p) {

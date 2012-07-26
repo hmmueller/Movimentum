@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Movimentum.Model;
@@ -162,43 +163,6 @@ namespace Movimentum.Unittests {
             Assert.IsFalse(3 > double.PositiveInfinity);
         }
 
-        [Test]
-        public void TestRotatingBarCoordinates() {
-            const string s =
-                @".config(8, 600, 400);
-                WH : .bar C = [0,0] P = [-60,80];
-                // length of bar: 100
-
-                @0
-	                WH.C 	= [200,200];
-	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
-                    x       > 0;
-                @2";
-            Script script = Program.Parse(s);
-
-            IEnumerable<Frame> frames = script.CreateFrames();
-
-            IDictionary<IVariable, VariableWithValue> previousState = new Dictionary<IVariable, VariableWithValue>();
-
-            foreach (var f in frames) {
-                IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
-                double x = previousState[Polynomial.CreateNamedVariable("x")].Value;
-                Assert.AreEqual(10, x, 1e-2);
-
-                ConstVector whcLocation = anchorLocations["WH"]["C"];
-                Assert.AreEqual(200, whcLocation.X, 1e-2);
-                Assert.AreEqual(200, whcLocation.Y, 1e-2);
-                Assert.AreEqual(0, whcLocation.Z, 1e-2);
-
-                double alpha = f.FrameNo / 8.0 * 2 * Math.PI - Math.PI / 8;
-                //double alphaDegrees = alpha / Math.PI * 180 % 360;
-                ConstVector whpLocation = anchorLocations["WH"]["P"];
-                Assert.AreEqual(200 + 100 * Math.Cos(alpha), whpLocation.X, 1e-2);
-                Assert.AreEqual(200 + 100 * Math.Sin(alpha), whpLocation.Y, 1e-2);
-                Assert.AreEqual(0, whpLocation.Z, 1e-2);
-            }
-        }
-
         private string MkTestDir() {
             string dir = Path.Combine(Path.GetTempPath(), "MovimentumTest");
             Directory.CreateDirectory(dir);
@@ -235,6 +199,7 @@ namespace Movimentum.Unittests {
             @0
 	            WH.C 	= [200,200];
 	            WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
+                x       > 0;
             @2";
             Script script = Program.Parse(s);
             script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "x", 10 } });
@@ -244,19 +209,95 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(17, frameCount);
         }
 
-        [Test, Ignore("Not yet there")]
-        public void TestRotatingTriangle() {
+        [Test]
+        public void TestRotatingBarCoordinates() {
             const string s =
-                @".config(10, 600, 400);
-                WH : .bar C = [0,0] P = [-10,20] Q = [10,20];
+                @".config(8, 600, 400);
+                WH : .bar C = [0,0] P = [-60,80];
+                // length of bar: 100
 
                 @0
-	                WH.C 	= [100,100];
-	                WH.P 	= WH.C + [x,0].r(360*.t/4);
-                    //// x       > 0; // ????
-                @20";
+	                WH.C 	= [200,200];
+	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
+                    x       > 0;
+                @2";
             Script script = Program.Parse(s);
-            Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+            script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "x", 10 } });
+
+            IEnumerable<Frame> frames = script.CreateFrames();
+
+            IDictionary<IVariable, VariableWithValue> previousState = new Dictionary<IVariable, VariableWithValue>();
+
+            foreach (var f in frames) {
+                IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
+                double x = previousState[Polynomial.CreateNamedVariable("x")].Value;
+                Assert.AreEqual(10, x, 1e-2);
+
+                ConstVector whcLocation = anchorLocations["WH"]["C"];
+                Assert.AreEqual(200, whcLocation.X, 1e-2);
+                Assert.AreEqual(200, whcLocation.Y, 1e-2);
+                Assert.AreEqual(0, whcLocation.Z, 1e-2);
+
+                double alpha = f.FrameNo / 8.0 * 2 * Math.PI - Math.PI / 8;
+                //double alphaDegrees = alpha / Math.PI * 180 % 360;
+                ConstVector whpLocation = anchorLocations["WH"]["P"];
+                double expectedX = 200 + 100 * Math.Cos(alpha);
+                double expectedY = 200 + 100 * Math.Sin(alpha);
+                Debug.WriteLine("expX=" + expectedX + ", expY=" + expectedY);
+                Assert.AreEqual(expectedX, whpLocation.X, 1e-2);
+                Assert.AreEqual(expectedY, whpLocation.Y, 1e-2);
+                Assert.AreEqual(0, whpLocation.Z, 1e-2);
+            }
+        }
+
+        [Test]
+        public void TestRotatingTriangleSimpler() {
+            const string s =
+                @".config(8, 600, 400);
+                WH : .bar C = [0,0] P = [-60,80] Q = [80,60];
+
+                @0
+	                WH.C 	= [200,200];
+	                WH.P 	= WH.C + [10*x,0].r(360*.t); 
+                    x       > 0;
+                @2";
+            Script script = Program.Parse(s);
+
+            script.DebugAddExpectedResult(1, new Dictionary<string, double> {
+                { "WH.P.X", 300 }, 
+                { "WH.P.Y", 200 }, 
+                { "WH.Q.X", 200 }, 
+                { "WH.Q.Y", 100 }, 
+                { "x", 10 }
+            });
+
+            int frameCount = Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+            Assert.AreEqual(17, frameCount);
+        }
+
+        [Test]
+        public void TestRotatingTriangle() {
+            const string s =
+                @".config(8, 600, 400);
+                WH : .bar C = [0,0] P = [-60,80] Q = [80,60];
+
+                @0
+	                WH.C 	= [200,200];
+	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
+                    x       > 0;
+                @2";
+            Script script = Program.Parse(s);
+
+            script.DebugAddExpectedResult(1, new Dictionary<string, double> {
+                //{ "WH.P.X", 292.387953251129 }, 
+                //{ "WH.P.Y", 238.268343236509 }, 
+                //{ "WH.Q.X", 238.268343236509 }, 
+                { "WH.Q.Y", 107.612046748871 }, 
+                { "x", 10 }
+            });
+
+            int frameCount = Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+            Assert.AreEqual(17, frameCount);
         }
 
         [Test, Ignore("Not yet there")]
