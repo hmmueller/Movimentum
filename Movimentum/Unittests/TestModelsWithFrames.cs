@@ -193,16 +193,16 @@ namespace Movimentum.Unittests {
         public void TestRotatingBar() {
             const string s =
                 @".config(8, 600, 400);
-            WH : .bar C = [0,0] P = [-60,80];
-            // length of bar: 100
+                WH : .bar C = [0,0] P = [-60,80];
+                // length of bar: 100
 
-            @0
-	            WH.C 	= [200,200];
-	            WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
-                x       > 0;
-            @2";
+                @0
+	                WH.C 	= [200,200];
+	                WH.P 	= WH.C + [len,0].r(360*.t + 22.5); 
+                    len > 0;
+                @2";
             Script script = Program.Parse(s);
-            script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "x", 10 } });
+            //script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "len", 100 } });
 
             string prefix = MkTestDir();
             int frameCount = Program.Interpret(script, prefix);
@@ -218,11 +218,11 @@ namespace Movimentum.Unittests {
 
                 @0
 	                WH.C 	= [200,200];
-	                WH.P 	= WH.C + [10*x,0].r(360*.t + 22.5); 
-                    x       > 0;
+	                WH.P 	= WH.C + [len,0].r(360*.t + 22.5); 
+                    len       > 0;
                 @2";
             Script script = Program.Parse(s);
-            script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "x", 10 } });
+            //script.DebugAddExpectedResult(1, new Dictionary<string, double> { { "WH.P.Y", 238.268343236509 }, { "len", 10 } });
 
             IEnumerable<Frame> frames = script.CreateFrames();
 
@@ -230,8 +230,8 @@ namespace Movimentum.Unittests {
 
             foreach (var f in frames) {
                 IDictionary<string, IDictionary<string, ConstVector>> anchorLocations = f.SolveConstraints(10000, ref previousState);
-                double x = previousState[Polynomial.CreateNamedVariable("x")].Value;
-                Assert.AreEqual(10, x, 1e-2);
+                //double x = previousState[Polynomial.CreateNamedVariable("x")].Value;
+                //Assert.AreEqual(10, x, 1e-2);
 
                 ConstVector whcLocation = anchorLocations["WH"]["C"];
                 Assert.AreEqual(200, whcLocation.X, 1e-2);
@@ -239,7 +239,7 @@ namespace Movimentum.Unittests {
                 Assert.AreEqual(0, whcLocation.Z, 1e-2);
 
                 double alpha = f.FrameNo / 8.0 * 2 * Math.PI - Math.PI / 8;
-                //double alphaDegrees = alpha / Math.PI * 180 % 360;
+
                 ConstVector whpLocation = anchorLocations["WH"]["P"];
                 double expectedX = 200 + 100 * Math.Cos(alpha);
                 double expectedY = 200 + 100 * Math.Sin(alpha);

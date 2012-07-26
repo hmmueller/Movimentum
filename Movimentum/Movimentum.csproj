@@ -76,8 +76,6 @@
     <Compile Include="SubstitutionSolver3\ConstraintTemplates.cs" />
     <Compile Include="SubstitutionSolver3\ToStringVisitor.cs" />
     <Compile Include="SubstitutionSolver3\ExpressionRewrite.cs" />
-    <Compile Include="SubstitutionSolver3\PolynomialFoldingVisitorNEW2.cs" />
-    <Compile Include="SubstitutionSolver3\PolynomialFoldingVisitorNEW.cs" />
     <Compile Include="SubstitutionSolver3\PolynomialFoldingVisitor.cs" />
     <Compile Include="SubstitutionSolver3\SolverNode_Rules.cs" />
     <Compile Include="SubstitutionSolver3\RewritingVisitor.cs" />

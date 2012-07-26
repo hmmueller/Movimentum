@@ -86,11 +86,11 @@ namespace Movimentum.SubstitutionSolver3 {
 
         public IAbstractExpr Visit(IGeneralPolynomial polynomial, Ignore parameter) {
             if (polynomial.Var.Equals(_from)) {
-                if (_from is IConstant) {
+                if (_to is IConstant) {
                     // For efficiency, handle this case by direct evaluation, instead
                     // of building an expression tree that is later constant-folded.
-                    double from = ((IConstant)_from).Value;
-                    var visitor = new EvaluationVisitor(polynomial.Var, from);
+                    double to = ((IConstant)_to).Value;
+                    var visitor = new EvaluationVisitor(polynomial.Var, to);
                     return Polynomial.CreateConstant(polynomial.Accept(visitor));
                 } else {
                     // Evaluate by Horner's rule.
