@@ -341,9 +341,18 @@ namespace Movimentum.SubstitutionSolver3 {
             }
 
             private bool Equals(GeneralPolynomial other) {
-                return other != null
+                if (other != null
                     && _variable.Equals(other._variable)
-                    && _coefficients.SequenceEqual(other._coefficients);
+                    && _coefficients.Length == other._coefficients.Length) {
+                    for (int i = 0; i < _coefficients.Length; i++) {
+                        if (!_coefficients[i].Near(other._coefficients[i])) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
             }
 
             public override int GetHashCode() {
@@ -438,9 +447,9 @@ namespace Movimentum.SubstitutionSolver3 {
             return p * d;
         }
 
-    public static Polynomial operator -(Polynomial p) {
-        return CreatePolynomial(p.Var, p.Coefficients.Select(c => -c)).P;
-    }
+        public static Polynomial operator -(Polynomial p) {
+            return CreatePolynomial(p.Var, p.Coefficients.Select(c => -c)).P;
+        }
 
         public static IPolynomial CreatePolynomial(IVariable variable, params double[] coefficients) {
             return CreatePolynomial(variable, (IEnumerable<double>)coefficients);
@@ -475,6 +484,24 @@ namespace Movimentum.SubstitutionSolver3 {
             } else {
                 return new GeneralPolynomial(variable, normalizedCoefficients);
             }
+        }
+
+        /// <summary>
+        /// (3x + 4).ConstMultipleOf(6x + 8) == 0.5
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public IConstant ConstMultipleOf(Polynomial other) {
+            if (Degree == 0 || Degree != other.Degree) {
+                return null;
+            }
+            double factor = Coefficient(Degree) / other.Coefficient(Degree);
+            for (int d = 0; d < Degree; d++) {
+                if (!Coefficient(d).Near(factor * other.Coefficient(d))) {
+                    return null;
+                }
+            }
+            return CreateConstant(factor);
         }
     }
 

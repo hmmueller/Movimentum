@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Movimentum.SubstitutionSolver3;
 using NUnit.Framework;
@@ -908,6 +909,49 @@ namespace Movimentum.Unittests {
             Assert.AreEqual(expected, fold);
         }
 
+        [Test]
+        public void TestTimes1() {
+            // 0 = 6 + x sqrt(x²+5) has solution -2.
+            // But its "rewriting" 0 = 6 + sqrt(x²*(x²+5)) DOES NOT HAVE this solution!
+            // Therefore, the "polynomial folding" P*sqrt(Q) --> sqrt(P²*Q) is WRONG!
+            AbstractExpr x = V("x").C;
+            IAbstractExpr fold = Fold(C(6).C + x * new UnaryExpression(x * x + C(5), new PositiveSquareroot()));
+            double result = fold.Accept(new EvaluationVisitor(V("x"), -2));
+            Assert.AreEqual(0, result);
+        }
+
+        [Test]
+        public void TestPlus1() {
+            // sqrt(x²)+sqrt(4x²) = sqrt(9x²)
+            IVariable x = Polynomial.CreateNamedVariable("x");
+            AbstractExpr e = new UnaryExpression(x.C, new PositiveSquareroot())
+                  + new UnaryExpression(C(4).C * x, new PositiveSquareroot());
+            UnaryExpression expected = new UnaryExpression(Polynomial.CreatePolynomial(x, 9, 0), new PositiveSquareroot());
+            IAbstractExpr fold = Fold(e);
+            Assert.AreEqual(expected, fold);
+        }
+
+        [Test]
+        public void TestPlus2() {
+            // sqrt(x²)+-sqrt(9x²) = -sqrt(4x²)
+            IVariable x = Polynomial.CreateNamedVariable("x");
+            AbstractExpr e = new UnaryExpression(x.C, new PositiveSquareroot())
+                  + -new UnaryExpression(C(9).C * x, new PositiveSquareroot());
+            AbstractExpr expected = -new UnaryExpression(Polynomial.CreatePolynomial(x, 4, 0), new PositiveSquareroot());
+            IAbstractExpr fold = Fold(e);
+            Assert.AreEqual(expected, fold);
+        }
+
+        [Test]
+        public void TestPlus3() {
+            // sqrt(9x²)+-sqrt(x²) = sqrt(4x²)
+            IVariable x = Polynomial.CreateNamedVariable("x");
+            AbstractExpr e = new UnaryExpression(C(9).C * x.C, new PositiveSquareroot())
+                  + -new UnaryExpression(x, new PositiveSquareroot());
+            AbstractExpr expected = new UnaryExpression(Polynomial.CreatePolynomial(x, 4, 0), new PositiveSquareroot());
+            IAbstractExpr fold = Fold(e);
+            Assert.AreEqual(expected, fold);
+        }
 
         #region Rewriting of polynomials
 

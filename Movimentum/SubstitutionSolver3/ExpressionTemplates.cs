@@ -121,6 +121,7 @@ namespace Movimentum.SubstitutionSolver3 {
     class ExpressionMatcher {
         private readonly AbstractExpressionTemplate _template;
         private IDictionary<AbstractExpressionTemplate, IAbstractExpr> _matches;
+        private Dictionary<object, object> _data;
 
         public ExpressionMatcher(AbstractExpressionTemplate template) {
             _template = template;
@@ -131,7 +132,7 @@ namespace Movimentum.SubstitutionSolver3 {
             return _matches == null ? null : this;
         }
 
-        private IAbstractExpr GetMatch(AbstractExpressionTemplate t) {
+        public IAbstractExpr GetMatch(AbstractExpressionTemplate t) {
             IAbstractExpr result;
             _matches.TryGetValue(t, out result);
             return result;
@@ -173,6 +174,22 @@ namespace Movimentum.SubstitutionSolver3 {
         }
         public static IConstant operator &(ExpressionMatcher m, TypeMatchTemplate<IConstant> t) {
             return m.Match(t);
+        }
+
+        public bool Remember<T>(object index, T obj) where T : class {
+            if (obj != null) {
+                if (_data == null) {
+                    _data = new Dictionary<object, object>();
+                }
+                _data.Add(index, obj);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public T Remembered<T>(object index) where T: class {
+            return _data[index] as T;
         }
     }
 }

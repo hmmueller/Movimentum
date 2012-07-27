@@ -65,7 +65,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public IAbstractExpr Visit(PositiveSquareroot op, IAbstractExpr inner, Ignore p) {
-            return FoldIfConstant(op, inner, x => x.Near(0) ? 0 : Math.Sqrt(x));
+            return FoldIfConstant(op, inner, x => x.NearSqrt());
         }
 
         public IAbstractExpr Visit(Sin op, IAbstractExpr inner, Ignore p) {
@@ -122,6 +122,7 @@ namespace Movimentum.SubstitutionSolver3 {
 
         static PolynomialFoldingVisitor() {
             var c = new TypeMatchTemplate<IConstant>();
+            var d = new TypeMatchTemplate<IConstant>();
             var e = new TypeMatchTemplate<IAbstractExpr>();
             var f = new TypeMatchTemplate<IAbstractExpr>();
             var p = new TypeMatchTemplate<IPolynomial>();
@@ -200,6 +201,25 @@ namespace Movimentum.SubstitutionSolver3 {
             //        |
             // E      | Q[V]+(E+F)          Q[V]+E          E+F
 
+            // sqrt(P) + sqrt(P*k) = sqrt(P*(1+k))
+            new StandardExpressionRewrite("sqrt(P)+sqrt(P*k)", _plusRewrites,
+                sqrtP + sqrtQ,
+                m => HaveSameVar(p, q)(m) && m.Remember(1, (m & q).ConstMultipleOf(m & p)),
+                m => {
+                    double k = 1 + m.Remembered<IConstant>(1).Value.NearSqrt();
+                    return new UnaryExpression(k * k * (m & p), new PositiveSquareroot());
+                });
+            // sqrt(P) +- sqrt(P*k) = sgn(1-k)*sqrt(P*|1-k|)
+            new StandardExpressionRewrite("sqrt(P)+sqrt(P*k)", _plusRewrites,
+                sqrtP + -sqrtQ,
+                m => HaveSameVar(p, q)(m) && m.Remember(1, (m & q).ConstMultipleOf(m & p)),
+                m => {
+                    double k = 1 - m.Remembered<IConstant>(1).Value.NearSqrt();
+                    return k.Near(0) ? (AbstractExpr) Polynomial.CreateConstant(0)
+                        : k < 0
+                            ? -new UnaryExpression(k * k * (m & p), new PositiveSquareroot())
+                            : new UnaryExpression(k * k * (m & p), new PositiveSquareroot());
+                });
 
             {
                 new StandardExpressionRewrite("(P+E)+(Q+F)", _plusRewrites,
@@ -295,19 +315,22 @@ namespace Movimentum.SubstitutionSolver3 {
                     m => -(RecursivelyFold((m & e) * (m & f)).C));
             }
 
-            // Step III: Handle square roots.
+            // Step III: Pull up square roots as far as possible.
             //
-            //          √Q          √F              Q           F
+            //          √Q              √F              Q       D               F
             //
-            //  √P      P=Q:  P     √(P*F)          √{PQ²}      =
-            //          else: √{PQ}
+            //  √P      P=Q:  P         √(P*F)          =       D<0: -√{PD²}    =
+            //          else: √{PQ}                             else: √{PD²}
             //
-            //  √E      √(Q*E)      E=F:  E         √({Q²}*E)   =
-            //                      else: √(E*F)
+            //  √E      √(Q*E)          E=F:  E         =       D<0: -√({D²}*E) =
+            //                          else: √(E*F)            else: √({D²}*E)
             //
-            //  P       √({P²Q}     √({P²}*F)       {P*Q}       =  
+            //  P       =               =               {P*Q}   {P*D}           =
+            //                                                X
+            //  C       C<0: -√({C²Q}   C<0: -√({C²}*F) {C*Q}   {C*D}           =  
+            //          else: √({C²Q}   else: √({C²}*F)
             //
-            //  E       =             =               =         =
+            //  E       =             =                 =       =               =
             //
             {
                 // 1st line
@@ -321,10 +344,13 @@ namespace Movimentum.SubstitutionSolver3 {
                 new StandardExpressionRewrite("√P*√F", _timesRewrites,
                     sqrtP * sqrtF,
                     m => PosSqrtAndRecursivelyFold((m & p) * (m & f)));
-                new StandardExpressionRewrite("√P*Q", _timesRewrites,
-                    sqrtP * q,
-                    HaveSameVar(p, q),
-                    m => PosSqrtAndRecursivelyFold((m & q) * (m & q) * (m & p)));
+                // √P*Q --> =
+                new StandardExpressionRewrite("√P*D,D<0", _timesRewrites,
+                    sqrtP * d, m => (m & d).Value < 0,
+                    m => -PosSqrtAndRecursivelyFold((m & d).Value * (m & d).Value * (m & p)));
+                new StandardExpressionRewrite("√P*D,D>0", _timesRewrites,
+                    sqrtP * d,
+                    m => PosSqrtAndRecursivelyFold((m & d).Value * (m & d).Value * (m & p)));
 
                 // 2nd line
                 new StandardExpressionRewrite("√E*√Q", _timesRewrites,
@@ -336,24 +362,35 @@ namespace Movimentum.SubstitutionSolver3 {
                 new StandardExpressionRewrite("√E*√F", _timesRewrites,
                     sqrtE * sqrtF,
                     m => PosSqrtAndRecursivelyFold((m & e) * (m & f)));
-                new StandardExpressionRewrite("√E*D", _timesRewrites,
-                    sqrtE * q,
-                    m => PosSqrtAndRecursivelyFold((m & q) * (m & q) * (m & e)));
+                // √E*Q --> =
+                new StandardExpressionRewrite("√E*D,D<0", _timesRewrites,
+                    sqrtE * d, m => (m & d).Value < 0,
+                    m => -PosSqrtAndRecursivelyFold(Polynomial.CreateConstant((m & d).Value * (m & d).Value).C * (m & e)));
+                new StandardExpressionRewrite("√E*D,D>0", _timesRewrites,
+                    sqrtE * d,
+                    m => PosSqrtAndRecursivelyFold(Polynomial.CreateConstant((m & d).Value * (m & d).Value).C * (m & e)));
 
-                // 3rd line
-                new StandardExpressionRewrite("P*√Q", _timesRewrites,
-                    p * sqrtQ,
-                    HaveSameVar(p, q),
-                    m => PosSqrtAndRecursivelyFold((m & p) * (m & p) * (m & q)));
-                new StandardExpressionRewrite("P*√F", _timesRewrites,
-                    p * sqrtF,
-                    m => PosSqrtAndRecursivelyFold((m & p) * (m & p) * (m & f)));
+                // 4 rewrites at X
                 new StandardExpressionRewrite("P*Q", _timesRewrites,
                     p * q,
                     HaveSameVar(p, q),
                     m => (m & p) * (m & q));
 
                 // 4th line
+                new StandardExpressionRewrite("C*√Q,C<0", _timesRewrites,
+                    c * sqrtQ, m => (m & c).Value < 0,
+                    m => -PosSqrtAndRecursivelyFold((m & c).Value * (m & c).Value * (m & q)));
+                new StandardExpressionRewrite("C*√Q,C>0", _timesRewrites,
+                    c * sqrtQ,
+                    m => PosSqrtAndRecursivelyFold((m & c).Value * (m & c).Value * (m & q)));
+                new StandardExpressionRewrite("C*√F,C<0", _timesRewrites,
+                    c * sqrtF, m => (m & c).Value < 0,
+                    m => -PosSqrtAndRecursivelyFold(Polynomial.CreateConstant((m & c).Value * (m & c).Value).C * (m & f)));
+                new StandardExpressionRewrite("C*√E,C>0", _timesRewrites,
+                    c * sqrtF,
+                    m => PosSqrtAndRecursivelyFold(Polynomial.CreateConstant((m & c).Value * (m & c).Value).C * (m & f)));
+
+                // 5th line
                 new StandardExpressionRewrite("E", _timesRewrites,
                     e,
                     m => m & e);
@@ -377,7 +414,7 @@ namespace Movimentum.SubstitutionSolver3 {
             #endregion Rewrites for Divide
         }
 
-        private static IAbstractExpr PosSqrtAndRecursivelyFold(AbstractExpr expr) {
+        private static AbstractExpr PosSqrtAndRecursivelyFold(AbstractExpr expr) {
             return new UnaryExpression(RecursivelyFold(expr), new PositiveSquareroot());
         }
 

@@ -118,7 +118,7 @@ namespace Movimentum.SubstitutionSolver3 {
         }
 
         public double Visit(PositiveSquareroot op, double inner, Ignore p) {
-            return inner.Near(0) ? 0 : Math.Sqrt(inner);
+            return inner.NearSqrt();
         }
 
         public double Visit(Square op, double inner, Ignore p) {

@@ -87,5 +87,13 @@ namespace Movimentum.SubstitutionSolver3 {
         public T Match<T>(TypeMatchTemplate<T> t) where T : class, IAbstractExpr {
             return _expressionMatcher.Match(t);
         }
+
+        public static IPolynomial operator &(ScalarConstraintMatcher m, TypeMatchTemplate<IPolynomial> t) {
+            return m._expressionMatcher & t;
+        }
+
+        public static IAbstractExpr operator &(ScalarConstraintMatcher m, AbstractExpressionTemplate t) {
+            return m._expressionMatcher.GetMatch(t);
+        }
     }
 }

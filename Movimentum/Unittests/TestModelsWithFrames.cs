@@ -271,7 +271,8 @@ namespace Movimentum.Unittests {
                 { "x", 10 }
             });
 
-            int frameCount = Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+            string prefix = MkTestDir();
+            int frameCount = Program.Interpret(script, prefix);
             Assert.AreEqual(17, frameCount);
         }
 
@@ -296,7 +297,8 @@ namespace Movimentum.Unittests {
                 { "x", 10 }
             });
 
-            int frameCount = Program.Interpret(script, Path.Combine(Path.GetTempPath(), "F_"));
+            string prefix = MkTestDir();
+            int frameCount = Program.Interpret(script, prefix);
             Assert.AreEqual(17, frameCount);
         }
 

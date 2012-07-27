@@ -41,7 +41,6 @@ namespace Movimentum.SubstitutionSolver3 {
                         currNode.CloseVariable(
                             matcher.Match(v), Polynomial.CreateConstant(0), matchedConstraint));
             }
-
             {
                 // 3. 0 = V + C
                 var v = new TypeMatchTemplate<IVariable>();
@@ -56,17 +55,18 @@ namespace Movimentum.SubstitutionSolver3 {
                             matchedConstraint));
             }
             {
-                // 3a. 0 = P[V]
+                //    // 3a. 0 = P[V]
                 var p = new TypeMatchTemplate<IPolynomial>();
                 new RuleAction<ScalarConstraintMatcher>("0=P[V]",
                     new EqualsZeroConstraintTemplate(p).GetMatchDelegate(),
                     matcher => matcher != null,
                     (currNode, matcher, matchedConstraint) =>
-                        FindZeros(matcher.Match(p)).Select(zero =>
+                        FindZeros(matcher & p).Select(zero =>
                             currNode.CloseVariable(
-                            matcher.Match(p).Var,
-                            Polynomial.CreateConstant(zero),
-                            matchedConstraint))
+                                (matcher & p).Var,
+                                Polynomial.CreateConstant(zero),
+                                matchedConstraint)
+                             )
                         );
             }
             {
@@ -118,6 +118,21 @@ namespace Movimentum.SubstitutionSolver3 {
                         currNode.CloseVariable(matcher.Match(v),
                                                    -matcher.Match(e), matchedConstraint)
                 );
+            }
+            {
+                // 6. 0 = -E
+                var e = new TypeMatchTemplate<IAbstractExpr>();
+                new RuleAction<ScalarConstraintMatcher>("0=-E",
+                    new EqualsZeroConstraintTemplate(-e).GetMatchDelegate(),
+                    matcher => matcher != null,
+                    (currNode, matcher, matchedConstraint) =>
+                        new SolverNode(currNode.Constraints
+                                                .Except(matchedConstraint)
+                                                .Union(new[] {
+                                        new EqualsZeroConstraint(matcher & e), 
+                                    }),
+                                        currNode.ClosedVariables,
+                                        currNode));
             }
             {
                 // STEPE
@@ -172,42 +187,42 @@ namespace Movimentum.SubstitutionSolver3 {
                     }
                 );
             }
-            {
-                // STEPF
-                // 6. 0 = P[V] + sqrt(E)
-                //    rewrite to
-                //    0 = E - P[V]² and 0 <= -P[V]
-                var p = new TypeMatchTemplate<IPolynomial>();
-                var e = new TypeMatchTemplate<AbstractExpr>();
-                var t = p + new UnaryExpressionTemplate(new PositiveSquareroot(), e);
-                new RuleAction<ScalarConstraintMatcher>("0=P[V]+sqrt(E)",
-                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
-                    matcher => matcher != null,
-                    (currNode, matcher, matchedConstraint) => {
-                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
-                        ScalarConstraint c2 = new AtLeastZeroConstraint(-matcher.Match(p).C);
-                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
-                                                currNode);
-                    });
-            }
-            {
-                // STEPF
-                // 6a. 0 = P[V] + -sqrt(E)
-                //    rewrite to
-                //    0 = E - P[V]² and 0 <= P[V]
-                var p = new TypeMatchTemplate<IPolynomial>();
-                var e = new TypeMatchTemplate<AbstractExpr>();
-                var t = p + -new UnaryExpressionTemplate(new PositiveSquareroot(), e);
-                new RuleAction<ScalarConstraintMatcher>("0=P[V]-sqrt(E)",
-                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
-                    matcher => matcher != null,
-                    (currNode, matcher, matchedConstraint) => {
-                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
-                        ScalarConstraint c2 = new AtLeastZeroConstraint(matcher.Match(p));
-                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
-                                                currNode);
-                    });
-            }
+            //{
+            //    // STEPF
+            //    // 6. 0 = P[V] + sqrt(E)
+            //    //    rewrite to
+            //    //    0 = E - P[V]² and 0 <= -P[V]
+            //    var p = new TypeMatchTemplate<IPolynomial>();
+            //    var e = new TypeMatchTemplate<AbstractExpr>();
+            //    var t = p + new UnaryExpressionTemplate(new PositiveSquareroot(), e);
+            //    new RuleAction<ScalarConstraintMatcher>("0=P[V]+sqrt(E)",
+            //        new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+            //        matcher => matcher != null,
+            //        (currNode, matcher, matchedConstraint) => {
+            //            ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
+            //            ScalarConstraint c2 = new AtLeastZeroConstraint(-matcher.Match(p).C);
+            //            return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
+            //                                    currNode);
+            //        });
+            //}
+            //{
+            //    // STEPF
+            //    // 6a. 0 = P[V] + -sqrt(E)
+            //    //    rewrite to
+            //    //    0 = E - P[V]² and 0 <= P[V]
+            //    var p = new TypeMatchTemplate<IPolynomial>();
+            //    var e = new TypeMatchTemplate<AbstractExpr>();
+            //    var t = p + -new UnaryExpressionTemplate(new PositiveSquareroot(), e);
+            //    new RuleAction<ScalarConstraintMatcher>("0=P[V]-sqrt(E)",
+            //        new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+            //        matcher => matcher != null,
+            //        (currNode, matcher, matchedConstraint) => {
+            //            ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e) + -new UnaryExpression(matcher.Match(p), new Square()));
+            //            ScalarConstraint c2 = new AtLeastZeroConstraint(matcher.Match(p));
+            //            return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1, c2 }), currNode.ClosedVariables,
+            //                                    currNode);
+            //        });
+            //}
             {
                 // STEPM
                 // 7. 0 = sqrt(E)
@@ -218,53 +233,60 @@ namespace Movimentum.SubstitutionSolver3 {
                 new RuleAction<ScalarConstraintMatcher>("0=sqrt(E)",
                     new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
                     matcher => matcher != null,
-                    (currNode, matcher, matchedConstraint) => {
-                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e));
-                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1 }), currNode.ClosedVariables,
-                                                currNode);
-                    });
+                    (currNode, matcher, matchedConstraint) =>
+                        new SolverNode(currNode.Constraints
+                                               .Except(matchedConstraint)
+                                               .Union(new[] {
+                                                    new EqualsZeroConstraint(matcher&e)
+                                                }),
+                                       currNode.ClosedVariables,
+                                       currNode));
             }
-            {
-                // STEPM
-                // 7. 0 = -E
-                //    rewrite to
-                //    0 = E
-                var e = new TypeMatchTemplate<AbstractExpr>();
-                var t = -e;
-                new RuleAction<ScalarConstraintMatcher>("0=-E",
-                    new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
-                    matcher => matcher != null,
-                    (currNode, matcher, matchedConstraint) => {
-                        ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e));
-                        return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1 }), currNode.ClosedVariables,
-                                                currNode);
-                    });
-            }
+            //{
+            //    // STEPM
+            //    // 7. 0 = -E
+            //    //    rewrite to
+            //    //    0 = E
+            //    var e = new TypeMatchTemplate<AbstractExpr>();
+            //    var t = -e;
+            //    new RuleAction<ScalarConstraintMatcher>("0=-E",
+            //        new EqualsZeroConstraintTemplate(t).GetMatchDelegate(),
+            //        matcher => matcher != null,
+            //        (currNode, matcher, matchedConstraint) => {
+            //            ScalarConstraint c1 = new EqualsZeroConstraint(matcher.Match(e));
+            //            return new SolverNode(currNode.Constraints.Except(matchedConstraint).Union(new[] { c1 }), currNode.ClosedVariables,
+            //                                    currNode);
+            //        });
+            //}
         }
 
-        private static IEnumerable<double> FindZeros(IPolynomial polynomial) {
-            switch (polynomial.Degree) {
-                case 0:
-                    throw new ArgumentException("Cannot find zeros for constant polynomial");
-                case 1: {
-                        // 0 = ax + b --> x = -b/a                
-                        var a = polynomial.Coefficient(1);
-                        var b = polynomial.Coefficient(0);
-                        return new[] { -b / a };
-                    }
-                case 2: {
-                        // 0 = ax² + bx + c --> with D = b² - 4ac, x1/2 = (-b+-sqrt D)/2a
-                        // These formulas are not good from a numerical standpoint! - see Wikipedia ...
-                        var a = polynomial.Coefficient(2);
-                        var b = polynomial.Coefficient(1);
-                        var c = polynomial.Coefficient(0);
-                        var sqrtD = Math.Sqrt(b * b - 4 * a * c);
-                        return new[] { (-b + sqrtD) / (2 * a), (-b - sqrtD) / (2 * a) };
-                    }
-                default:
-                    throw new NotImplementedException("Cannot find zeros for polynomial of degree " + polynomial.Degree);
+    private static IEnumerable<double> FindZeros(IPolynomial polynomial) {
+        switch (polynomial.Degree) {
+            case 0:
+                throw new ArgumentException("Cannot find zeros for constant polynomial");
+            case 1: {
+                // 0 = ax + b --> x = -b/a                
+                var a = polynomial.Coefficient(1);
+                var b = polynomial.Coefficient(0);
+                return new[] { -b / a };
             }
+            case 2: {
+                // 0 = ax² + bx + c --> with D = b² - 4ac, 
+                // we get x1,2 = (-b+-sqrt D)/2a.
+                // Attention: These formulas are not good 
+                // from a numerical standpoint! - see Wikipedia.
+                double a = polynomial.Coefficient(2);
+                double b = polynomial.Coefficient(1);
+                double c = polynomial.Coefficient(0);
+                double d = b * b - 4 * a * c;
+                double sqrtD = d.NearSqrt();
+                return new[] { (-b + sqrtD) / (2 * a), 
+                               (-b - sqrtD) / (2 * a) };
+            }
+            default:
+                throw new NotImplementedException("Cannot find zeros for polynomial of degree " + polynomial.Degree);
         }
+    }
 
         private static IEnumerable<SolverNode> RewriteFormalSquareroot(SolverNode origin, UnaryExpression someFormalSquareroot) {
             UnaryExpression positiveRoot = new UnaryExpression(someFormalSquareroot.Inner, new PositiveSquareroot());

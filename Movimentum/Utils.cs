@@ -28,6 +28,10 @@ namespace Movimentum {
         public static bool Near(this double d1, double d2) {
             return Math.Abs(d1 - d2) < 1e-8; // ????
         }
+
+        public static double NearSqrt(this double d) {
+            return d.Near(0) ? 0 : Math.Sqrt(d);
+        }
     }
 
     public static class StringUtils {
